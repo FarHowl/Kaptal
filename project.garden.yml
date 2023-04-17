@@ -1,5 +1,9 @@
 kind: Project
 name: kaptal
+modules:
+   include:
+     - kaptal-server
+     - kaptal-client
 environments:
   - name: default
 providers:

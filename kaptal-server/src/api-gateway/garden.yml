@@ -1,0 +1,8 @@
+kind: Module
+name: api-gateway
+type: container
+services:
+  - name: api-gateway
+    ports:
+      - name: http
+        containerPort: 3001
