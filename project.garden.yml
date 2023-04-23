@@ -4,6 +4,9 @@ modules:
    include:
      - kaptal-server
      - kaptal-client
+     - mongo-db
+     - hashicorp-vault
+     - mongo-cache
 environments:
   - name: default
 providers:

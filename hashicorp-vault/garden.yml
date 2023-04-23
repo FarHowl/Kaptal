@@ -1,0 +1,8 @@
+kind: Module
+name: hashicorp-vault
+type: container
+services:
+  - name: hashicorp-vault
+    ports:
+      - name: http
+        containerPort: 3234

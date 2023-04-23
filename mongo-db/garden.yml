@@ -1,0 +1,33 @@
+kind: Module
+type: container
+name: mongo-db
+image: mongo
+services:
+  - name: mongo-db
+    ports:
+      - name: http
+        containerPort: 27017
+    volumes:
+      - name: data
+        containerPath: /db-data
+exclude:
+  - Dockerfile
+  - index.js
+  - package.json
+
+---
+
+kind: Module
+type: container
+name: mongo-cache
+services:
+  - name: mongo-cache
+    ports:
+      - name: http
+        containerPort: 3006
+    dependencies:
+      - mongo-db
+include:
+  - Dockerfile
+  - index.js
+  - package.json

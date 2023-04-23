@@ -1,0 +1,9 @@
+{
+    "dependencies": {
+        "node-vault": "^0.9.22",
+        "express": "^4.18.2"
+    },
+    "scripts": {
+        "start": "node index.js"
+    }
+}

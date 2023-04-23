@@ -7,7 +7,21 @@ services:
       - name: http
         containerPort: 8070
     ingresses:
-      - path: /hello-frontend
+      - path: /
         port: http
-      - path: /call-backend
-        port: http
+    devMode:
+      command: [npm, run, start] # Overrides the container's default when the service is deployed in dev mode
+      sync:
+        # Source/target configuration for dev mode is the same as for hot reloading.
+        - source: src
+          target: /app/src
+          # Make sure to specify any paths that should not be synced!
+          exclude: [node_modules]
+          mode: two-way
+    dependencies:
+      - api-gateway
+tests:
+  - name: user-sign-in
+    args: [npm, test]
+    dependencies:
+      - api-gateway
