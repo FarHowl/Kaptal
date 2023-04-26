@@ -1,4 +1,4 @@
-export const apiAddress = "http://api-gateway:3001";
+export const apiAddress = "http://api.local.app.garden";
 
 // User
 /**

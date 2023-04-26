@@ -34,7 +34,10 @@ export default function MainPage() {
     // }, []);
 
     async function getResponse() {
-        const response = await axios.get("http://api-gateway:3001/");
+        const response = await axios.post("http://api.local.app.garden/user/signIn", {
+            email: "kartashov104@gmail.com",
+            password: "3498569",
+        });
         return response.data;
     }
 

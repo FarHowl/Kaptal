@@ -9,6 +9,7 @@ services:
     ingresses:
       - path: /
         port: http
+        hostname: frontend.${var.base-hostname}
     devMode:
       command: [npm, run, start] # Overrides the container's default when the service is deployed in dev mode
       sync:

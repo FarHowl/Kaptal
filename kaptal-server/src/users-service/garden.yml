@@ -7,6 +7,10 @@ services:
       - name: http
         containerPort: 3002
         servicePort: 3002
+    ingresses:
+     - path: /
+       port: http
+       hostname: users.${var.base-hostname}
     devMode:
       command: [npm, start] # Overrides the container's default when the service is deployed in dev mode
       sync:

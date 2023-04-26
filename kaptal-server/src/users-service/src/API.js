@@ -10,6 +10,7 @@ const verifyJWT = require("./utils/verifyJWT");
 
 router.post("/user/signIn", async (req, res) => {
     try {
+        console.log("first");
         verifyJWT(req);
 
         const findUserOrValidEmail = await User.findOne({ email: req.body.email });

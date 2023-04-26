@@ -4,16 +4,16 @@ const cors = require("cors");
 const routes = require("./src/API");
 const app = express();
 
-// mongoose.set('strictQuery', false);
-// mongoose.connect("mongodb+srv://FarHowl:3498569@kaptalcluster.fewuptw.mongodb.net/test");
+mongoose.set('strictQuery', false);
+mongoose.connect("mongodb://mongo-db:27017");
 
-// mongoose.connection.on("error", (error) => {
-//     console.log(error);
-// });
+mongoose.connection.on("error", (error) => {
+    console.log(error);
+});
 
-// mongoose.connection.once("connected", () => {
-//     console.log("Database Connected");
-// });
+mongoose.connection.once("connected", () => {
+    console.log("Database Connected");
+});
 
 app.use(
     cors({
@@ -28,8 +28,4 @@ app.use("/api", routes);
 
 app.listen(3003, () => {
     console.log("Books alive");
-});
-
-app.get("/", (req, res) => {
-    res.send("Hello World!");
 });

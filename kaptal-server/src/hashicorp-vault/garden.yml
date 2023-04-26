@@ -1,8 +1,13 @@
 kind: Module
 name: hashicorp-vault
 type: container
+image: hashicorp/vault
 services:
   - name: hashicorp-vault
     ports:
       - name: http
-        containerPort: 3234
+        containerPort: 3005
+    ingresses:
+     - path: /
+       port: http
+       hostname: vault.${var.base-hostname}

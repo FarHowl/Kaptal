@@ -5,11 +5,15 @@ image: mongo
 services:
   - name: mongo-db
     ports:
-      - name: http
+      - name: mongodb
         containerPort: 27017
     volumes:
       - name: data
         containerPath: /db-data
+    ingresses:
+     - path: /
+       port: mongodb
+       hostname: mongo-db.${var.base-hostname}
 exclude:
   - Dockerfile
   - index.js
@@ -27,6 +31,10 @@ services:
         containerPort: 3006
     dependencies:
       - mongo-db
+    ingresses:
+     - path: /
+       port: http
+       hostname: mongo-cache.${var.base-hostname}
 include:
   - Dockerfile
   - index.js

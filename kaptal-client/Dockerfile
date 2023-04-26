@@ -1,10 +1,11 @@
-FROM node:12.22.6-alpine
+FROM node:18
 
 ENV PORT=8070
 EXPOSE ${PORT}
 WORKDIR /app
 
 COPY package.json /app
+COPY package-lock.json /app
 RUN npm install
 
 COPY . /app

@@ -8,8 +8,11 @@ modules:
      - hashicorp-vault
      - mongo-cache
 environments:
-  - name: default
+  - name: local
+    defaultNamespace: default
+    variables:
+      base-hostname: local.app.garden
 providers:
   - name: local-kubernetes
     environment: [local]
-    context: minikube
+    context: docker-desktop

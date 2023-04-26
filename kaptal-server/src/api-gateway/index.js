@@ -23,12 +23,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/api", routes);
 
-app.listen(3001, () => {
+app.listen(3001, async () => {
     console.log("API-Gateway alive");
-});
-
-app.get("/", (req, res) => {
-    res.send("Hello World!");
 });
 
 const server = require("http").createServer(app);

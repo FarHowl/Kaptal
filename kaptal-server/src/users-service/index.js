@@ -4,16 +4,16 @@ const cors = require("cors");
 const routes = require("./src/API");
 const app = express();
 
-// mongoose.set('strictQuery', false);
-// mongoose.connect("mongodb://mongo-db:27017");
+mongoose.set('strictQuery', false);
+mongoose.connect("mongodb://mongo-db:27017");
 
-// mongoose.connection.on("error", (error) => {
-//     console.log(error);
-// });
+mongoose.connection.on("error", (error) => {
+    console.log(error);
+});
 
-// mongoose.connection.once("connected", () => {
-//     console.log("Database Connected");
-// });
+mongoose.connection.once("connected", () => {
+    console.log("Database Connected");
+});
 
 app.use(
     cors({
