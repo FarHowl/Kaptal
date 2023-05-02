@@ -1,9 +1,9 @@
 kind: Module
-name: hashicorp-vault
+name: vault
 type: container
-image: hashicorp/vault
+image: vault
 services:
-  - name: hashicorp-vault
+  - name: vault
     ports:
       - name: http
         containerPort: 3005

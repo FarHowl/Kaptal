@@ -21,4 +21,4 @@ services:
           exclude: [node_modules]
           mode: two-way
     dependencies:
-      - mongo-cache
+      - redis

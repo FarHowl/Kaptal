@@ -1,41 +1,12 @@
 kind: Module
 type: container
-name: mongo-db
-image: mongo
+name: redis
 services:
-  - name: mongo-db
-    ports:
-      - name: mongodb
-        containerPort: 27017
-    volumes:
-      - name: data
-        containerPath: /db-data
-    ingresses:
-     - path: /
-       port: mongodb
-       hostname: mongo-db.${var.base-hostname}
-exclude:
-  - Dockerfile
-  - index.js
-  - package.json
-
----
-
-kind: Module
-type: container
-name: mongo-cache
-services:
-  - name: mongo-cache
+  - name: redis
     ports:
       - name: http
         containerPort: 3006
-    dependencies:
-      - mongo-db
     ingresses:
      - path: /
        port: http
-       hostname: mongo-cache.${var.base-hostname}
-include:
-  - Dockerfile
-  - index.js
-  - package.json
+       hostname: redis.${var.base-hostname}
