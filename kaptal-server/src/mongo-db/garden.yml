@@ -1,12 +1,12 @@
 kind: Module
 type: container
-name: redis
+name: mongo-db
+image: mongo
 services:
-  - name: redis
+  - name: mongo-db
+    volumes:
+      - name: data
+        containerPath: /data/db
     ports:
-      - name: http
-        containerPort: 3006
-    ingresses:
-     - path: /
-       port: http
-       hostname: redis.${var.base-hostname}
+      - name: mongodb
+        containerPort: 27017

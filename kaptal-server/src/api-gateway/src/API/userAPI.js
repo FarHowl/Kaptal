@@ -12,14 +12,14 @@ router.post("/user/signIn", async (req, res) => {
     try {
         const hasAllFields = req.body?.email || req.body?.password;
         if (!hasAllFields) throw new Error("Enter all fields");
-        // const token = jwt.sign({ email: req.body.email }, process.env.PRIVATE_KEY_FOR_USERS, { expiresIn: "1h", algorithm: "RS256" });
+        const token = jwt.sign({ email: req.body.email }, process.env.GATEWAY_USERS_KEY, { expiresIn: "1h", algorithm: "RS256" });
 
         const response = await axios.post(
             "http://users-service:3002" + "/api/user/signIn",
             {
                 ...req.body,
-            }
-            // { headers: { Authorization: "Bearer " + token } }
+            },
+            { headers: { Authorization: "Bearer " + token } }
         );
         res.status(200).send(response.data);
     } catch (error) {
