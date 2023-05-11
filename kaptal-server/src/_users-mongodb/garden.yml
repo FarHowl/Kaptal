@@ -1,9 +1,10 @@
 kind: Module
 type: container
-name: mongo-db
+name: users-mongodb
 image: mongo
+description: MongoDB for users-service. Contains users data
 services:
-  - name: mongo-db
+  - name: users-mongodb
     volumes:
       - name: data
         containerPath: /data/db

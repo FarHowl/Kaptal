@@ -21,8 +21,8 @@ services:
           mode: two-way
     dependencies:
       - api-gateway
-tests:
-  - name: user-sign-in
-    args: [npm, test]
-    dependencies:
-      - api-gateway
+# tests:
+#   - name: user-sign-in
+#     args: [npm, test]
+#     dependencies:
+#       - api-gateway

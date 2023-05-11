@@ -24,7 +24,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/api", routes);
 
-app.listen(3001, async () => {
+app.listen(3000, async () => {
     console.log("API-Gateway alive");
 });
 

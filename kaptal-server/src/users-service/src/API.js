@@ -4,14 +4,14 @@ const { User } = require("./models");
 const jwt = require("jsonwebtoken");
 
 const router = express.Router();
-// const verifyJWT = require("../utils/verifyJWT");
 const { SHA3 } = require("sha3");
 const verifyJWT = require("./utils/verifyJWT");
 
 router.post("/user/signIn", async (req, res) => {
     try {
-        console.log("first");
-        verifyJWT(req);
+        const currentToken = req.headers.authorization.split(" ")[1];
+        
+        jwt.verify(currentToken, process.env.GATEWAY_USERS_KEY);
 
         const findUserOrValidEmail = await User.findOne({ email: req.body.email });
         if (!findUserOrValidEmail) throw new Error("User does not exist or email is invalid");
@@ -22,9 +22,9 @@ router.post("/user/signIn", async (req, res) => {
         const isPasswordValid = currentUser.password !== passwordHash;
         if (isPasswordValid) throw new Error("Password is invalid");
 
-        const token = jwt.sign({ _id: currentUser._id.toString(), role: currentUser.role }, jwtKey, { expiresIn: "10h" });
+        const frontendToken = jwt.sign({ _id: currentUser._id.toString(), role: currentUser.role }, process.env.FRONTEND_GATEWAY_KEY, { expiresIn: "100d" });
 
-        res.status(200).send({ username: currentUser.username, role: currentUser.role, orders: currentUser.orders, shoppingCart: currentUser.shoppingCart, authToken: token, userId: currentUser._id });
+        res.status(200).send({ username: currentUser.username, role: currentUser.role, orders: currentUser.orders, shoppingCart: currentUser.shoppingCart, authToken: frontendToken, userId: currentUser._id });
     } catch (error) {
         res.status(400).send({ error: error.message });
     }
@@ -55,14 +55,14 @@ router.post("/user/signUp", async (req, res) => {
 
 router.post("/admin/updateUser", async (req, res) => {
     try {
-        // await verifyJWT(req, ["admin"]);
+        verifyJWT(req);
 
         const hasUserId = req.body?.userId;
         if (!hasUserId) throw new Error("Please, enter userId");
 
         const currentUser = await User.findById(req.body.userId);
 
-        const update = {};
+        let update = {};
 
         const hasChangeRoleTo = req.body?.role !== undefined;
         if (hasChangeRoleTo && req.body.role === currentUser.role) throw new Error("You have entered the same role");
@@ -76,7 +76,6 @@ router.post("/admin/updateUser", async (req, res) => {
 
         const user = await User.findByIdAndUpdate(currentUser._id.toString(), update);
         res.sendStatus(200);
-        console.log(user);
     } catch (error) {
         res.status(400).send({ error: error.message });
     }
@@ -84,9 +83,9 @@ router.post("/admin/updateUser", async (req, res) => {
 
 router.get("/admin/getAllUsers", async (req, res) => {
     try {
-        // await verifyJWT(req, ["admin", "moderator"]);
+        verifyJWT(req);
 
-        let users = await User.find({}, { password: 0 });
+        const users = await User.find({}, { password: 0 });
         res.status(200).send(users);
     } catch (error) {
         res.status(500).send({ error: "Something went wrong" });

@@ -1,25 +1,28 @@
 const express = require("express");
 const router = express.Router();
 
-// const verifyJWT = require("../utils/verifyJWT");
+const verifyJWT = require("./utils/verifyJWT");
+const jwt = require("jsonwebtoken");
 
 const { SHA3 } = require("sha3");
 
 const fs = require("fs");
-const {Book} = require("./models");
+const { Book } = require("./models");
 
-router.get("/admin/getAllBooks", async (res) => {
+router.get("/admin/getAllBooks", async (req, res) => {
     try {
+        verifyJWT(req);
+
         const books = await Book.find({});
         res.status(200).send(books);
     } catch (error) {
-        res.status(500).send({ error: "Something went wrong" });
+        res.status(500).send({ error: error.message });
     }
 });
 
 router.post("/admin/addNewBook", async (req, res) => {
     try {
-        // await verifyJWT(req, ["admin"]);
+        verifyJWT(req);
 
         const hasAllFields =
             req.body?.name ||
@@ -42,9 +45,6 @@ router.post("/admin/addNewBook", async (req, res) => {
             req.body?.ratingCount ||
             req.body?.language;
         if (!hasAllFields) throw new Error("Enter all fields");
-
-        const doesBookExist = (await Book.findOne({ ISBN: req.body.ISBN })) !== undefined;
-        if (!doesBookExist) throw new Error("This book already exists");
 
         const imgOriginalName = req.files.image.originalFilename;
         let imgParsedName;
@@ -94,12 +94,12 @@ router.post("/admin/addNewBook", async (req, res) => {
 
 router.post("/admin/updateBook", async (req, res) => {
     try {
-        // await verifyJWT(req, ["admin"]);
+        verifyJWT(req);
 
         const hasBookId = req.body?.bookId;
         if (!hasBookId) throw new Error("Please, enter userId");
 
-        const findBookById = await Book.findById(req.body.bookId);
+        const book = await Book.findById(req.body.bookId);
 
         const update = {};
 
@@ -184,7 +184,7 @@ router.post("/admin/updateBook", async (req, res) => {
             update.image = stringHash + "." + imgType;
         }
 
-        await Book.findByIdAndUpdate(findBookById._id.toString(), update);
+        await Book.findByIdAndUpdate(book._id.toString(), update);
         res.sendStatus(200);
     } catch (error) {
         res.status(400).send({ error: error.message });
@@ -193,7 +193,7 @@ router.post("/admin/updateBook", async (req, res) => {
 
 router.post("/admin/deleteBook", async (req, res) => {
     try {
-        // await verifyJWT(req, ["admin"]);
+        verifyJWT(req);
 
         const hasBookId = req.body?.bookId;
         if (!hasBookId) throw new Error();
@@ -213,6 +213,8 @@ router.post("/admin/deleteBook", async (req, res) => {
 
 router.get("/book/getBookImage", async (req, res) => {
     try {
+        verifyJWT(req);
+
         const parsedURL = url.parse(req.url, true);
         const imgName = parsedURL.query.imgName;
 

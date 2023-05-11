@@ -5,7 +5,7 @@ const routes = require("./src/API");
 const app = express();
 
 mongoose.set("strictQuery", false);
-mongoose.connect("mongodb://mongo-db:27017");
+mongoose.connect("mongodb://books-mongodb:27017/BooksDB");
 
 mongoose.connection.on("error", (error) => {
     console.log(error);
@@ -26,6 +26,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/api", routes);
 
-app.listen(3003, () => {
+app.listen(3000, () => {
     console.log("Books alive");
 });

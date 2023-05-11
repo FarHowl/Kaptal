@@ -5,7 +5,7 @@ services:
   - name: api-gateway
     ports:
       - name: http
-        containerPort: 3001
+        containerPort: 3000
     ingresses:
      - path: /
        port: http
@@ -22,4 +22,3 @@ services:
     dependencies:
       - books-service
       - users-service
-      # - vault

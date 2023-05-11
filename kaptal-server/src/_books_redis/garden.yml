@@ -1,0 +1,12 @@
+kind: Module
+type: container
+name: books-redis
+image: redis
+description: Redis service to cache books DB requests
+services:
+  - name: books-redis
+    ports:
+      - name: http
+        containerPort: 3000
+    dependencies:
+      - books-mongodb

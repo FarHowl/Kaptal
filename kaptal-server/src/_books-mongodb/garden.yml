@@ -1,0 +1,13 @@
+kind: Module
+type: container
+name: books-mongodb
+image: mongo
+description: MongoDB for books-service. Contains books data
+services:
+  - name: books-mongodb
+    volumes:
+      - name: data
+        containerPath: /data/db
+    ports:
+      - name: mongodb
+        containerPort: 27017
