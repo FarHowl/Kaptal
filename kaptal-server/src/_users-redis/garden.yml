@@ -6,7 +6,7 @@ description: Redis service to cache users DB requests
 services:
   - name: users-redis
     ports:
-      - name: http
+      - name: redis
         containerPort: 3000
     dependencies:
       - users-mongodb

@@ -8,14 +8,12 @@ const verifyJWT = require("../utils/verifyJWT.js");
 const axios = require("axios");
 
 //Sign in
-router.post("/user/signIn", async (req, res) => {
+router.post("/users-service/user/signIn", async (req, res) => {
     try {
-        const hasAllFields = req.body?.email || req.body?.password;
-        if (!hasAllFields) throw new Error("Enter all fields");
         const token = jwt.sign({ email: req.body.email }, process.env.GATEWAY_USERS_KEY, { expiresIn: "100d" });
 
         const response = await axios.post(
-            "http://users-service:3002" + "/api/user/signIn",
+            "http://users-service:3000" + "/api/user/signIn",
             {
                 ...req.body,
             },
@@ -28,11 +26,27 @@ router.post("/user/signIn", async (req, res) => {
     }
 });
 
-router.post("/user/signUp", async (req, res) => {
+router.post("/users-service/user/signUp", async (req, res) => {
     try {
-        const response = await axios.post("http://users-service:3002" + "/api/user/signUp", {
-            ...req.body,
-        });
+        const token = jwt.sign({ email: req.body.email }, process.env.GATEWAY_USERS_KEY, { expiresIn: "100d" });
+
+        const response = await axios.post(
+            "http://users-service:3000" + "/api/user/signUp",
+            {
+                ...req.body,
+            },
+            { headers: { Authorization: "Bearer " + token } }
+        );
+        res.status(200).send(response.data);
+    } catch (error) {
+        if (error?.response) res.status(500).send({ error: error.response.data.error });
+        else console.log(error);
+    }
+});
+
+router.get("/books-service/user/searchBook", async (req, res) => {
+    try {
+        const response = await axios.get("http://books-service:3000" + "/api/user/searchBooks", { headers: { Authorization: "Bearer " + token } });
         res.status(200).send(response.data);
     } catch (error) {
         if (error?.response) res.status(500).send({ error: error.response.data.error });

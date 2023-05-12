@@ -1,18 +1,9 @@
 const express = require("express");
 const cors = require("cors");
-const os = require("os");
 const app = express();
-const formData = require("express-form-data");
-const axios = require("axios");
 
 const routes = require("./src/API/adminAPI.js");
 
-app.use(
-    formData.parse({
-        uploadDir: os.tmpdir(),
-        autoClean: true,
-    })
-);
 app.use(
     cors({
         origin: "*",

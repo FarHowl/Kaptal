@@ -2,19 +2,23 @@ const express = require("express");
 const router = express.Router();
 
 const verifyJWT = require("./utils/verifyJWT");
-const jwt = require("jsonwebtoken");
 
-const { SHA3 } = require("sha3");
-
-const fs = require("fs");
 const { Book } = require("./models");
 
 router.get("/admin/getAllBooks", async (req, res) => {
     try {
         verifyJWT(req);
 
-        const books = await Book.find({});
-        res.status(200).send(books);
+        const totalAmountOfBooks = await Book.countDocuments();
+        const totalPages = Math.ceil(totalAmountOfBooks / 1);
+        const currentPage = parseInt(req.query.page);
+        console.log(req.query.page);
+        if (currentPage > totalPages) throw new Error("Undefined page");
+
+        const amountOfBooksToSkip = (currentPage - 1) * 1;
+        const foundBooks = await Book.find().skip(amountOfBooksToSkip).limit(1);
+
+        res.status(200).send({ books: foundBooks, totalPages });
     } catch (error) {
         res.status(500).send({ error: error.message });
     }
@@ -39,26 +43,29 @@ router.post("/admin/addNewBook", async (req, res) => {
             req.body?.circulation ||
             req.body?.annotation ||
             req.body?.price ||
-            req.files?.image ||
+            req.body?.image ||
             req.body?.weight ||
             req.body?.series ||
             req.body?.ratingCount ||
             req.body?.language;
         if (!hasAllFields) throw new Error("Enter all fields");
 
-        const imgOriginalName = req.files.image.originalFilename;
-        let imgParsedName;
-        let imgType;
+        const urlRegex = /^(ftp|http|https):\/\/[^ "]+$/;
+        if (!urlRegex.test(req.body.image)) throw new Error("Invalid image URL");
 
-        if (imgOriginalName.split(".").length === 2 && (imgOriginalName.split(".")[1] === "jpg" || imgOriginalName.split(".")[1] === "jpeg")) {
-            imgParsedName = imgOriginalName.split(".")[0];
-            imgType = imgOriginalName.split(".")[1];
-        } else throw new Error();
+        // const imgOriginalName = req.files.image.originalFilename;
+        // let imgParsedName;
+        // let imgType;
 
-        const hash = new SHA3(512);
-        const imgHash = hash.update(imgParsedName + Date.now()).digest("hex");
+        // if (imgOriginalName.split(".").length === 2 && (imgOriginalName.split(".")[1] === "jpg" || imgOriginalName.split(".")[1] === "jpeg")) {
+        //     imgParsedName = imgOriginalName.split(".")[0];
+        //     imgType = imgOriginalName.split(".")[1];
+        // } else throw new Error();
 
-        const imgDestPath = "../src/images/booksImages/" + stringHash + "." + imgType;
+        // const hash = new SHA3(512);
+        // const imgHash = hash.update(imgParsedName + Date.now()).digest("hex");
+
+        // const imgDestPath = "../src/images/booksImages/" + stringHash + "." + imgType;
 
         const book = new Book({
             name: req.body.name,
@@ -76,7 +83,7 @@ router.post("/admin/addNewBook", async (req, res) => {
             annotation: req.body.annotation,
             discount: req.body.discount,
             price: req.body.price,
-            image: imgHash + "." + imgType,
+            image: req.body.image,
             weight: req.body.weight,
             series: req.body.series,
             ratingCount: req.body.ratingCount,
@@ -84,7 +91,7 @@ router.post("/admin/addNewBook", async (req, res) => {
         });
 
         await book.save();
-        fs.copyFileSync(req.files.image.path, imgDestPath);
+        // fs.copyFileSync(req.files.image.path, imgDestPath);
         res.sendStatus(200);
     } catch (error) {
         res.status(500).send({ error: error.message });
@@ -157,34 +164,38 @@ router.post("/admin/updateBook", async (req, res) => {
         const hasChangeRatingCountTo = req.body?.ratingCount !== undefined;
         if (hasChangeRatingCountTo) update.ratingCount = req.body.ratingCount;
 
-        const hasChangeImageTo = req.files?.image !== undefined;
-        if (hasChangeImageTo) {
-            const book = await Book.findById(req.body.bookId);
-            fs.unlink("../src/images/booksImages/" + book.image, (err) => {
-                if (err) throw new Error();
-            });
+        const hasChangeImageTo = req.body?.image !== undefined;
+        if (hasChangeImageTo) update.image = req.body.image;
 
-            const imgOriginalName = req.files.image.originalFilename;
-            let imgParsedName;
-            let imgType;
+        // const hasChangeImageTo = req.files?.image !== undefined;
+        // if (hasChangeImageTo) {
+        //     const book = await Book.findById(req.body.bookId);
+        //     fs.unlink("../src/images/booksImages/" + book.image, (err) => {
+        //         if (err) throw new Error();
+        //     });
 
-            if (imgOriginalName.split(".").length === 2 && (imgOriginalName.split(".")[1] === "jpg" || imgOriginalName.split(".")[1] === "jpeg")) {
-                imgParsedName = imgOriginalName.split(".")[0];
-                imgType = imgOriginalName.split(".")[1];
-            } else throw new Error();
+        //     const imgOriginalName = req.files.image.originalFilename;
+        //     let imgParsedName;
+        //     let imgType;
 
-            const imgHash = new SHA3(512);
+        //     if (imgOriginalName.split(".").length === 2 && (imgOriginalName.split(".")[1] === "jpg" || imgOriginalName.split(".")[1] === "jpeg")) {
+        //         imgParsedName = imgOriginalName.split(".")[0];
+        //         imgType = imgOriginalName.split(".")[1];
+        //     } else throw new Error();
 
-            imgHash.update(imgParsedName + Date.now());
-            const stringHash = imgHash.digest("hex");
+        //     const imgHash = new SHA3(512);
 
-            const imgDestPath = "../src/images/booksImages/" + stringHash + "." + imgType;
-            fs.copyFileSync(req.files.image.path, imgDestPath);
+        //     imgHash.update(imgParsedName + Date.now());
+        //     const stringHash = imgHash.digest("hex");
 
-            update.image = stringHash + "." + imgType;
-        }
+        //     const imgDestPath = "../src/images/booksImages/" + stringHash + "." + imgType;
+        //     fs.copyFileSync(req.files.image.path, imgDestPath);
+
+        //     update.image = stringHash + "." + imgType;
+        // }
 
         await Book.findByIdAndUpdate(book._id.toString(), update);
+
         res.sendStatus(200);
     } catch (error) {
         res.status(400).send({ error: error.message });
@@ -196,12 +207,12 @@ router.post("/admin/deleteBook", async (req, res) => {
         verifyJWT(req);
 
         const hasBookId = req.body?.bookId;
-        if (!hasBookId) throw new Error();
+        if (!hasBookId) throw new Error("Please, enter book id");
 
         const book = await Book.findById(req.body.bookId);
-        fs.unlink("../src/images/booksImages/" + book.image, (err) => {
-            if (err) throw new Error();
-        });
+        // fs.unlink("../src/images/booksImages/" + book.image, (err) => {
+        //     if (err) throw new Error();
+        // });
 
         await Book.findByIdAndDelete(req.body.bookId);
 
@@ -211,19 +222,61 @@ router.post("/admin/deleteBook", async (req, res) => {
     }
 });
 
-router.get("/book/getBookImage", async (req, res) => {
+router.get("/user/searchBook", async (req, res) => {
     try {
         verifyJWT(req);
 
-        const parsedURL = url.parse(req.url, true);
-        const imgName = parsedURL.query.imgName;
+        const search = req.query.search;
+        const regex = RegExp(search, "i");
 
-        res.set({ "Content-Type": "image/png" });
-        res.sendFile("C:/Users/dima3/OneDrive/Документы/GitHub/KaptalServer/src/images/booksImages/" + imgName);
+        const totalAmountOfBooks = await Book.countDocuments({
+            $or: [
+                {
+                    name: regex,
+                },
+                {
+                    author: regex,
+                },
+            ],
+        });
+        const totalPages = Math.ceil(totalAmountOfBooks / 46);
+        const currentPage = parseInt(req.query.page);
+        if (currentPage > totalPages) throw new Error("Undefined page");
+
+        const amountOfBooksToSkip = (currentPage - 1) * 46;
+
+        const foundBooks = await Book.find({
+            $or: [
+                {
+                    name: regex,
+                },
+                {
+                    author: regex,
+                },
+            ],
+        })
+            .skip(amountOfBooksToSkip)
+            .limit(46);
+
+        res.status(200).send({ books: foundBooks, totalPages });
     } catch (error) {
-        console.log(error);
-        res.send(500, { error: error.message });
+        res.status(500).send({ error: error.message });
     }
 });
+
+// router.get("/book/getBookImage", async (req, res) => {
+//     try {
+//         verifyJWT(req);
+
+//         const parsedURL = url.parse(req.url, true);
+//         const imgName = parsedURL.query.imgName;
+
+//         res.set({ "Content-Type": "image/png" });
+//         res.sendFile("C:/Users/dima3/OneDrive/Документы/GitHub/KaptalServer/src/images/booksImages/" + imgName);
+//     } catch (error) {
+//         console.log(error);
+//         res.send(500, { error: error.message });
+//     }
+// });
 
 module.exports = router;

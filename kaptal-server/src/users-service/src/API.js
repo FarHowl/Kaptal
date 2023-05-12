@@ -1,16 +1,16 @@
 const express = require("express");
+const router = express.Router();
+
+const jwt = require("jsonwebtoken");
+const { SHA3 } = require("sha3");
 
 const { User } = require("./models");
-const jwt = require("jsonwebtoken");
-
-const router = express.Router();
-const { SHA3 } = require("sha3");
 const verifyJWT = require("./utils/verifyJWT");
 
 router.post("/user/signIn", async (req, res) => {
     try {
         const currentToken = req.headers.authorization.split(" ")[1];
-        
+
         jwt.verify(currentToken, process.env.GATEWAY_USERS_KEY);
 
         const findUserOrValidEmail = await User.findOne({ email: req.body.email });
@@ -24,7 +24,14 @@ router.post("/user/signIn", async (req, res) => {
 
         const frontendToken = jwt.sign({ _id: currentUser._id.toString(), role: currentUser.role }, process.env.FRONTEND_GATEWAY_KEY, { expiresIn: "100d" });
 
-        res.status(200).send({ username: currentUser.username, role: currentUser.role, orders: currentUser.orders, shoppingCart: currentUser.shoppingCart, authToken: frontendToken, userId: currentUser._id });
+        res.status(200).send({
+            username: currentUser.username,
+            role: currentUser.role,
+            orders: currentUser.orders,
+            shoppingCart: currentUser.shoppingCart,
+            authToken: frontendToken,
+            userId: currentUser._id,
+        });
     } catch (error) {
         res.status(400).send({ error: error.message });
     }
@@ -32,6 +39,10 @@ router.post("/user/signIn", async (req, res) => {
 
 router.post("/user/signUp", async (req, res) => {
     try {
+        const currentToken = req.headers.authorization.split(" ")[1];
+
+        jwt.verify(currentToken, process.env.GATEWAY_USERS_KEY);
+
         const hasAllFields = req.body?.username || req.body?.email || req.body?.password;
         if (!hasAllFields) throw new Error("Please, enter all fields");
 
