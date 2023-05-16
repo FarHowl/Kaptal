@@ -157,7 +157,11 @@ function AllUsersTab({ setTabOption }) {
 
     async function getAllUsers() {
         try {
-            const res = await axios.get(getAllUsers_EP, authToken_header());
+            const query = "?page=1";
+
+            console.log(getAllUsers_EP + query);
+
+            const res = await axios.get(getAllUsers_EP + query, authToken_header());
 
             let b = [];
             for (const i of res.data) {

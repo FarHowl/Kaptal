@@ -116,9 +116,42 @@ const bookSchema = new mongoose.Schema({
         required: true,
         type: String,
     },
+    category: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Category",
+        required: true,
+        default: null,
+    },
+    collections: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Collection",
+        },
+    ],
 });
+
+const categorySchema = new mongoose.Schema({
+    name: { type: String, required: true, unique: true },
+    parent: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Category",
+    },
+});
+
+const collectionSchema = new mongoose.Schema({
+    name: {
+        required: true,
+        trim: true,
+        type: String,
+    },
+});
+
+const Category = mongoose.model("Category", categorySchema);
+const Collection = mongoose.model("Collection", collectionSchema);
 const Book = mongoose.model("Book", bookSchema);
 
 module.exports = {
     Book,
+    Collection,
+    Category,
 };

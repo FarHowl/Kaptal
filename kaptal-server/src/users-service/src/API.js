@@ -96,10 +96,35 @@ router.get("/admin/getAllUsers", async (req, res) => {
     try {
         verifyJWT(req);
 
-        const users = await User.find({}, { password: 0 });
+        const totalAmountOfUsers = await User.countDocuments();
+        const totalPages = Math.ceil(totalAmountOfUsers / 1);
+        const currentPage = parseInt(req.query.page);
+        if (currentPage > totalPages) throw new Error("Undefined page");
+
+        const amountOfUsersToSkip = (currentPage - 1) * 1;
+        const users = await User.find({}, { password: 0 }).skip(amountOfUsersToSkip).limit(1);
+
         res.status(200).send(users);
     } catch (error) {
-        res.status(500).send({ error: "Something went wrong" });
+        res.status(500).send({ error: error.message });
+    }
+});
+
+router.get("/admin/getAllBooks", async (req, res) => {
+    try {
+        verifyJWT(req);
+
+        const totalAmountOfBooks = await Book.countDocuments();
+        const totalPages = Math.ceil(totalAmountOfBooks / 1);
+        const currentPage = parseInt(req.query.page);
+        if (currentPage > totalPages) throw new Error("Undefined page");
+
+        const amountOfBooksToSkip = (currentPage - 1) * 1;
+        const foundBooks = await Book.find().skip(amountOfBooksToSkip).limit(1);
+
+        res.status(200).send({ books: foundBooks, totalPages });
+    } catch (error) {
+        res.status(500).send({ error: error.message });
     }
 });
 

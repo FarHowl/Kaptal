@@ -12,7 +12,6 @@ router.get("/admin/getAllBooks", async (req, res) => {
         const totalAmountOfBooks = await Book.countDocuments();
         const totalPages = Math.ceil(totalAmountOfBooks / 1);
         const currentPage = parseInt(req.query.page);
-        console.log(req.query.page);
         if (currentPage > totalPages) throw new Error("Undefined page");
 
         const amountOfBooksToSkip = (currentPage - 1) * 1;
@@ -226,39 +225,78 @@ router.get("/user/searchBook", async (req, res) => {
     try {
         verifyJWT(req);
 
-        const search = req.query.search;
-        const regex = RegExp(search, "i");
+        const searchPhrase = decodeURIComponent(req.query?.search);
+        const bookAvailability = decodeURIComponent(req.query?.available);
+        const sortType = decodeURIComponent(req.query?.sort);
+        const sortOrder = parseInt(decodeURIComponent(req.query?.order));
 
-        const totalAmountOfBooks = await Book.countDocuments({
-            $or: [
-                {
-                    name: regex,
-                },
-                {
-                    author: regex,
-                },
-            ],
-        });
-        const totalPages = Math.ceil(totalAmountOfBooks / 46);
-        const currentPage = parseInt(req.query.page);
-        if (currentPage > totalPages) throw new Error("Undefined page");
+        let sort = "";
+        if (sortType === "byNew") {
+            if (sortOrder === 1) sort = { year: 1 };
+            else if (sortOrder === -1) sort = { year: -1 };
+            else throw new Error("Invalid sort order");
+        } else if (sortType === "byPrice") {
+            if (sortOrder === 1) sort = { price: 1 };
+            else if (sortOrder === -1) sort = { price: -1 };
+            else throw new Error("Invalid sort order");
+        } else if (sortType === "byRating") {
+            if (sortOrder === 1) sort = { rating: 1 };
+            else if (sortOrder === -1) sort = { rating: -1 };
+            else throw new Error("Invalid sort order");
+        }
 
+        const currentPage = parseInt(req.query.page) ?? 1;
         const amountOfBooksToSkip = (currentPage - 1) * 46;
+
+        const regexPhrase = searchPhrase !== "undefined" ? RegExp(`^${searchPhrase}`, "i") : "";
+        const bookAvailabilityCondition = bookAvailability === "true" ? { isAvailable: true } : {};
 
         const foundBooks = await Book.find({
             $or: [
                 {
-                    name: regex,
+                    name: { $regex: regexPhrase },
                 },
                 {
-                    author: regex,
+                    author: { $regex: regexPhrase },
+                },
+                {
+                    annotation: { $regex: regexPhrase },
+                },
+                {
+                    publisher: { $regex: regexPhrase },
+                },
+                {
+                    genres: { $regex: regexPhrase },
+                },
+                {
+                    series: { $regex: regexPhrase },
                 },
             ],
+            ...bookAvailabilityCondition,
         })
             .skip(amountOfBooksToSkip)
-            .limit(46);
+            .limit(46)
+            .sort(sort);
+
+        const totalPages = Math.ceil(foundBooks.length / 46);
+        if (currentPage > totalPages) throw new Error("Undefined page");
 
         res.status(200).send({ books: foundBooks, totalPages });
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+        console.log(error);
+    }
+});
+
+router.get("/user/getBookData", async (req, res) => {
+    try {
+        verifyJWT(req);
+
+        const bookId = req.query?.bookId;
+        if (!bookId) throw new Error("Please, enter book id");
+
+        const book = await Book.findById(bookId);
+        res.status(200).send({ book });
     } catch (error) {
         res.status(500).send({ error: error.message });
     }

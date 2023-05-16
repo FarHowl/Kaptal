@@ -5,7 +5,7 @@ export const apiAddress = "http://api.local.app.garden";
  * @param {string} email
  * @param {string} password
  */
-export const signIn_EP = apiAddress + "/api/user/signIn";
+export const signIn_EP = apiAddress + "/api/users-service/user/signIn";
 
 export const getBookImage_EP = apiAddress + "/api/book/getBookImage";
 
@@ -17,7 +17,9 @@ export const getAvailableStaffForChat_EP = apiAddress + "/api/user/getAvailableS
  * @param {string} password
  * @returns {string}
  */
-export const signUp_EP = apiAddress + "/api/user/signUp";
+export const signUp_EP = apiAddress + "/api/users-service/user/signUp";
+
+export const getBookData_EP = apiAddress + "/api/users-service/user/getBookData";
 
 //
 
@@ -26,7 +28,7 @@ export const getAllBooks_EP = apiAddress + "/api/admin/getAllBooks";
 
 export const addNewBook_EP = apiAddress + "/api/admin/addNewBook";
 
-export const getAllUsers_EP = apiAddress + "/api/admin/getAllUsers";
+export const getAllUsers_EP = apiAddress + "/api/users-service/admin/getAllUsers";
 
 export const updateBook_EP = apiAddress + "/api/admin/updateBook";
 

@@ -34,7 +34,9 @@ router.get("/users-service/admin/getAllUsers", async (req, res) => {
 
         const newToken = jwt.sign({ parentToken }, process.env.GATEWAY_USERS_KEY, { expiresIn: "100d" });
 
-        const response = await axios.get("http://users-service:3000" + "/api/admin/getAllUsers", { headers: { Authorization: "Bearer " + newToken } });
+        const query = "?" + req.originalUrl.split("?")[1];
+
+        const response = await axios.get("http://users-service:3000" + "/api/admin/getAllUsers" + query, { headers: { Authorization: "Bearer " + newToken } });
         res.status(200).send(response.data);
     } catch (error) {
         if (error?.response) res.status(500).send({ error: error.response.data.error });

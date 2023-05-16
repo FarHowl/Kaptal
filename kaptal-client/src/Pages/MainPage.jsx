@@ -34,7 +34,7 @@ export default function MainPage() {
     // }, []);
 
     async function getResponse() {
-        const response = await axios.post("http://api.local.app.garden/user/signIn", {
+        const response = await axios.post("http://api.local.app.garden/api/users-service/user/signIn", {
             email: "kartashov104@gmail.com",
             password: "3498569",
         });
@@ -78,7 +78,7 @@ export default function MainPage() {
                         </div>
                     </div>
                 </div>
-                {getUserData()?.role === "user" ? (
+                {/* {getUserData()?.role === "user" ? (
                     <div className="w-[400px] flex flex-col items-center shadow-lg rounded-lg py-4">
                         <div className="w-full flex justify-center h-[300px] overflow-y-auto py-2 px-2"></div>
                         <div className="w-full px-3 flex justify-center gap-3">
@@ -88,7 +88,7 @@ export default function MainPage() {
                     </div>
                 ) : (
                     <></>
-                )}
+                )} */}
             </div>
         </>
     );
