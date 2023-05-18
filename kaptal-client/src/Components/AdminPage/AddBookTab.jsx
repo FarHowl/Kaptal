@@ -1,8 +1,7 @@
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { addNewBook_EP } from "../../Utils/API";
 import { getUserData } from "../../Utils/LocalStorageUtils";
-
 
 export default function AddBookTab({ setIsTabLoading }) {
     const [bookInfo, setBookInfo] = useState({});
@@ -48,188 +47,37 @@ export default function AddBookTab({ setIsTabLoading }) {
         }
     }
 
+    useEffect(() => {
+        console.log(bookInfo);
+    }, [bookInfo]);
+
     return (
         <div className="absolute top-[90px] left-[254px] pb-6 pt-8 px-10 right-0 bottom-0 flex flex-col items-center overflow-y-auto">
             <div className="flex gap-6 justify-center items-center w-full flex-wrap">
                 <div className="flex flex-col gap-2 max-w-[250px] w-full">
-                    <div className="relative flex flex-col w-full items-center">
-                        <input
-                            onChange={(e) => {
-                                setBookInfo({ ...bookInfo, name: e.target.value });
-                            }}
-                            className="w-full text-left pt-5 pb-1 font-medium text-medium px-3 border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300"
-                            type="text"
-                        />
-                        <span className="absolute text-sm text-gray-500 left-3 top-1">Название</span>
-                    </div>
-                    <div className="relative flex flex-col w-full items-center">
-                        <input
-                            onChange={(e) => {
-                                setBookInfo({ ...bookInfo, author: e.target.value });
-                            }}
-                            className="w-full text-left pt-5 pb-1 font-medium text-medium px-3 border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300"
-                            type="text"
-                        />
-                        <span className="absolute text-sm text-gray-500 left-3 top-1">Автор</span>
-                    </div>
-                    <div className="relative flex flex-col w-full items-center">
-                        <input
-                            onChange={(e) => {
-                                setBookInfo({ ...bookInfo, publisher: e.target.value });
-                            }}
-                            className="w-full text-left pt-5 pb-1 font-medium text-medium px-3 border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300"
-                            type="text"
-                        />
-                        <span className="absolute text-sm text-gray-500 left-3 top-1">Издатель</span>
-                    </div>
-                    <div className="relative flex flex-col w-full items-center">
-                        <input
-                            onChange={(e) => {
-                                setBookInfo({ ...bookInfo, year: e.target.value });
-                            }}
-                            className="w-full text-left pt-5 pb-1 font-medium text-medium px-3 border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300"
-                            type="text"
-                        />
-                        <span className="absolute text-sm text-gray-500 left-3 top-1">Год</span>
-                    </div>
-                    <div className="relative flex flex-col w-full items-center">
-                        <input
-                            onChange={(e) => {
-                                setBookInfo({ ...bookInfo, pagesCount: e.target.value });
-                            }}
-                            className="w-full text-left pt-5 pb-1 font-medium text-medium px-3 border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300"
-                            type="text"
-                        />
-                        <span className="absolute text-sm text-gray-500 left-3 top-1">Количество страниц</span>
-                    </div>
+                    <InputTile title={"Название"} bookField={"name"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
+                    <InputTile title={"Автор"} bookField={"author"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
+                    <InputTile title={"Издатель"} bookField={"publisher"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
+                    <InputTile title={"Год"} bookField={"year"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
+                    <InputTile title={"Количество страниц"} bookField={"pagesCount"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
                 </div>
                 <div className="flex flex-col gap-2 max-w-[250px] w-full">
-                    <div className="relative flex flex-col w-full items-center">
-                        <input
-                            onChange={(e) => {
-                                setBookInfo({ ...bookInfo, ISBN: e.target.value });
-                            }}
-                            className="w-full text-left pt-5 pb-1 font-medium text-medium px-3 border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300"
-                            type="text"
-                        />
-                        <span className="absolute text-sm text-gray-500 left-3 top-1">ISBN</span>
-                    </div>
-                    <div className="relative flex flex-col w-full items-center">
-                        <input
-                            onChange={(e) => {
-                                setBookInfo({ ...bookInfo, size: e.target.value });
-                            }}
-                            className="w-full text-left pt-5 pb-1 font-medium text-medium px-3 border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300"
-                            type="text"
-                        />
-                        <span className="absolute text-sm text-gray-500 left-3 top-1">Размер</span>
-                    </div>
-                    <div className="relative flex flex-col w-full items-center">
-                        <input
-                            onChange={(e) => {
-                                setBookInfo({ ...bookInfo, weight: e.target.value });
-                            }}
-                            className="w-full text-left pt-5 pb-1 font-medium text-medium px-3 border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300"
-                            type="text"
-                        />
-                        <span className="absolute text-sm text-gray-500 left-3 top-1">Вес</span>
-                    </div>
-                    <div className="relative flex flex-col w-full items-center">
-                        <input
-                            onChange={(e) => {
-                                setBookInfo({ ...bookInfo, price: e.target.value });
-                            }}
-                            className="w-full text-left pt-5 pb-1 font-medium text-medium px-3 border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300"
-                            type="text"
-                        />
-                        <span className="absolute text-sm text-gray-500 left-3 top-1">Цена</span>
-                    </div>
-                    <div className="relative flex flex-col w-full items-center">
-                        <input
-                            onChange={(e) => {
-                                setBookInfo({ ...bookInfo, circulation: e.target.value });
-                            }}
-                            className="w-full text-left pt-5 pb-1 font-medium text-medium px-3 border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300"
-                            type="text"
-                        />
-                        <span className="absolute text-sm text-gray-500 left-3 top-1">Тираж</span>
-                    </div>
+                    <InputTile title={"ISBN"} bookField={"ISBN"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
+                    <InputTile title={"Размер"} bookField={"size"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
+                    <InputTile title={"Вес"} bookField={"weight"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
+                    <InputTile title={"Цена"} bookField={"price"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
+                    <InputTile title={"Тираж"} bookField={"circulation"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
                 </div>
                 <div className="flex flex-col gap-2 max-w-[250px] w-full">
-                    <div className="relative flex flex-col w-full items-center">
-                        <input
-                            onChange={(e) => {
-                                setBookInfo({ ...bookInfo, series: e.target.value });
-                            }}
-                            className="w-full text-left pt-5 pb-1 font-medium text-medium px-3 border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300"
-                            type="text"
-                        />
-                        <span className="absolute text-sm text-gray-500 left-3 top-1">Серия</span>
-                    </div>
-                    <div className="relative flex flex-col w-full items-center">
-                        <input
-                            onChange={(e) => {
-                                setBookInfo({ ...bookInfo, isAvailable: e.target.value === "Нет в наличии" ? false : e.target.value === "Есть в наличии" ? true : "" });
-                            }}
-                            className="w-full text-left pt-5 pb-1 font-medium text-medium px-3 border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300"
-                            type="text"
-                        />
-                        <span className="absolute text-sm text-gray-500 left-3 top-1">Наличие</span>
-                    </div>
-                    <div className="relative flex flex-col w-full items-center">
-                        <input
-                            onChange={(e) => {
-                                setBookInfo({ ...bookInfo, language: e.target.value });
-                            }}
-                            className="w-full text-left pt-5 pb-1 font-medium text-medium px-3 border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300"
-                            type="text"
-                        />
-                        <span className="absolute text-sm text-gray-500 left-3 top-1">Язык</span>
-                    </div>
-                    <div className="relative flex flex-col w-full items-center">
-                        <input
-                            onChange={(e) => {
-                                setBookInfo({ ...bookInfo, ageLimit: e.target.value });
-                            }}
-                            className="w-full text-left pt-5 pb-1 font-medium text-medium px-3 border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300"
-                            type="text"
-                        />
-                        <span className="absolute text-sm text-gray-500 left-3 top-1">Возрастной рейтинг</span>
-                    </div>
-                    <div className="relative flex flex-col w-full items-center">
-                        <input
-                            onChange={(e) => {
-                                setBookInfo({ ...bookInfo, genres: e.target.value });
-                            }}
-                            className="w-full text-left pt-5 pb-1 font-medium text-medium px-3 border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300"
-                            type="text"
-                        />
-                        <span className="absolute text-sm text-gray-500 left-3 top-1">Жанры</span>
-                    </div>
+                    <InputTile title={"Серия"} bookField={"series"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
+                    <InputTile title={"Наличие на складе"} bookField={"amount"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
+                    <InputTile title={"Язык"} bookField={"language"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
+                    <InputTile title={"Возрастной рейтинг"} bookField={"ageLimit"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
                 </div>
             </div>
             <div className="flex gap-6 justify-center items-center w-full mt-6">
                 <div className="flex flex-col gap-2 max-w-[250px] w-full">
-                    <div className="relative flex flex-col w-full items-center">
-                        <input
-                            onChange={(e) => {
-                                setBookInfo({ ...bookInfo, discount: e.target.value });
-                            }}
-                            className="w-full text-left pt-5 pb-1 font-medium text-medium px-3 border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300"
-                            type="text"
-                        />
-                        <span className="absolute text-sm text-gray-500 left-3 top-1">Скидка</span>
-                    </div>
-                    <div className="relative flex flex-col w-full items-center">
-                        <input
-                            onChange={(e) => {
-                                setBookInfo({ ...bookInfo, coverType: e.target.value });
-                            }}
-                            className="w-full text-left pt-5 pb-1 font-medium text-medium px-3 border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300"
-                            type="text"
-                        />
-                        <span className="absolute text-sm text-gray-500 left-3 top-1">Тип обложки</span>
-                    </div>
+                    <InputTile title={"Тип обложки"} type={"text"} bookField={"coverType"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
                 </div>
             </div>
             <div className="relative flex flex-col max-w-[400px] w-full items-center mt-2">
@@ -270,6 +118,34 @@ export default function AddBookTab({ setIsTabLoading }) {
             >
                 Добавить книгу
             </button>
+        </div>
+    );
+}
+
+function InputTile({ setBookInfo, bookInfo, bookField, type, title }) {
+    const [isFocused, setIsFocused] = useState(false);
+    const [isEmpty, setIsEmpty] = useState(true);
+
+    return (
+        <div className="relative flex flex-col w-full items-center">
+            <input
+                onFocus={() => {
+                    setIsFocused(true);
+                }}
+                onBlur={() => {
+                    setIsFocused(false);
+                }}
+                onChange={(e) => {
+                    setBookInfo({ ...bookInfo, [bookField]: e.target.value });
+                    if (e.target.value.length === 0) setIsEmpty(true);
+                    else setIsEmpty(false);
+                }}
+                className="w-full text-left pt-5 pb-1 font-medium text-medium px-3 border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300"
+                type="text"
+            />
+            <div className={"absolute left-3 h-full pointer-events-none animated-100 " + (isFocused || !isEmpty ? "top-[1px]" : "top-[25%]")}>
+                <span className={"text-gray-500 animated-100 origin-top-left " + (isFocused || !isEmpty ? "text-sm" : "text-lg")}>{title}</span>
+            </div>
         </div>
     );
 }

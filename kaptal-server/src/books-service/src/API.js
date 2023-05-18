@@ -20,6 +20,7 @@ router.get("/admin/getAllBooks", async (req, res) => {
         res.status(200).send({ books: foundBooks, totalPages });
     } catch (error) {
         res.status(500).send({ error: error.message });
+        console.log(error);
     }
 });
 
@@ -30,8 +31,6 @@ router.post("/admin/addNewBook", async (req, res) => {
         const hasAllFields =
             req.body?.name ||
             req.body?.author ||
-            req.body?.genres ||
-            req.body?.isAvailable ||
             req.body?.coverType ||
             req.body?.publisher ||
             req.body?.size ||
@@ -45,7 +44,7 @@ router.post("/admin/addNewBook", async (req, res) => {
             req.body?.image ||
             req.body?.weight ||
             req.body?.series ||
-            req.body?.ratingCount ||
+            req.body?.amount ||
             req.body?.language;
         if (!hasAllFields) throw new Error("Enter all fields");
 
@@ -69,8 +68,6 @@ router.post("/admin/addNewBook", async (req, res) => {
         const book = new Book({
             name: req.body.name,
             author: req.body.author,
-            genres: req.body.genres,
-            isAvailable: req.body.isAvailable,
             coverType: req.body.coverType,
             publisher: req.body.publisher,
             size: req.body.size,
@@ -80,12 +77,10 @@ router.post("/admin/addNewBook", async (req, res) => {
             year: req.body.year,
             circulation: req.body.circulation,
             annotation: req.body.annotation,
-            discount: req.body.discount,
             price: req.body.price,
             image: req.body.image,
             weight: req.body.weight,
             series: req.body.series,
-            ratingCount: req.body.ratingCount,
             language: req.body.language,
         });
 
@@ -197,7 +192,8 @@ router.post("/admin/updateBook", async (req, res) => {
 
         res.sendStatus(200);
     } catch (error) {
-        res.status(400).send({ error: error.message });
+        res.status(500).send({ error: error.message });
+        console.log(error);
     }
 });
 
@@ -217,7 +213,8 @@ router.post("/admin/deleteBook", async (req, res) => {
 
         res.sendStatus(200);
     } catch (error) {
-        res.status(400).send({ error: error.message });
+        res.status(500).send({ error: error.message });
+        console.log(error);
     }
 });
 
@@ -299,6 +296,18 @@ router.get("/user/getBookData", async (req, res) => {
         res.status(200).send({ book });
     } catch (error) {
         res.status(500).send({ error: error.message });
+        console.log(error);
+    }
+});
+
+router.get("/user/getAllCategories", async (req, res) => {
+    try {
+        const categories = await Category.find().populate("parent");
+
+        res.status(200).send({ categories });
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+        console.log(error);
     }
 });
 

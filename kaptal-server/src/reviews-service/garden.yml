@@ -1,8 +1,8 @@
 kind: Module
-name: books-service
+name: reviews-service
 type: container
 services:
-  - name: books-service
+  - name: reviews-service
     ports:
       - name: http
         containerPort: 3000
@@ -16,4 +16,4 @@ services:
           exclude: [node_modules]
           mode: two-way
     dependencies:
-      - books-redis
+      - reviews-redis

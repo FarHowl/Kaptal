@@ -23,13 +23,9 @@ export default function AdminPage() {
         }, 300);
     }, [tabOption]);
 
-    useEffect(() => {
-        console.log(tabOption);
-    }, [tabOption]);
-
     return (
         <div className="flex w-full">
-            <div className="flex flex-col w-[254px] top-[90px] bg-[#fafafa] bottom-0 absolute border-r-2">
+            <div className="flex flex-col w-[254px] top-[80px] bg-[#fafafa] bottom-0 absolute border-r-2">
                 <div className="flex flex-col w-full items-left mt-6 pl-6">
                     <span className="font-semibold">Книги</span>
                 </div>
@@ -99,7 +95,7 @@ export default function AdminPage() {
                     </button>
                 </div>
             </div>
-            {isTabLoading ? <LoadingComponent customStyle={"absolute right-0 left-[254px] bottom-0 top-[90px] bg-white z-10 flex justify-center items-center"} /> : <></>}
+            {isTabLoading ? <LoadingComponent customStyle={"absolute right-0 left-[254px] bottom-0 top-[80px] bg-white z-10 flex justify-center items-center"} /> : <></>}
             {tabOption === "AllBooks" ? (
                 <AllBooksTab setTabOption={setTabOption} />
             ) : tabOption === "AddBook" ? (
@@ -146,7 +142,7 @@ function AllBooksTab({ setTabOption }) {
     }, []);
 
     return (
-        <div className="absolute top-[90px] left-[254px] pb-6 pt-8 px-10 right-0 bottom-0 flex flex-col items-center overflow-y-auto">
+        <div className="absolute top-[80px] left-[254px] pb-6 pt-8 px-10 right-0 bottom-0 flex flex-col items-center overflow-y-auto">
             <div className="w-full flex justify-center">{booksView}</div>
         </div>
     );
@@ -179,7 +175,7 @@ function AllUsersTab({ setTabOption }) {
     }, []);
 
     return (
-        <div className="absolute top-[90px] left-[254px] pb-6 pt-8 px-10 right-0 bottom-0 flex flex-col items-center overflow-y-auto">
+        <div className="absolute top-[80px] left-[254px] pb-6 pt-8 px-10 right-0 bottom-0 flex flex-col items-center overflow-y-auto">
             <div className="w-full flex flex-wrap gap-6 px-6 justify-center">{allUsersView}</div>
         </div>
     );
@@ -260,7 +256,7 @@ function UserTab({ user }) {
     }, []);
 
     return (
-        <div className="absolute top-[90px] left-[254px] pb-6 pt-6 px-10 right-0 bottom-0 flex flex-col items-center overflow-y-auto">
+        <div className="absolute top-[80px] left-[254px] pb-6 pt-6 px-10 right-0 bottom-0 flex flex-col items-center overflow-y-auto">
             <div className="w-full flex px-2 pointer-events-none">
                 <span className="text-gray-500 text-base">
                     Все пользователи {">"} {user.username}
@@ -302,7 +298,7 @@ function UserTab({ user }) {
 
 function UserOrdersTab({ user }) {
     return (
-        <div className="absolute top-[90px] left-[254px] pb-6 pt-6 px-10 right-0 bottom-0 flex flex-col items-center overflow-y-auto">
+        <div className="absolute top-[80px] left-[254px] pb-6 pt-6 px-10 right-0 bottom-0 flex flex-col items-center overflow-y-auto">
             <div className="w-full flex px-2 pointer-events-none">
                 <span className="text-gray-500 text-base">
                     Все пользователи {">"} {user.username} {">"} Заказы
@@ -328,7 +324,7 @@ function OnlineChatsTab({ setTabOption }) {
     useEffect(() => {}, []);
 
     return (
-        <div className="absolute top-[90px] left-[254px] pb-6 pt-6 px-10 right-0 bottom-0 flex flex-col items-center overflow-y-auto">
+        <div className="absolute top-[80px] left-[254px] pb-6 pt-6 px-10 right-0 bottom-0 flex flex-col items-center overflow-y-auto">
             <div className="w-full flex flex-col gap-4 items-center">
                 <div className="flex border-[1px] rounded-md shadow-sm items-center justify-between p-4 w-full max-w-[500px]">
                     <span className="">Помогите разобраться..</span>
@@ -359,7 +355,7 @@ function OnlineChatsTab({ setTabOption }) {
 
 function ChatWindowTab() {
     return (
-        <div className="absolute top-[90px] left-[254px] pb-6 pt-6 px-10 right-0 bottom-0 flex flex-col items-center overflow-y-auto">
+        <div className="absolute top-[80px] left-[254px] pb-6 pt-6 px-10 right-0 bottom-0 flex flex-col items-center overflow-y-auto">
             <div className="w-full flex flex-col items-center shadow-lg rounded-lg py-4 border-[1px]">
                 <div className="w-full flex justify-center h-[300px] overflow-y-auto py-2 px-2"></div>
                 <div className="w-full px-3 flex justify-center gap-3">

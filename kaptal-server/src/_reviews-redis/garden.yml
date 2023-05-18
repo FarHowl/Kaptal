@@ -1,0 +1,12 @@
+kind: Module
+type: container
+name: reviews-redis
+image: redis
+description: Redis service to cache users DB requests
+services:
+  - name: reviews-redis
+    ports:
+      - name: redis
+        containerPort: 3000
+    dependencies:
+      - users-mongodb

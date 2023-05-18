@@ -11,15 +11,10 @@ const bookSchema = new mongoose.Schema({
         trim: true,
         type: String,
     },
-    genres: {
+    amount: {
         required: true,
         trim: true,
-        type: Array,
-    },
-    isAvailable: {
-        required: true,
-        trim: true,
-        type: Boolean,
+        type: Number,
     },
     coverType: {
         required: true,
@@ -82,20 +77,7 @@ const bookSchema = new mongoose.Schema({
         trim: true,
         type: String,
     },
-    reviews: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true,
-            default: "",
-        },
-    ],
     rating: {
-        required: true,
-        trim: true,
-        default: 0,
-        type: Number,
-    },
-    ratingCount: {
         required: true,
         trim: true,
         default: 0,
@@ -120,12 +102,12 @@ const bookSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Category",
         required: true,
-        default: null,
     },
     collections: [
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Collection",
+            required: true,
         },
     ],
 });

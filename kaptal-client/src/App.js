@@ -65,11 +65,11 @@ export default function App() {
 
     return (
         <div className="flex flex-col w-full items-center">
-            <div className="w-full flex gap-6 justify-between items-center h-[90px] rounded-md px-6 border-b-2">
+            <div className="w-full flex gap-6 justify-between items-center h-[80px] rounded-md px-6 border-b-2 fixed bg-white z-20">
                 <Link to={"/"} className="title-font text-5xl text-center w-[204px] flex flex-shrink-0 justify-center">
                     Каптал
                 </Link>
-                <button className="p-4 rounded-lg text-white text-xl font-semibold bg-indigo-600 bg-opacity-90 animated-100 hover:bg-indigo-700 hover:bg-opacity-95">Каталог</button>
+                <button className="px-4 py-3 rounded-xl text-white text-xl font-semibold bg-indigo-600 bg-opacity-90 animated-100 hover:bg-indigo-700 hover:bg-opacity-95">Каталог</button>
                 <div className="relative w-full h-full flex items-center gap-4">
                     <input
                         className="max-w-[60%] w-full h-[50%] pl-10 pr-16 border-2 border-indigo-400 border-opacity-80 rounded-full focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:ring-indigo-300"
@@ -118,6 +118,7 @@ export default function App() {
                     )}
                 </div>
             </div>
+            <div className="w-full h-[80px]"></div>
             {isRouteLoaded ? <></> : <LoadingComponent customStyle={"absolute inset-0 top-[90px] bg-white z-10 flex justify-center items-center"} />}
             <Suspense>
                 <Routes>
