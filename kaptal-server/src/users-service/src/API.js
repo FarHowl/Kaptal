@@ -110,22 +110,4 @@ router.get("/admin/getAllUsers", async (req, res) => {
     }
 });
 
-router.get("/admin/getAllBooks", async (req, res) => {
-    try {
-        verifyJWT(req);
-
-        const totalAmountOfBooks = await Book.countDocuments();
-        const totalPages = Math.ceil(totalAmountOfBooks / 1);
-        const currentPage = parseInt(req.query.page);
-        if (currentPage > totalPages) throw new Error("Undefined page");
-
-        const amountOfBooksToSkip = (currentPage - 1) * 1;
-        const foundBooks = await Book.find().skip(amountOfBooksToSkip).limit(1);
-
-        res.status(200).send({ books: foundBooks, totalPages });
-    } catch (error) {
-        res.status(500).send({ error: error.message });
-    }
-});
-
 module.exports = router;

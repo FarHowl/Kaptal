@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, Children } from "react";
 import { addNewBook_EP } from "../../Utils/API";
 import { getUserData } from "../../Utils/LocalStorageUtils";
 
@@ -77,7 +77,8 @@ export default function AddBookTab({ setIsTabLoading }) {
             </div>
             <div className="flex gap-6 justify-center items-center w-full mt-6">
                 <div className="flex flex-col gap-2 max-w-[250px] w-full">
-                    <InputTile title={"Тип обложки"} type={"text"} bookField={"coverType"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
+                    <InputTile title={"Тип обложки"} bookField={"coverType"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
+                    <CategoryInputTile title={"Категория"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
                 </div>
             </div>
             <div className="relative flex flex-col max-w-[400px] w-full items-center mt-2">
@@ -122,7 +123,7 @@ export default function AddBookTab({ setIsTabLoading }) {
     );
 }
 
-function InputTile({ setBookInfo, bookInfo, bookField, type, title }) {
+function InputTile({ setBookInfo, bookInfo, bookField, title }) {
     const [isFocused, setIsFocused] = useState(false);
     const [isEmpty, setIsEmpty] = useState(true);
 
@@ -140,11 +141,191 @@ function InputTile({ setBookInfo, bookInfo, bookField, type, title }) {
                     if (e.target.value.length === 0) setIsEmpty(true);
                     else setIsEmpty(false);
                 }}
-                className="w-full text-left pt-5 pb-1 font-medium text-medium px-3 border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300"
+                className="w-full text-left pt-6 pb-1 font-medium text-medium px-3 border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300"
                 type="text"
             />
             <div className={"absolute left-3 h-full pointer-events-none animated-100 " + (isFocused || !isEmpty ? "top-[1px]" : "top-[25%]")}>
                 <span className={"text-gray-500 animated-100 origin-top-left " + (isFocused || !isEmpty ? "text-sm" : "text-lg")}>{title}</span>
+            </div>
+        </div>
+    );
+}
+
+function CategoryInputTile({ setBookInfo, bookInfo, bookField, title }) {
+    const [isFocused, setIsFocused] = useState(false);
+    const [isEmpty, setIsEmpty] = useState(true);
+
+    const [categoriesView, setCategoriesView] = useState([]);
+    
+    const categories = [
+        {
+            name: "Фантастика",
+            children: [
+                {
+                    name: "Космическая фантастика",
+                    children: [
+                        {
+                            name: "Космоопера",
+                            children: [],
+                        },
+                        {
+                            name: "Космическая опера",
+                            children: [],
+                        },
+                    ],
+                },
+                {
+                    name: "Научная фантастика",
+                    children: [],
+                },
+                {
+                    name: "Киберпанк",
+                    children: [],
+                },
+            ],
+        },
+        {
+            name: "Фэнтези",
+            children: [
+                {
+                    name: "Эпическое фэнтези",
+                    children: [],
+                },
+                {
+                    name: "Героическое фэнтези",
+                    children: [],
+                },
+                {
+                    name: "Ужасы",
+                    children: [],
+                },
+            ],
+        },
+        {
+            name: "Детектив",
+            children: [
+                {
+                    name: "Классический детектив",
+                    children: [],
+                },
+                {
+                    name: "Психологический детектив",
+                    children: [],
+                },
+                {
+                    name: "Триллер",
+                    children: [],
+                },
+            ],
+        },
+    ];
+
+    const inputRef = useRef();
+    const categoriesContainerRef = useRef();
+
+    useEffect(() => {
+        if (categoriesView.length !== 0) {
+            inputRef.current.style.paddingLeft = categoriesContainerRef.current.offsetWidth + 18 + "px";
+        }
+    }, [categoriesView]);
+
+    useEffect(() => {
+        console.log(isEmpty, isFocused);
+    }, [isEmpty, isFocused]);
+
+    useEffect(() => {
+        if (categoriesView.length === 0) setIsEmpty(true);
+    }, [categoriesView]);
+
+    useEffect(() => {
+        console.log(categoriesView);
+    }, [categoriesView]);
+
+    return (
+        <div
+            onFocus={() => {
+                setIsFocused(true);
+            }}
+            className="relative flex flex-col w-[550px] items-center"
+        >
+            <input
+                ref={inputRef}
+                onChange={(e) => {
+                    if (e.target.value.length !== 0 || categoriesView.length !== 0) setIsEmpty(false);
+                    else setIsEmpty(true);
+                }}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter" && e.target.value.length !== 0 && !categoriesView.includes(e.target.value)) {
+                        e.preventDefault();
+                        // if (
+                        //     categoriesView[categoriesView.length - 1]?.children.some((category) => {
+                        //         category.name === e.target.value;
+                        //     })
+                        // )
+                        //     setCategoriesView([...categoriesView, { name: e.target.value, children: [] }]);
+                        console.log(
+                            categoriesView[categoriesView.length - 1]?.children.some((category) => {
+                                category.name === e.target.value;
+                            })
+                        );
+                        inputRef.current.value = "";
+                    }
+                }}
+                className={
+                    "w-full text-left pt-[26px] pb-3 font-medium text-medium pl-3 pr-3 border-[1px] border-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300 " +
+                    (isFocused || categoriesView.length !== 0 ? "bg-white" : "bg-gray-100")
+                }
+                type="text"
+            />
+            <div className={"absolute left-3 pointer-events-none animated-100 " + (isFocused || !isEmpty ? "top-[1px]" : "top-[30%]")}>
+                <span className={"text-gray-500 animated-100 origin-top-left " + (isFocused || !isEmpty ? "text-sm" : "text-lg")}>{title}</span>
+            </div>
+            {isFocused ? (
+                <div className={"absolute top-14 left-3 flex flex-col shadow-md items-left gap-y-2 z-10 px-2 py-2 bg-white rounded-sm w-[200px] "}>
+                    {(categoriesView.length === 0 ? categories : categoriesView[categoriesView.length - 1].children).map((category) => {
+                        return (
+                            <button
+                                onClick={() => {
+                                    if (!categoriesView.includes(category.name)) {
+                                        setCategoriesView([...categoriesView, { ...category }]);
+                                        setIsEmpty(false);
+                                        inputRef.current.value = "";
+                                        inputRef.current.focus();
+                                    }
+                                }}
+                                className="text-left"
+                            >
+                                {category.name}
+                            </button>
+                        );
+                    })}
+                </div>
+            ) : (
+                <></>
+            )}
+            <div ref={categoriesContainerRef} className="absolute top-[23px] left-3 flex gap-2">
+                {categoriesView.map((category) => {
+                    return (
+                        <div className="flex items-center gap-2">
+                            <div className="flex gap-2 justify-center items-center px-3 py-1 bg-stone-200/70 rounded-md">
+                                <span className="">{category.name}</span>
+                                <button
+                                    onClick={() => {
+                                        if (category.name === categoriesView[categoriesView.length - 1].name) {
+                                            setCategoriesView(categoriesView.filter((c) => c !== category));
+                                            // setCurrentCategory()
+                                            inputRef.current.style.paddingLeft = 12 + "px";
+                                            inputRef.current.focus();
+                                        }
+                                    }}
+                                    className="text-gray-500"
+                                >
+                                    x
+                                </button>
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );

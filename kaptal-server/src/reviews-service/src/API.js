@@ -7,7 +7,8 @@ const { Review } = require("./models");
 
 router.get("/user/getBookReviews", async (req, res) => {
     try {
-        verifyJWT(req);
+        const hasToBeAuthorized = false;
+        verifyJWT(req, hasToBeAuthorized);
 
         const bookId = req.query?.bookId;
 
@@ -22,7 +23,8 @@ router.get("/user/getBookReviews", async (req, res) => {
 
 router.post("/user/addReview", async (req, res) => {
     try {
-        verifyJWT(req);
+        const hasToBeAuthorized = true;
+        verifyJWT(req, hasToBeAuthorized);
 
         const hasAllFields = req.body?.text && req.body?.title && req.body?.rating && req.body?.author && req.body?.publicationDate && req.body?.bookId;
         if (!hasAllFields) throw new Error("Please enter all fields");

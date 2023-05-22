@@ -113,15 +113,21 @@ const bookSchema = new mongoose.Schema({
 });
 
 const categorySchema = new mongoose.Schema({
-    name: { type: String, required: true, unique: true },
-    parent: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
+    name: {
+        type: String,
+        required: true,
     },
+    children: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true,
+        },
+    ],
 });
 
 const collectionSchema = new mongoose.Schema({
     name: {
+        unique: true,
         required: true,
         trim: true,
         type: String,

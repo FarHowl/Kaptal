@@ -3,11 +3,12 @@ const router = express.Router();
 
 const verifyJWT = require("./utils/verifyJWT");
 
-const { Book } = require("./models");
+const { Book, Category, Collections } = require("./models");
 
 router.get("/admin/getAllBooks", async (req, res) => {
     try {
-        verifyJWT(req);
+        const hasToBeAuthorized = true;
+        verifyJWT(req, hasToBeAuthorized);
 
         const totalAmountOfBooks = await Book.countDocuments();
         const totalPages = Math.ceil(totalAmountOfBooks / 1);
@@ -26,7 +27,8 @@ router.get("/admin/getAllBooks", async (req, res) => {
 
 router.post("/admin/addNewBook", async (req, res) => {
     try {
-        verifyJWT(req);
+        const hasToBeAuthorized = true;
+        verifyJWT(req, hasToBeAuthorized);
 
         const hasAllFields =
             req.body?.name ||
@@ -45,6 +47,8 @@ router.post("/admin/addNewBook", async (req, res) => {
             req.body?.weight ||
             req.body?.series ||
             req.body?.amount ||
+            req.body?.category ||
+            req.body?.collections ||
             req.body?.language;
         if (!hasAllFields) throw new Error("Enter all fields");
 
@@ -82,7 +86,19 @@ router.post("/admin/addNewBook", async (req, res) => {
             weight: req.body.weight,
             series: req.body.series,
             language: req.body.language,
+            category: req.body.category.name,
+            collections: req.body.collections,
         });
+
+        const category = Category.find({ name: req.body.category.name });
+        if (!category) {
+            new Category({
+                name: req.body.category.name,
+                children: [req.body.category.children],
+            });
+        }
+
+        const collections = 1;
 
         await book.save();
         // fs.copyFileSync(req.files.image.path, imgDestPath);
@@ -95,7 +111,8 @@ router.post("/admin/addNewBook", async (req, res) => {
 
 router.post("/admin/updateBook", async (req, res) => {
     try {
-        verifyJWT(req);
+        const hasToBeAuthorized = true;
+        verifyJWT(req, hasToBeAuthorized);
 
         const hasBookId = req.body?.bookId;
         if (!hasBookId) throw new Error("Please, enter userId");
@@ -199,7 +216,8 @@ router.post("/admin/updateBook", async (req, res) => {
 
 router.post("/admin/deleteBook", async (req, res) => {
     try {
-        verifyJWT(req);
+        const hasToBeAuthorized = true;
+        verifyJWT(req, hasToBeAuthorized);
 
         const hasBookId = req.body?.bookId;
         if (!hasBookId) throw new Error("Please, enter book id");
@@ -220,7 +238,8 @@ router.post("/admin/deleteBook", async (req, res) => {
 
 router.get("/user/searchBook", async (req, res) => {
     try {
-        verifyJWT(req);
+        const hasToBeAuthorized = false;
+        verifyJWT(req, hasToBeAuthorized);
 
         const searchPhrase = decodeURIComponent(req.query?.search);
         const bookAvailability = decodeURIComponent(req.query?.available);
@@ -287,7 +306,8 @@ router.get("/user/searchBook", async (req, res) => {
 
 router.get("/user/getBookData", async (req, res) => {
     try {
-        verifyJWT(req);
+        const hasToBeAuthorized = false;
+        verifyJWT(req, hasToBeAuthorized);
 
         const bookId = req.query?.bookId;
         if (!bookId) throw new Error("Please, enter book id");
