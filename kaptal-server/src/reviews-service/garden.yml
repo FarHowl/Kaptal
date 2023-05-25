@@ -1,19 +1,30 @@
-kind: Module
-name: reviews-service
+kind: Build
 type: container
-services:
-  - name: reviews-service
-    ports:
-      - name: http
-        containerPort: 3000
-    devMode:
-      command: [npm, start] # Overrides the container's default when the service is deployed in dev mode
-      sync:
-        # Source/target configuration for dev mode is the same as for hot reloading.
-        - source: src
-          target: /app/src
-          # Make sure to specify any paths that should not be synced!
-          exclude: [node_modules]
-          mode: two-way
-    dependencies:
-      - reviews-redis
+name: reviews-service
+description: The reviews service container
+
+---
+
+kind: Deploy
+type: container
+name: reviews-service
+description: The reviews service deployment
+build: reviews-service
+dependencies: [deploy.reviews-redis]
+spec:
+  args: [npm, start]
+  env:
+    FRONTEND_GATEWAY_KEY: 2d54c6da7a32e828487c1973972a265ab2699cf162868340704a52be73f68970
+    GATEWAY_REVIEWS_KEY: 4586007dcda0af3519e2121bc98a82740f3762d68294020e14f647b5ecf02250
+    MONGO_INITDB_ROOT_USERNAME: root
+    MONGO_INITDB_ROOT_PASSWORD: root
+    MONGO_INITDB_DATABASE: ReviewsDB
+  ports:
+    - name: http
+      containerPort: 3000
+  sync:
+    paths:
+    - target: /app/src
+      source: src
+      exclude: [node_modules]
+      mode: two-way

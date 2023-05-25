@@ -99,13 +99,13 @@ const bookSchema = new mongoose.Schema({
         type: String,
     },
     category: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
+        type: String,
+        trim: true,
         required: true,
     },
     collections: [
         {
-            type: mongoose.Schema.Types.ObjectId,
+            type: String,
             ref: "Collection",
             required: true,
         },
@@ -119,8 +119,9 @@ const categorySchema = new mongoose.Schema({
     },
     children: [
         {
-            type: mongoose.Schema.Types.ObjectId,
+            type: Object,
             required: true,
+            default: {},
         },
     ],
 });

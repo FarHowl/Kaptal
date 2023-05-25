@@ -1,12 +1,29 @@
-kind: Module
+# kind: Module
+# type: container
+# name: users-redis
+# image: redis
+# description: Redis service to cache users DB requests
+# services:
+#   - name: users-redis
+#     ports:
+#       - name: redis
+#         containerPort: 3000
+#     dependencies:
+#       - users-mongodb
+
+# kind: Build
+# type: container
+# name: users-redis
+# description: The users-redis container
+
+# ---
+
+kind: Deploy
 type: container
 name: users-redis
-image: redis
-description: Redis service to cache users DB requests
-services:
-  - name: users-redis
-    ports:
-      - name: redis
-        containerPort: 3000
-    dependencies:
-      - users-mongodb
+description: The users-redis deployment
+spec:
+  image: redis
+  ports:
+    - name: mongodb
+      containerPort: 6379

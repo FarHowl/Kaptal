@@ -1,28 +1,29 @@
-kind: Module
+kind: Build
 type: container
 name: frontend
-services:
-  - name: frontend
-    ports:
-      - name: http
-        containerPort: 8070
-    ingresses:
-      - path: /
-        port: http
-        hostname: frontend.${var.base-hostname}
-    devMode:
-      command: [npm, run, start] # Overrides the container's default when the service is deployed in dev mode
-      sync:
-        # Source/target configuration for dev mode is the same as for hot reloading.
-        - source: src
-          target: /app/src
-          # Make sure to specify any paths that should not be synced!
-          exclude: [node_modules]
-          mode: two-way
-    dependencies:
-      - api-gateway
-# tests:
-#   - name: user-sign-in
-#     args: [npm, test]
-#     dependencies:
-#       - api-gateway
+description: The frontend container
+
+---
+
+kind: Deploy
+type: container
+name: frontend
+description: The frontend deployment
+build: frontend
+dependencies: [deploy.api-gateway]
+spec:
+  args: [npm, run, start]
+  ports:
+    - name: http
+      containerPort: 8070
+  ingresses:
+    - path: /
+      port: http
+      hostname: frontend.${var.base-hostname}
+  command: [npm, run, start] # Overrides the container's default when the service is deployed in dev mode
+  sync:
+    paths:
+    - target: /app/src
+      source: src
+      exclude: [node_modules]
+      mode: two-way

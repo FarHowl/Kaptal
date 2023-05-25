@@ -43,13 +43,13 @@ router.post("/users-service/user/signUp", async (req, res) => {
         else console.log(error);
     }
 });
-router.post("/books-service/user/getBookData", async (req, res) => {
+router.get("/books-service/user/getBookData", async (req, res) => {
     try {
         const token = jwt.sign({}, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
 
         const query = "?" + req.originalUrl.split("?")[1];
 
-        const response = await axios.post("http://books-service:3000" + "/api/user/getBookData" + query, { headers: { Authorization: "Bearer " + token } });
+        const response = await axios.get("http://books-service:3000" + "/api/user/getBookData" + query, { headers: { Authorization: "Bearer " + token } });
         res.status(200).send(response.data);
     } catch (error) {
         if (error?.response) res.status(500).send({ error: error.response.data.error });
@@ -89,9 +89,9 @@ router.get("/books-service/user/searchBook", async (req, res) => {
 
 router.post("/reviews-service/user/addReview", async (req, res) => {
     try {
-        const parentToken = verifyJWT(req, ["admin"]);
+        const parentToken = verifyJWT(req, ["user", "admin", "moderator"]);
 
-        const newToken = jwt.sign({ parentToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
+        const newToken = jwt.sign({ parentToken }, process.env.GATEWAY_REVIEWS_KEY, { expiresIn: "100d" });
 
         const response = await axios.post(
             "http://reviews-service:3000" + "/api/user/addReview",
@@ -109,7 +109,7 @@ router.post("/reviews-service/user/addReview", async (req, res) => {
 
 router.get("/reviews-service/user/getBookReviews", async (req, res) => {
     try {
-        const token = jwt.sign({}, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
+        const token = jwt.sign({}, process.env.GATEWAY_REVIEWS_KEY, { expiresIn: "100d" });
 
         const query = "?" + req.originalUrl.split("?")[1];
 

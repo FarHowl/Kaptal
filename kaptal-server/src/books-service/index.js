@@ -5,7 +5,7 @@ const routes = require("./src/API");
 const app = express();
 
 mongoose.set("strictQuery", false);
-mongoose.connect("mongodb://books-mongodb:27017/BooksDB");
+mongoose.connect(`mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME + ":" + process.env.MONGO_INITDB_ROOT_PASSWORD}@books-mongodb:27017`);
 
 mongoose.connection.on("error", (error) => {
     console.log(error);

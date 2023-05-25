@@ -1,8 +1,8 @@
-import { useEffect, React, useState } from "react";
+import { useEffect, React, useState, useLayoutEffect } from "react";
 import IconComponent from "../Components/Icons/IconComponent";
 import WishesIcon from "../Components/Icons/WishesIcon";
 import LoadingComponent from "../Components/UI/LoadingComponent";
-import { getBookData_EP } from "../Utils/API";
+import { getBookData_EP, getBookReviews_EP, addReview_EP } from "../Utils/API";
 import { authToken_header } from "../Utils/LocalStorageUtils";
 import { useParams } from "react-router-dom";
 import axios from "axios";
@@ -11,46 +11,51 @@ export default function BookPage() {
     const params = useParams();
     const [isImgLoaded, setIsImgLoaded] = useState(false);
     const [bookData, setBookData] = useState({});
-    const [reviewsView, setReviewsView] = useState();
+    const [reviewsView, setReviewsView] = useState([]);
 
-    const book = {
-        name: "Любовь по залету",
-        author: "Лина Филимонова",
-        genres: ["Fantasy", "Adventure"],
-        isAvailable: false,
-        coverType: "Мягкий переплет",
-        publisher: "АСТ",
-        series: "Звездная коллекция романов о любви",
-        language: "Русский",
-        size: "16.5x11.3x2.3",
-        weight: 158,
-        ISBN: "978-5-17-127247-0",
-        pagesCount: 320,
-        ageLimit: 18,
-        year: 2023,
-        circulation: 3000,
-        annotation:
-            "Аня хотела от него только одного - ребенка. Потому что часики тикают, нормальных парней все равно нет, а этот… просто настоящий мачо! Она уверена в том, что не любит Демида и вовсе не собирается за него замуж, ведь самое ценное в нем - его прекрасные гены, которые ей и нужны. Демид же вовсе не против развлечься, он и не думает о серьезных отношениях, в его жизни и так было немало беременных, мечтающих затащить его в загс и все пошли лесом. Так почему бы не провести время с удовольствием? Однако судьба приготовила свои сюрпризы для них обоих...",
-        reviews: [],
-        rating: 4,
-        ratingCount: 33,
-        discount: 10,
-        price: 270,
-        image: "https://cdn.img-gorod.ru/310x500/nomenclature/29/193/2919342.jpg",
-        category: "61824b6c77a53d0015fe5279",
-        collections: ["61824b6c77a53d0015fe527a", "61824b6c77a53d0015fe527b"],
-    };
-
-    async function getBookData() {
+    async function getReviewsData() {
         try {
-            const res = await axios.get(getBookData_EP, authToken_header());
+            const query = `?bookId=${params.bookId}`;
+            const res = await axios.get(getBookReviews_EP + query);
 
             let r = [];
-            for (const i of res.reviews) {
-                r.push(<ReviewTile key={i._id} review={i} />);
+            for (let i = 0; i < res.data.length; i++) {
+                r.push(<ReviewTile key={i} review={res.data[i]} />);
             }
 
             setReviewsView(r);
+        } catch (error) {
+            if (error?.response) console.log(error.response.data.error);
+            else console.log(error);
+        }
+    }
+
+    async function getBookData() {
+        try {
+            const query = `?bookId=${params.bookId}`;
+            const res = await axios.get(getBookData_EP + query);
+            setBookData(res.data.book);
+        } catch (error) {
+            if (error?.response) console.log(error.response.data.error);
+            else console.log(error);
+        }
+    }
+
+    async function addReview() {
+        try {
+            const res = await axios.post(
+                addReview_EP,
+                {
+                    bookId: params.bookId,
+                    text: "Толкин снова в ударе! Новая книга просто полнейший ахуй!",
+                    title: "АХУЕТЬ НЕ ВСТАТЬ",
+                    rating: 5,
+                    author: "Трушный толкинист",
+                    publicationDate: "2023-05-20",
+                },
+                authToken_header()
+            );
+            console.log(res);
         } catch (error) {
             if (error?.response) console.log(error.response.data.error);
             else console.log(error);
@@ -61,6 +66,11 @@ export default function BookPage() {
         let summary = price - price * (discount / 100);
         return Math.round(summary);
     }
+
+    useLayoutEffect(() => {
+        getBookData();
+        getReviewsData();
+    }, []);
 
     return (
         <div className="flex flex-col items-center w-full gap-y-10 pt-10 py-10 max-w-[1200px]">
@@ -74,20 +84,20 @@ export default function BookPage() {
                                     setIsImgLoaded(true);
                                 }}
                                 className="object-cover w-full h-full"
-                                src={book.image}
+                                src={bookData.image}
                                 alt=""
                             />
                         </div>
                         <div className="flex flex-col items-center w-[500px]">
                             <div className="w-full flex justify-between">
-                                <span className="text-2xl font-semibold">Любовь по залету</span>
+                                <span className="text-2xl font-semibold">{bookData.name}</span>
                             </div>
                             <div className="w-full flex justify-start mt-1">
-                                <button className="text-sky-600 hover:text-sky-800 animated-100 font-medium">{book.author}</button>
+                                <button className="text-sky-600 hover:text-sky-800 animated-100 font-medium">{bookData.author}</button>
                             </div>
                             <div className="flex w-full gap-x-2 items-center justify-start mt-2">
-                                <span>{book.rating}</span>
-                                <span className="text-gray-500">({book.ratingCount})</span>
+                                <span>{bookData.rating}</span>
+                                <span className="text-gray-500">({bookData.ratingCount})</span>
                                 <button className="text-sky-600 hover:text-sky-800 animated-100">Оценить</button>
                             </div>
                             <div className="w-full flex flex-col gap-y-4 mt-6">
@@ -95,74 +105,74 @@ export default function BookPage() {
                                     <div className="w-[50%] flex flex-shrink-0">
                                         <span className="text-gray-500">Издательство</span>
                                     </div>
-                                    <button className="text-sky-600 hover:text-sky-800 animated-100">{book.publisher}</button>
+                                    <button className="text-sky-600 hover:text-sky-800 animated-100">{bookData.publisher}</button>
                                 </div>
                                 <div className="flex w-full">
                                     <div className="w-[50%] flex flex-shrink-0">
                                         <span className="text-gray-500">Серия</span>
                                     </div>
-                                    <button className="text-sky-600 hover:text-sky-800 animated-100 text-left">{book.series}</button>
+                                    <button className="text-sky-600 hover:text-sky-800 animated-100 text-left">{bookData.series}</button>
                                 </div>
                                 <div className="flex w-full">
                                     <div className="w-[50%] flex flex-shrink-0">
                                         <span className="text-gray-500">Год издания</span>
                                     </div>
-                                    <span>{book.year}</span>
+                                    <span>{bookData.year}</span>
                                 </div>
                                 <div className="flex w-full">
                                     <div className="w-[50%] flex flex-shrink-0">
                                         <span className="text-gray-500">ISBN</span>
                                     </div>
-                                    <span>{book.ISBN}</span>
+                                    <span>{bookData.ISBN}</span>
                                 </div>
                                 <div className="flex w-full">
                                     <div className="w-[50%] flex flex-shrink-0">
                                         <span className="text-gray-500">Количество страниц</span>
                                     </div>
-                                    <span>{book.pagesCount}</span>
+                                    <span>{bookData.pagesCount}</span>
                                 </div>
                                 <div className="flex w-full">
                                     <div className="w-[50%] flex flex-shrink-0">
                                         <span className="text-gray-500">Размер</span>
                                     </div>
-                                    <span>{book.size}</span>
+                                    <span>{bookData.size}</span>
                                 </div>
                                 <div className="flex w-full">
                                     <div className="w-[50%] flex flex-shrink-0">
                                         <span className="text-gray-500">Тип обложки</span>
                                     </div>
-                                    <span>{book.coverType}</span>
+                                    <span>{bookData.coverType}</span>
                                 </div>
                                 <div className="flex w-full">
                                     <div className="w-[50%] flex flex-shrink-0">
                                         <span className="text-gray-500">Вес</span>
                                     </div>
-                                    <span>{book.weight}</span>
+                                    <span>{bookData.weight}</span>
                                 </div>
                                 <div className="flex w-full">
                                     <div className="w-[50%] flex flex-shrink-0">
                                         <span className="text-gray-500">Возрастные ограничения</span>
                                     </div>
-                                    <span>{book.ageLimit}</span>
+                                    <span>{bookData.ageLimit}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div className="mt-14 leading-7 mb-6">{book.annotation}</div>
+                    <div className="mt-14 leading-7 mb-6">{bookData.annotation}</div>
                 </div>
                 <div className="w-[270px] flex flex-col">
                     <div className="flex flex-col shadow-lg w-full px-4 py-4 gap-1">
                         <div className="w-full mb-1">
-                            <span className={"font-light " + (book.isAvailable ? "text-teal-500" : "text-neutral-500")}>{book.isAvailable ? "В наличии" : "Нет в наличии"}</span>
+                            <span className={"font-light " + (bookData.amount ? "text-teal-500" : "text-neutral-500")}>{bookData.amount ? "В наличии" : "Нет в наличии"}</span>
                         </div>
-                        {book.discount === 0 ? (
+                        {bookData.discount === 0 ? (
                             <div className="fle px-20w-full gap-10 items-center">
                                 <span className="font-bold text-xl">{100 + "₽"}</span>
                             </div>
                         ) : (
                             <div className="flex w-full gap-10 items-center">
-                                <span className="font-bold text-red-500 text-xl">{calculateDiscount(book.price, book.discount) + "₽"}</span>
-                                <span className="font-extralight line-through text-slate-600">{book.price + "₽"}</span>
+                                <span className="font-bold text-red-500 text-xl">{calculateDiscount(bookData.price, bookData.discount) + "₽"}</span>
+                                <span className="font-extralight line-through text-slate-600">{bookData.price + "₽"}</span>
                             </div>
                         )}
                         <div className="mt-2">
@@ -184,30 +194,26 @@ export default function BookPage() {
                 </div>
             </div>
             <div className="flex w-full justify-start">
-                <span className="text-3xl font-bold">Отзывы</span>
+                <div className="flex flex-col gap-3">
+                    <span className="text-3xl font-bold">Отзывы</span>
+                    <button
+                        onClick={() => {
+                            addReview();
+                        }}
+                    >
+                        Написать отзыв
+                    </button>
+                </div>
             </div>
             <div className="flex w-full justify-start">
                 <div className="flex justify-center gap-6">
-                    <div className="flex flex-col items-start gap-y-10">
-                        {reviewsView}
-                        <ReviewTile />
-                        <ReviewTile />
-                        <ReviewTile />
-                        <ReviewTile />
-                        <ReviewTile />
-                        <ReviewTile />
-                        <ReviewTile />
-                        <ReviewTile />
-                        <ReviewTile />
-                        <ReviewTile />
-                        <ReviewTile />
-                    </div>
+                    <div className="flex flex-col items-start gap-y-10">{reviewsView}</div>
                     <div className="w-[100px] flex flex-col">
                         <div className="flex justify-start items-center gap-x-3 sticky top-[90px]">
                             <div className="border-l-2 border-sky-500 h-full"></div>
                             <div className="flex flex-col">
                                 <span className="text-neutral-500">Всего</span>
-                                <span className="text-3xl">33</span>
+                                <span className="text-3xl">{reviewsView.length}</span>
                             </div>
                         </div>
                     </div>
@@ -217,17 +223,7 @@ export default function BookPage() {
     );
 }
 
-function ReviewTile() {
-    const review = {
-        text: "Еще одна забавная история с чувством юмора. Как говорится: Не везет, да несчастье помогло. Встреча с Аней переворачивает все внутри Демида. Да, и мечты сбываются. В эпилоге -восхитительная гармония: Демид и Аня любят друг друга, гордятся своим ребенком, а великий змей торжествует. Серафимы забавляются собственными желаниями и монологами. И он достиг своей цели раньше, чем Жестянщик, со своими двумя живыми детьми. Большое спасибо",
-        title: "Восхитительно! Незабываемая история любви по залету!",
-        rating: 5,
-        author: "Ксения",
-        publicationDate: "21.08.2022",
-        likes: 3,
-        dislikes: 10,
-    };
-
+function ReviewTile({ review }) {
     return (
         <div className={"w-[700px] rounded-lg flex flex-col items-center px-6 py-6 gap-4 " + (review.rating >= 4 ? "bg-green-100/70" : review.rating === 3 ? "bg-neutral-100/70" : "bg-red-100/70")}>
             <div className="flex w-full justify-between">

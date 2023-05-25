@@ -1,13 +1,15 @@
-kind: Module
+kind: Deploy
 type: container
 name: reviews-mongodb
-image: mongo
-description: MongoDB for books-service. Contains books data
-services:
-  - name: reviews-mongodb
-    volumes:
-      - name: data
-        containerPath: /data/db
-    ports:
-      - name: mongodb
-        containerPort: 27017
+description: The reviews-mongodb deployment
+spec:
+  env:
+    MONGO_INITDB_ROOT_USERNAME: root
+    MONGO_INITDB_ROOT_PASSWORD: root
+  image: mongo
+  ports:
+    - name: mongodb
+      containerPort: 27017
+  volumes:
+    - name: data
+      containerPath: /data/db

@@ -1,12 +1,10 @@
-kind: Module
+kind: Deploy
 type: container
 name: books-redis
-image: redis
-description: Redis service to cache books DB requests
-services:
-  - name: books-redis
-    ports:
-      - name: redis
-        containerPort: 3000
-    dependencies:
-      - books-mongodb
+description: The books-redis deployment
+dependencies: [deploy.books-mongodb]
+spec:
+  image: redis
+  ports:
+    - name: redis
+      containerPort: 6379

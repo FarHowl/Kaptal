@@ -12,7 +12,7 @@ router.get("/user/getBookReviews", async (req, res) => {
 
         const bookId = req.query?.bookId;
 
-        const reviews = await Review.findById(bookId);
+        const reviews = await Review.find({ bookId: bookId });
 
         res.status(200).send(reviews);
     } catch (error) {
@@ -44,15 +44,16 @@ router.post("/user/addReview", async (req, res) => {
         if (!dateRegex.test(req.body?.publicationDate)) throw new Error("Invalid date format");
 
         const review = new Review({
-            text: req.body?.text,
-            title: req.body?.title,
-            rating: req.body?.rating,
-            author: req.body?.author,
-            publicationDate: req.body?.publicationDate,
-            bookId: req.body?.bookId,
+            text: req.body.text,
+            title: req.body.title,
+            rating: req.body.rating,
+            author: req.body.author,
+            publicationDate: req.body.publicationDate,
+            bookId: req.body.bookId,
         });
 
         await review.save();
+        res.sendStatus(200);
     } catch (error) {
         res.status(500).send({ error: error.message });
         console.log(error);

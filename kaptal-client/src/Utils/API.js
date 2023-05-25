@@ -19,7 +19,11 @@ export const getAvailableStaffForChat_EP = apiAddress + "/api/user/getAvailableS
  */
 export const signUp_EP = apiAddress + "/api/users-service/user/signUp";
 
-export const getBookData_EP = apiAddress + "/api/users-service/user/getBookData";
+export const getBookData_EP = apiAddress + "/api/books-service/user/getBookData";
+
+export const getBookReviews_EP = apiAddress + "/api/reviews-service/user/getBookReviews";
+
+export const addReview_EP = apiAddress + "/api/reviews-service/user/addReview";
 
 //
 

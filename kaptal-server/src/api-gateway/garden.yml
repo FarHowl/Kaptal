@@ -1,24 +1,33 @@
-kind: Module
-name: api-gateway
+kind: Build
 type: container
-services:
-  - name: api-gateway
-    ports:
-      - name: http
-        containerPort: 3000
-    ingresses:
-     - path: /
-       port: http
-       hostname: api.${var.base-hostname}
-    devMode:
-      command: [npm, start] # Overrides the container's default when the service is deployed in dev mode
-      sync:
-        # Source/target configuration for dev mode is the same as for hot reloading.
-        - source: src
-          target: /app/src
-          # Make sure to specify any paths that should not be synced!
-          exclude: [node_modules]
-          mode: two-way
-    dependencies:
-      - books-service
-      - users-service
+name: api-gateway
+description: The api-gateway container
+
+---
+
+kind: Deploy
+type: container
+name: api-gateway
+description: The api-gateway deployment
+build: api-gateway
+dependencies: [deploy.books-service, deploy.users-service]
+spec:
+  args: [npm, start]
+  env:
+    FRONTEND_GATEWAY_KEY: 2d54c6da7a32e828487c1973972a265ab2699cf162868340704a52be73f68970
+    GATEWAY_USERS_KEY: 3273459917ac5ef2baefc0033e8ffc8a27c422b65beaf0bbb37ee2680498b15a
+    GATEWAY_BOOKS_KEY: 6d804ea84fc0285e55efd6411cf5e0170d42afd5728f31b735180adeb093a727
+    GATEWAY_REVIEWS_KEY: 4586007dcda0af3519e2121bc98a82740f3762d68294020e14f647b5ecf02250
+  ports:
+    - name: http
+      containerPort: 3000
+  ingresses:
+    - path: /
+      port: http
+      hostname: api.${var.base-hostname}
+  sync:
+    paths:
+    - target: /app/src
+      source: src
+      exclude: [node_modules]
+      mode: two-way

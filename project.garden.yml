@@ -1,5 +1,6 @@
 kind: Project
 name: kaptal
+apiVersion: garden.io/v1
 environments:
   - name: local
     defaultNamespace: default

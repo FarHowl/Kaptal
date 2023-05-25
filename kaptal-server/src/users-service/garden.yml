@@ -1,19 +1,30 @@
-kind: Module
-name: users-service
+kind: Build
 type: container
-services:
-  - name: users-service
-    ports:
-      - name: http
-        containerPort: 3000
-    devMode:
-      command: [npm, start] # Overrides the container's default when the service is deployed in dev mode
-      sync:
-        # Source/target configuration for dev mode is the same as for hot reloading.
-        - source: src
-          target: /app/src
-          # Make sure to specify any paths that should not be synced!
-          exclude: [node_modules]
-          mode: two-way
-    dependencies:
-      - users-redis
+name: users-service
+description: The users service container
+
+---
+
+kind: Deploy
+type: container
+name: users-service
+description: The users service deployment
+build: users-service
+dependencies: [deploy.users-redis]
+spec:
+  args: [npm, start]
+  env:
+    FRONTEND_GATEWAY_KEY: 2d54c6da7a32e828487c1973972a265ab2699cf162868340704a52be73f68970
+    GATEWAY_USERS_KEY: 3273459917ac5ef2baefc0033e8ffc8a27c422b65beaf0bbb37ee2680498b15a
+    MONGO_INITDB_ROOT_USERNAME: root
+    MONGO_INITDB_ROOT_PASSWORD: root
+    MONGO_INITDB_DATABASE: UsersDB
+  ports:
+    - name: http
+      containerPort: 3000
+  sync:
+    paths:
+    - target: /app/src
+      source: src
+      mode: two-way
+      exclude: [node_modules]

@@ -3,7 +3,7 @@ const router = express.Router();
 
 const verifyJWT = require("./utils/verifyJWT");
 
-const { Book, Category, Collections } = require("./models");
+const { Book, Category, Collection } = require("./models");
 
 router.get("/admin/getAllBooks", async (req, res) => {
     try {
@@ -47,7 +47,7 @@ router.post("/admin/addNewBook", async (req, res) => {
             req.body?.weight ||
             req.body?.series ||
             req.body?.amount ||
-            req.body?.category ||
+            req.body?.categoryPath ||
             req.body?.collections ||
             req.body?.language;
         if (!hasAllFields) throw new Error("Enter all fields");
@@ -69,6 +69,66 @@ router.post("/admin/addNewBook", async (req, res) => {
 
         // const imgDestPath = "../src/images/booksImages/" + stringHash + "." + imgType;
 
+        async function addOrUpdateCategory(categoryNames) {
+            const allCategories = await Category.find();
+            let currentCategoryList = allCategories;
+            let upperCategoryExists = false;
+            let categoryBuffer;
+
+            for (const category of allCategories) {
+                if (category.name === categoryNames[0]) {
+                    upperCategoryExists = true;
+                    categoryBuffer = category;
+                    currentCategoryList = categoryBuffer.children;
+                }
+            }
+
+            if (!upperCategoryExists) {
+                const newCategory = new Category({ name: categoryNames[0], children: [] });
+                await newCategory.save();
+                categoryBuffer = newCategory;
+                currentCategoryList = newCategory.children;
+            }
+
+            for (let i = 1; i < categoryNames.length; i++) {
+                const categoryName = categoryNames[i];
+                let existingCategory = null;
+
+                for (const category of currentCategoryList) {
+                    if (category.name === categoryName) {
+                        existingCategory = category;
+                        break;
+                    }
+                }
+
+                if (existingCategory) {
+                    currentCategoryList = existingCategory.children;
+                } else {
+                    const newCategory = { name: categoryName, children: [] };
+
+                    currentCategoryList.push(newCategory);
+                    currentCategoryList = newCategory.children;
+                }
+            }
+
+            await Category.findByIdAndUpdate(categoryBuffer._id.toString(), categoryBuffer);
+        }
+
+        const categoryNames = req.body.categoryPath.split("/");
+        addOrUpdateCategory(categoryNames);
+
+        const collectionsArray = [];
+        for (const collection of req.body.collections) {
+            const existingCollection = await Collection.findOne({ name: collection });
+            collectionsArray.push(existingCollection);
+
+            if (!existingCollection) {
+                const newCollection = new Collection({ name: collection });
+                await newCollection.save();
+                collectionsArray.push(newCollection);
+            }
+        }
+
         const book = new Book({
             name: req.body.name,
             author: req.body.author,
@@ -86,19 +146,10 @@ router.post("/admin/addNewBook", async (req, res) => {
             weight: req.body.weight,
             series: req.body.series,
             language: req.body.language,
-            category: req.body.category.name,
-            collections: req.body.collections,
+            category: categoryNames[categoryNames.length - 1],
+            collections: collectionsArray,
+            amount: req.body.amount,
         });
-
-        const category = Category.find({ name: req.body.category.name });
-        if (!category) {
-            new Category({
-                name: req.body.category.name,
-                children: [req.body.category.children],
-            });
-        }
-
-        const collections = 1;
 
         await book.save();
         // fs.copyFileSync(req.files.image.path, imgDestPath);
@@ -282,7 +333,7 @@ router.get("/user/searchBook", async (req, res) => {
                     publisher: { $regex: regexPhrase },
                 },
                 {
-                    genres: { $regex: regexPhrase },
+                    category: { $regex: regexPhrase },
                 },
                 {
                     series: { $regex: regexPhrase },

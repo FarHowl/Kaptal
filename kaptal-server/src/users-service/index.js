@@ -1,12 +1,11 @@
 const mongoose = require("mongoose");
 const express = require("express");
 const cors = require("cors");
-
 const routes = require("./src/API");
 const app = express();
 
 mongoose.set("strictQuery", false);
-mongoose.connect("mongodb://users-mongodb:27017/UsersDB");
+mongoose.connect(`mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME + ":" + process.env.MONGO_INITDB_ROOT_PASSWORD}@users-mongodb:27017`);
 
 mongoose.connection.on("error", (error) => {
     console.log(error);

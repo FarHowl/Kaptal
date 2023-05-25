@@ -1,13 +1,15 @@
-kind: Module
+kind: Deploy
 type: container
 name: users-mongodb
-image: mongo
-description: MongoDB for users-service. Contains users data
-services:
-  - name: users-mongodb
-    volumes:
-      - name: data
-        containerPath: /data/db
-    ports:
-      - name: mongodb
-        containerPort: 27017
+description: The users-mongodb deployment
+spec:
+  env:
+    MONGO_INITDB_ROOT_USERNAME: root
+    MONGO_INITDB_ROOT_PASSWORD: root
+  image: mongo
+  ports:
+    - name: mongodb
+      containerPort: 27017
+  volumes:
+    - name: data
+      containerPath: /data/db
