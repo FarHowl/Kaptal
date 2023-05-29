@@ -30,4 +30,4 @@ spec:
     - target: /app/src
       source: src
       exclude: [node_modules]
-      mode: two-way
+      mode: one-way-replica

@@ -24,7 +24,7 @@ router.post("/users-service/admin/updateUser", async (req, res) => {
         res.status(200).send(response.data);
     } catch (error) {
         if (error?.response) res.status(500).send({ error: error.response.data.error });
-        else console.log(error);
+        else res.status(500).send({ error: error.message });
     }
 });
 
@@ -40,7 +40,7 @@ router.get("/users-service/admin/getAllUsers", async (req, res) => {
         res.status(200).send(response.data);
     } catch (error) {
         if (error?.response) res.status(500).send({ error: error.response.data.error });
-        else console.log(error);
+        else res.status(500).send({ error: error.message });
     }
 });
 
@@ -56,7 +56,7 @@ router.get("/books-service/admin/getAllBooks", async (req, res) => {
         res.status(200).send(response.data);
     } catch (error) {
         if (error?.response) res.status(500).send({ error: error.response.data.error });
-        else console.log(error);
+        else res.status(500).send({ error: error.message });
     }
 });
 
@@ -76,7 +76,7 @@ router.post("/books-service/admin/addNewBook", async (req, res) => {
         res.status(200).send(response.data);
     } catch (error) {
         if (error?.response) res.status(500).send({ error: error.response.data.error });
-        else console.log(error);
+        else res.status(500).send({ error: error.message });
     }
 });
 
@@ -96,7 +96,7 @@ router.post("/books-service/admin/updateBook", async (req, res) => {
         res.status(200).send(response.data);
     } catch (error) {
         if (error?.response) res.status(500).send({ error: error.response.data.error });
-        else console.log(error);
+        else res.status(500).send({ error: error.message });
     }
 });
 
@@ -116,7 +116,7 @@ router.post("/books-service/admin/deleteBook", async (req, res) => {
         res.status(200).send(response.data);
     } catch (error) {
         if (error?.response) res.status(500).send({ error: error.response.data.error });
-        else console.log(error);
+        else res.status(500).send({ error: error.message });
     }
 });
 

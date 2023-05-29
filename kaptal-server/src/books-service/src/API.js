@@ -73,7 +73,7 @@ router.post("/admin/addNewBook", async (req, res) => {
             const allCategories = await Category.find();
             let currentCategoryList = allCategories;
             let upperCategoryExists = false;
-            let categoryBuffer;
+            let categoryBuffer = {};
 
             for (const category of allCategories) {
                 if (category.name === categoryNames[0]) {
@@ -84,7 +84,7 @@ router.post("/admin/addNewBook", async (req, res) => {
             }
 
             if (!upperCategoryExists) {
-                const newCategory = new Category({ name: categoryNames[0], children: [] });
+                const newCategory = new Category({ name: categoryNames[0], children: [], containsBooks: false });
                 await newCategory.save();
                 categoryBuffer = newCategory;
                 currentCategoryList = newCategory.children;
@@ -103,9 +103,9 @@ router.post("/admin/addNewBook", async (req, res) => {
 
                 if (existingCategory) {
                     currentCategoryList = existingCategory.children;
+                    categoriesArray.push(existingCategory.name);
                 } else {
                     const newCategory = { name: categoryName, children: [] };
-
                     currentCategoryList.push(newCategory);
                     currentCategoryList = newCategory.children;
                 }
@@ -115,17 +115,18 @@ router.post("/admin/addNewBook", async (req, res) => {
         }
 
         const categoryNames = req.body.categoryPath.split("/");
-        addOrUpdateCategory(categoryNames);
+        await addOrUpdateCategory(categoryNames);
 
         const collectionsArray = [];
         for (const collection of req.body.collections) {
             const existingCollection = await Collection.findOne({ name: collection });
-            collectionsArray.push(existingCollection);
 
-            if (!existingCollection) {
+            if (existingCollection) {
+                collectionsArray.push(existingCollection.name);
+            } else {
                 const newCollection = new Collection({ name: collection });
                 await newCollection.save();
-                collectionsArray.push(newCollection);
+                collectionsArray.push(newCollection.name);
             }
         }
 
@@ -146,7 +147,7 @@ router.post("/admin/addNewBook", async (req, res) => {
             weight: req.body.weight,
             series: req.body.series,
             language: req.body.language,
-            category: categoryNames[categoryNames.length - 1],
+            categories: req.body.categoryPath.split("/"),
             collections: collectionsArray,
             amount: req.body.amount,
         });
@@ -333,7 +334,7 @@ router.get("/user/searchBook", async (req, res) => {
                     publisher: { $regex: regexPhrase },
                 },
                 {
-                    category: { $regex: regexPhrase },
+                    categories: { $regex: regexPhrase },
                 },
                 {
                     series: { $regex: regexPhrase },
@@ -355,6 +356,19 @@ router.get("/user/searchBook", async (req, res) => {
     }
 });
 
+router.get("/user/getAllCategories", async (req, res) => {
+    try {
+        const hasToBeAuthorized = false;
+        verifyJWT(req, hasToBeAuthorized);
+
+        const categories = Category.find();
+        res.status(200).send(categories);
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+        console.log(error);
+    }
+});
+
 router.get("/user/getBookData", async (req, res) => {
     try {
         const hasToBeAuthorized = false;
@@ -364,18 +378,28 @@ router.get("/user/getBookData", async (req, res) => {
         if (!bookId) throw new Error("Please, enter book id");
 
         const book = await Book.findById(bookId);
-        res.status(200).send({ book });
+        res.status(200).send({ ...book });
     } catch (error) {
         res.status(500).send({ error: error.message });
         console.log(error);
     }
 });
 
-router.get("/user/getAllCategories", async (req, res) => {
+router.post("/user/addRating", async (req, res) => {
     try {
-        const categories = await Category.find().populate("parent");
+        const hasToBeAuthorized = true;
+        verifyJWT(req, hasToBeAuthorized);
 
-        res.status(200).send({ categories });
+        const bookId = req.body?.bookId;
+        const rating = req.body?.rating;
+        if (!bookId || !rating) throw new Error("Please, enter book id and rating");
+
+        const book = await Book.findById(bookId);
+        book.ratings.push(rating);
+        book.averageRating = book.ratings.reduce((a, b) => a + b, 0) / book.ratings.length;
+
+        await book.save();
+        res.sendStatus(200);
     } catch (error) {
         res.status(500).send({ error: error.message });
         console.log(error);

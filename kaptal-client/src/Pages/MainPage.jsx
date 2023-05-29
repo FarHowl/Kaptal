@@ -22,28 +22,11 @@ export default function MainPage() {
             else console.log(error);
         }
     }
-
-    useEffect(() => {
-        getBooks();
-    }, []);
-
     // useLayoutEffect(() => {
     //     socket.on("connect", () => {
     //         console.log(socket.id);
     //     });
     // }, []);
-
-    async function getResponse() {
-        const response = await axios.post("http://api.local.app.garden/api/users-service/user/signIn", {
-            email: "kartashov104@gmail.com",
-            password: "3498569",
-        });
-        return response.data;
-    }
-
-    useEffect(() => {
-        console.log(getResponse());
-    }, []);
 
     return (
         <>

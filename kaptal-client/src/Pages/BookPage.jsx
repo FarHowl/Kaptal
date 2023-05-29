@@ -2,7 +2,7 @@ import { useEffect, React, useState, useLayoutEffect } from "react";
 import IconComponent from "../Components/Icons/IconComponent";
 import WishesIcon from "../Components/Icons/WishesIcon";
 import LoadingComponent from "../Components/UI/LoadingComponent";
-import { getBookData_EP, getBookReviews_EP, addReview_EP } from "../Utils/API";
+import { getBookData_EP, getBookReviews_EP } from "../Utils/API";
 import { authToken_header } from "../Utils/LocalStorageUtils";
 import { useParams } from "react-router-dom";
 import axios from "axios";
@@ -13,49 +13,73 @@ export default function BookPage() {
     const [bookData, setBookData] = useState({});
     const [reviewsView, setReviewsView] = useState([]);
 
-    async function getReviewsData() {
-        try {
-            const query = `?bookId=${params.bookId}`;
-            const res = await axios.get(getBookReviews_EP + query);
+    // const book = {
+    //     name: "Любовь по залету",
+    //     author: "Лина Филимонова",
+    //     genres: ["Fantasy", "Adventure"],
+    //     isAvailable: false,
+    //     coverType: "Мягкий переплет",
+    //     publisher: "АСТ",
+    //     series: "Звездная коллекция романов о любви",
+    //     language: "Русский",
+    //     size: "16.5x11.3x2.3",
+    //     weight: 158,
+    //     ISBN: "978-5-17-127247-0",
+    //     pagesCount: 320,
+    //     ageLimit: 18,
+    //     year: 2023,
+    //     circulation: 3000,
+    //     annotation:
+    //         "Аня хотела от него только одного - ребенка. Потому что часики тикают, нормальных парней все равно нет, а этот… просто настоящий мачо! Она уверена в том, что не любит Демида и вовсе не собирается за него замуж, ведь самое ценное в нем - его прекрасные гены, которые ей и нужны. Демид же вовсе не против развлечься, он и не думает о серьезных отношениях, в его жизни и так было немало беременных, мечтающих затащить его в загс и все пошли лесом. Так почему бы не провести время с удовольствием? Однако судьба приготовила свои сюрпризы для них обоих...",
+    //     reviews: [],
+    //     rating: 4,
+    //     ratingCount: 33,
+    //     discount: 10,
+    //     price: 270,
+    //     image: "https://cdn.img-gorod.ru/310x500/nomenclature/29/193/2919342.jpg",
+    //     category: "61824b6c77a53d0015fe5279",
+    //     collections: ["61824b6c77a53d0015fe527a", "61824b6c77a53d0015fe527b"],
+    // };
 
-            let r = [];
-            for (let i = 0; i < res.data.length; i++) {
-                r.push(<ReviewTile key={i} review={res.data[i]} />);
-            }
+    // async function getBookData() {
+    //     try {
+    //         const res = await axios.get(getBookData_EP, authToken_header());
 
-            setReviewsView(r);
-        } catch (error) {
-            if (error?.response) console.log(error.response.data.error);
-            else console.log(error);
-        }
-    }
+    //         let r = [];
+    //         for (const i of res.reviews) {
+    //             r.push(<ReviewTile key={i._id} review={i} />);
+    //         }
+
+    //         setReviewsView(r);
+    //     } catch (error) {
+    //         if (error?.response) console.log(error.response.data.error);
+    //         else console.log(error);
+    //     }
+    // }
 
     async function getBookData() {
         try {
-            const query = `?bookId=${params.bookId}`;
+            // const query = `?bookId=${params.id}`;
+            const query = "?bookId=646f259c1cd3f512ce8c349e";
             const res = await axios.get(getBookData_EP + query);
-            setBookData(res.data.book);
+            setBookData(res.data);
         } catch (error) {
             if (error?.response) console.log(error.response.data.error);
             else console.log(error);
         }
     }
 
-    async function addReview() {
+    async function getBookReviews() {
         try {
-            const res = await axios.post(
-                addReview_EP,
-                {
-                    bookId: params.bookId,
-                    text: "Толкин снова в ударе! Новая книга просто полнейший ахуй!",
-                    title: "АХУЕТЬ НЕ ВСТАТЬ",
-                    rating: 5,
-                    author: "Трушный толкинист",
-                    publicationDate: "2023-05-20",
-                },
-                authToken_header()
-            );
-            console.log(res);
+            // const query = `?bookId=${params.id}`;
+            const query = "?bookId=646f259c1cd3f512ce8c349e";
+            const res = await axios.get(getBookReviews_EP + query);
+
+            let a = [];
+            for (const review of res.data) {
+                a.push(<ReviewTile key={review._id} review={review} />);
+            }
+            setReviewsView(a);
         } catch (error) {
             if (error?.response) console.log(error.response.data.error);
             else console.log(error);
@@ -69,7 +93,7 @@ export default function BookPage() {
 
     useLayoutEffect(() => {
         getBookData();
-        getReviewsData();
+        getBookReviews();
     }, []);
 
     return (
@@ -194,16 +218,7 @@ export default function BookPage() {
                 </div>
             </div>
             <div className="flex w-full justify-start">
-                <div className="flex flex-col gap-3">
-                    <span className="text-3xl font-bold">Отзывы</span>
-                    <button
-                        onClick={() => {
-                            addReview();
-                        }}
-                    >
-                        Написать отзыв
-                    </button>
-                </div>
+                <span className="text-3xl font-bold">Отзывы</span>
             </div>
             <div className="flex w-full justify-start">
                 <div className="flex justify-center gap-6">
@@ -230,7 +245,7 @@ function ReviewTile({ review }) {
                 <span className="text-lg text-gray-600">{review.author}</span>
                 <div className="flex gap-2">
                     <span className="text-gray-600 font-light">{review.publicationDate}</span>
-                    <span>{review.rating}</span>
+                    <span>{review.bookRating}</span>
                 </div>
             </div>
             <div className="w-full flex justify-start">

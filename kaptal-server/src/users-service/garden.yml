@@ -26,5 +26,5 @@ spec:
     paths:
     - target: /app/src
       source: src
-      mode: two-way
       exclude: [node_modules]
+      mode: one-way-replica

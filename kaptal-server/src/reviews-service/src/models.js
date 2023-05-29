@@ -9,7 +9,7 @@ const reviewSchema = new mongoose.Schema({
         required: true,
         type: String,
     },
-    rating: {
+    bookRating: {
         required: true,
         type: Number,
     },
@@ -21,20 +21,39 @@ const reviewSchema = new mongoose.Schema({
         required: true,
         type: String,
     },
-    likes: {
-        required: true,
-        default: 0,
-        type: Number,
-    },
-    dislikes: {
-        required: true,
-        default: 0,
-        type: Number,
-    },
+    reviewRating: [
+        {
+            userId: {
+                required: true,
+                trim: true,
+                type: mongoose.Schema.Types.ObjectId,
+            },
+            isReviewUseful: {
+                required: true,
+                trim: true,
+                type: Boolean,
+            },
+        },
+    ],
     bookId: {
         required: true,
         trim: true,
         type: mongoose.Schema.Types.ObjectId,
+    },
+    pros: {
+        required: false,
+        type: String,
+        trim: true,
+    },
+    cons: {
+        required: false,
+        type: String,
+        trim: true,
+    },
+    status: {
+        required: true,
+        type: String,
+        trim: true,
     },
 });
 

@@ -77,11 +77,23 @@ const bookSchema = new mongoose.Schema({
         trim: true,
         type: String,
     },
-    rating: {
-        required: true,
-        trim: true,
-        default: 0,
+    ratings: [
+        {
+            required: true,
+            trim: true,
+            default: 0,
+            type: Number,
+            max: 5,
+            min: 1,
+            validate: {
+                validator: Number.isInteger,
+                message: "{VALUE} is not an integer value for rating.",
+            },
+        },
+    ],
+    averageRating: {
         type: Number,
+        default: 0,
     },
     discount: {
         required: true,
@@ -98,15 +110,16 @@ const bookSchema = new mongoose.Schema({
         required: true,
         type: String,
     },
-    category: {
-        type: String,
-        trim: true,
-        required: true,
-    },
+    categories: [
+        {
+            type: String,
+            trim: true,
+            required: true,
+        },
+    ],
     collections: [
         {
             type: String,
-            ref: "Collection",
             required: true,
         },
     ],

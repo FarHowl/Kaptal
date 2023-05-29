@@ -31,14 +31,6 @@ const userSchema = new mongoose.Schema({
             default: "",
         },
     ],
-    orders: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true,
-            trim: true,
-            default: "",
-        },
-    ],
     isStaffAvailableForChat: {
         required: false,
         type: Boolean,

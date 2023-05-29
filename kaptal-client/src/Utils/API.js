@@ -23,8 +23,6 @@ export const getBookData_EP = apiAddress + "/api/books-service/user/getBookData"
 
 export const getBookReviews_EP = apiAddress + "/api/reviews-service/user/getBookReviews";
 
-export const addReview_EP = apiAddress + "/api/reviews-service/user/addReview";
-
 //
 
 // Admin
