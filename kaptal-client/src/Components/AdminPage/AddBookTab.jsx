@@ -1,7 +1,8 @@
 import axios from "axios";
-import { useEffect, useState, useRef, Children } from "react";
-import { addNewBook_EP } from "../../Utils/API";
+import { useEffect, useState, useRef, Children, useLayoutEffect } from "react";
+import { addNewBook_EP, getAllCategories_EP } from "../../Utils/API";
 import { getUserData } from "../../Utils/LocalStorageUtils";
+import InputTile from "../UI/InputTile";
 
 export default function AddBookTab({ setIsTabLoading }) {
     const [bookInfo, setBookInfo] = useState({});
@@ -17,8 +18,6 @@ export default function AddBookTab({ setIsTabLoading }) {
                 {
                     name: bookInfo.name,
                     author: bookInfo.author,
-                    genres: bookInfo.genres,
-                    isAvailable: bookInfo.isAvailable,
                     coverType: bookInfo.coverType,
                     publisher: bookInfo.publisher,
                     size: bookInfo.size,
@@ -33,7 +32,9 @@ export default function AddBookTab({ setIsTabLoading }) {
                     weight: bookInfo.weight,
                     series: bookInfo.series,
                     language: bookInfo.language,
-                    discount: bookInfo.discount,
+                    stock: bookInfo.stock,
+                    categoryPath: bookInfo.categoryPath,
+                    collections: bookInfo.collections,
                 },
                 { headers: { "Content-Type": "multipart/form-data", Authorization: "Bearer " + getUserData().authToken } }
             );
@@ -55,29 +56,100 @@ export default function AddBookTab({ setIsTabLoading }) {
         <div className="absolute top-[90px] left-[254px] pb-6 pt-8 px-10 right-0 bottom-0 flex flex-col items-center overflow-y-auto">
             <div className="flex gap-6 justify-center items-center w-full flex-wrap">
                 <div className="flex flex-col gap-2 max-w-[250px] w-full">
-                    <InputTile title={"Название"} bookField={"name"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
-                    <InputTile title={"Автор"} bookField={"author"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
-                    <InputTile title={"Издатель"} bookField={"publisher"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
-                    <InputTile title={"Год"} bookField={"year"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
-                    <InputTile title={"Количество страниц"} bookField={"pagesCount"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
+                    <InputTile
+                        title={"Название"}
+                        onChange={(e) => {
+                            setBookInfo({ ...bookInfo, name: e.target.value });
+                        }}
+                    />
+                    <InputTile
+                        title={"Автор"}
+                        onChange={(e) => {
+                            setBookInfo({ ...bookInfo, author: e.target.value });
+                        }}
+                    />
+                    <InputTile
+                        title={"Издатель"}
+                        onChange={(e) => {
+                            setBookInfo({ ...bookInfo, publisher: e.target.value });
+                        }}
+                    />
+                    <InputTile
+                        title={"Год"}
+                        onChange={(e) => {
+                            setBookInfo({ ...bookInfo, year: e.target.value });
+                        }}
+                    />
+                    <InputTile
+                        title={"Количество страниц"}
+                        onChange={(e) => {
+                            setBookInfo({ ...bookInfo, pagesCount: e.target.value });
+                        }}
+                    />
                 </div>
                 <div className="flex flex-col gap-2 max-w-[250px] w-full">
-                    <InputTile title={"ISBN"} bookField={"ISBN"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
-                    <InputTile title={"Размер"} bookField={"size"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
-                    <InputTile title={"Вес"} bookField={"weight"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
-                    <InputTile title={"Цена"} bookField={"price"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
-                    <InputTile title={"Тираж"} bookField={"circulation"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
+                    <InputTile
+                        title={"ISBN"}
+                        onChange={(e) => {
+                            setBookInfo({ ...bookInfo, ISBN: e.target.value });
+                        }}
+                    />
+                    <InputTile
+                        title={"Размер"}
+                        onChange={(e) => {
+                            setBookInfo({ ...bookInfo, size: e.target.value });
+                        }}
+                    />
+                    <InputTile
+                        title={"Вес"}
+                        onChange={(e) => {
+                            setBookInfo({ ...bookInfo, weight: e.target.value });
+                        }}
+                    />
+                    <InputTile
+                        title={"Цена"}
+                        onChange={(e) => {
+                            setBookInfo({ ...bookInfo, price: e.target.value });
+                        }}
+                    />
+                    <InputTile
+                        title={"Тираж"}
+                        onChange={(e) => {
+                            setBookInfo({ ...bookInfo, circulation: e.target.value });
+                        }}
+                    />
                 </div>
                 <div className="flex flex-col gap-2 max-w-[250px] w-full">
-                    <InputTile title={"Серия"} bookField={"series"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
-                    <InputTile title={"Наличие на складе"} bookField={"amount"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
-                    <InputTile title={"Язык"} bookField={"language"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
-                    <InputTile title={"Возрастной рейтинг"} bookField={"ageLimit"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
-                </div>
-            </div>
-            <div className="flex gap-6 justify-center items-center w-full mt-6">
-                <div className="flex flex-col gap-2 max-w-[250px] w-full">
-                    <InputTile title={"Тип обложки"} bookField={"coverType"} bookInfo={bookInfo} setBookInfo={setBookInfo} />
+                    <InputTile
+                        title={"Серия"}
+                        onChange={(e) => {
+                            setBookInfo({ ...bookInfo, series: e.target.value });
+                        }}
+                    />
+                    <InputTile
+                        title={"Количество на складе"}
+                        onChange={(e) => {
+                            setBookInfo({ ...bookInfo, stock: e.target.value });
+                        }}
+                    />
+                    <InputTile
+                        title={"Язык"}
+                        onChange={(e) => {
+                            setBookInfo({ ...bookInfo, language: e.target.value });
+                        }}
+                    />
+                    <InputTile
+                        title={"Возрастной рейтинг"}
+                        onChange={(e) => {
+                            setBookInfo({ ...bookInfo, ageLimit: e.target.value });
+                        }}
+                    />
+                    <InputTile
+                        title={"Тип обложки"}
+                        onChange={(e) => {
+                            setBookInfo({ ...bookInfo, coverType: e.target.value });
+                        }}
+                    />
                 </div>
             </div>
             <div className="w-full flex justify-center items-center mt-6">
@@ -125,155 +197,48 @@ export default function AddBookTab({ setIsTabLoading }) {
     );
 }
 
-function InputTile({ setBookInfo, bookInfo, bookField, title }) {
-    const [isFocused, setIsFocused] = useState(false);
-    const [isEmpty, setIsEmpty] = useState(true);
-
-    return (
-        <div className="relative flex flex-col w-full items-center">
-            <input
-                onFocus={() => {
-                    setIsFocused(true);
-                }}
-                onBlur={() => {
-                    setIsFocused(false);
-                }}
-                onChange={(e) => {
-                    setBookInfo({ ...bookInfo, [bookField]: e.target.value });
-                    if (e.target.value.length === 0) setIsEmpty(true);
-                    else setIsEmpty(false);
-                }}
-                className="w-full text-left pt-6 pb-1 font-medium text-medium px-3 border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-lg focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300"
-                type="text"
-            />
-            <div className={"absolute left-3 h-full pointer-events-none animated-100 " + (isFocused || !isEmpty ? "top-[1px]" : "top-[25%]")}>
-                <span className={"text-gray-500 animated-100 origin-top-left " + (isFocused || !isEmpty ? "text-sm" : "text-lg")}>{title}</span>
-            </div>
-        </div>
-    );
-}
-
 function CategoryInputTile({ setBookInfo, bookInfo, bookField, title }) {
     const [isFocused, setIsFocused] = useState(false);
     const [isEmpty, setIsEmpty] = useState(true);
-
     const [categoriesView, setCategoriesView] = useState([]);
-
-    const categories = [
-        {
-            _id: "1",
-            name: "Фантастика",
-            children: [
-                {
-                    _id: "14",
-                    name: "Космическая фантастика",
-                    children: [
-                        {
-                            _id: "13",
-                            name: "Космоопера",
-                            children: [],
-                        },
-                        {
-                            _id: "12",
-                            name: "Космическая опера",
-                            children: [],
-                        },
-                    ],
-                },
-                {
-                    _id: "11",
-                    name: "Научная фантастика",
-                    children: [],
-                },
-                {
-                    _id: "10",
-                    name: "Киберпанк",
-                    children: [],
-                },
-            ],
-        },
-        {
-            _id: "2",
-            name: "Фэнтези",
-            children: [
-                {
-                    _id: "9",
-                    name: "Эпическое фэнтези",
-                    children: [],
-                },
-                {
-                    _id: "8",
-                    name: "Героическое фэнтези",
-                    children: [],
-                },
-                {
-                    _id: "7",
-                    name: "Ужасы",
-                    children: [],
-                },
-            ],
-        },
-        {
-            _id: "3",
-            name: "Детектив",
-            children: [
-                {
-                    _id: "4",
-                    name: "Классический детектив",
-                    children: [],
-                },
-                {
-                    _id: "5",
-                    name: "Психологический детектив",
-                    children: [],
-                },
-                {
-                    _id: "6",
-                    name: "Триллер",
-                    children: [],
-                },
-            ],
-        },
-    ];
+    const [categories, setCategories] = useState([]);
 
     const inputRef = useRef();
     const categoriesContainerRef = useRef();
-    const wrapperRef = useRef();
+
+    async function getAllCategories() {
+        try {
+            const res = await axios.get(getAllCategories_EP);
+            setCategories(res.data);
+        } catch (error) {
+            if (error?.response) {
+                console.log(error.response.data.error);
+            } else {
+                console.log(error);
+            }
+        }
+    }
 
     useEffect(() => {
         if (categoriesView.length === 0) setIsEmpty(true);
         else setIsEmpty(false);
     }, [categoriesView]);
 
-    // !event.target.classList.contains("delete-button")
-
-    useEffect(() => {
-        // Обработчик клика вне контейнера
-        const handleClickOutside = (event) => {
-          if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-            console.log('Клик вне контейнера');
-            // Здесь вы можете выполнить необходимые действия при клике вне контейнера
-          }
-        };
-    
-        // Добавление обработчика события при монтировании компонента
-        document.addEventListener('click', handleClickOutside);
-    
-        // Удаление обработчика события при размонтировании компонента
-        return () => {
-          document.removeEventListener('click', handleClickOutside);
-        };
-      }, []);
-
     useEffect(() => {
         console.log(categoriesView);
     }, [categoriesView]);
 
+    useLayoutEffect(() => {
+        getAllCategories();
+    }, []);
+
     return (
         <div
-            ref={wrapperRef}
             onFocus={() => {
                 setIsFocused(true);
+            }}
+            onBlur={()=>{
+                setIsFocused(false)
             }}
             className={
                 "relative min-w-[250px] flex items-center pl-3 pr-3 rounded-lg border-[1px] " +

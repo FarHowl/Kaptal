@@ -10,7 +10,7 @@ type: container
 name: books-service
 description: The books service deployment
 build: books-service
-dependencies: [deploy.books-redis]
+dependencies: [deploy.books-redis, deploy.s3-service]
 spec:
   args: [npm, start]
   env:

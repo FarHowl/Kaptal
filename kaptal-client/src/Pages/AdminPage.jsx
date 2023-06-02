@@ -127,7 +127,7 @@ function AllBooksTab({ setTabOption }) {
             const res = await axios.get(getAllBooks_EP, authToken_header());
 
             let b = [];
-            for (const i of res.data) {
+            for (const i of res.data.books) {
                 b.push(<BookTile key={i._id} book={i} isBookInAdminMenu={true} setAdminMenuTab={setTabOption} />);
             }
             setBooksView(b);

@@ -88,13 +88,13 @@ router.get("/books-service/user/getAllCategories", async (req, res) => {
     }
 });
 
-router.post("/books-service/user/addRating", async (req, res) => {
+router.post("/reviews-service/user/addRating", async (req, res) => {
     try {
         const parentToken = verifyJWT(req, ["admin", "user", "moderator"]);
 
         const newToken = jwt.sign({ parentToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
 
-        const response = await axios.post("http://books-service:3000" + "/api/user/addRating", { ...req.body }, { headers: { Authorization: "Bearer " + newToken } });
+        const response = await axios.post("http://reviews-service:3000" + "/api/user/addRating", { ...req.body }, { headers: { Authorization: "Bearer " + newToken } });
 
         res.status(200).send(response.data);
     } catch (error) {
@@ -103,31 +103,13 @@ router.post("/books-service/user/addRating", async (req, res) => {
     }
 });
 
-// router.get("/books-service/user/getAllCategories", async (req, res) => {
-//     try {
-//         const token = jwt.sign({}, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
-
-//         const query = "?" + req.originalUrl.split("?")[1];
-
-//         const response = await axios.get("http://books-service:3000" + "/api/user/getAllCategories" + query, { headers: { Authorization: "Bearer " + token } });
-//         res.status(200).send(response.data);
-//     } catch (error) {
-//         if (error?.response) res.status(500).send({ error: error.response.data.error });
-//         else console.log(error);
-
-//         console.log(error);
-//     }
-// });
-
 router.post("/reviews-service/user/addReview", async (req, res) => {
     try {
-        const parentToken = verifyJWT(req, ["admin"]);
+        const parentToken = verifyJWT(req, ["admin", "user", "moderator"]);
 
-        const newTokenForReviews = jwt.sign({ parentToken }, process.env.GATEWAY_REVIEWS_KEY, { expiresIn: "100d" });
-        const newTokenForBooks = jwt.sign({ parentToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
+        const newToken = jwt.sign({ parentToken }, process.env.GATEWAY_REVIEWS_KEY, { expiresIn: "100d" });
 
-        await axios.post("http://reviews-service:3000" + "/api/user/addReview", { ...req.body }, { headers: { Authorization: "Bearer " + newTokenForReviews } });
-        await axios.post("http://books-service:3000" + "/api/user/addRating", { bookId: req.body?.bookId, rating: req.body?.rating }, { headers: { Authorization: "Bearer " + newTokenForBooks } });
+        await axios.post("http://reviews-service:3000" + "/api/user/addReview", { ...req.body }, { headers: { Authorization: "Bearer " + newToken } });
 
         res.sendStatus(200);
     } catch (error) {
@@ -143,6 +125,21 @@ router.get("/reviews-service/user/getBookReviews", async (req, res) => {
         const query = "?" + req.originalUrl.split("?")[1];
 
         const response = await axios.get("http://reviews-service:3000" + "/api/user/getBookReviews" + query, { headers: { Authorization: "Bearer " + token } });
+
+        res.status(200).send(response.data);
+    } catch (error) {
+        if (error?.response) res.status(500).send({ error: error.response.data.error });
+        else res.status(500).send({ error: error.message });
+    }
+});
+
+router.get("/reviews-service/user/getBookRating", async (req, res) => {
+    try {
+        const token = jwt.sign({}, process.env.GATEWAY_REVIEWS_KEY, { expiresIn: "100d" });
+
+        const query = "?" + req.originalUrl.split("?")[1];
+
+        const response = await axios.get("http://reviews-service:3000" + "/api/user/getBookRating" + query, { headers: { Authorization: "Bearer " + token } });
 
         res.status(200).send(response.data);
     } catch (error) {

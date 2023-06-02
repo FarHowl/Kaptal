@@ -2,66 +2,25 @@ import { useEffect, React, useState, useLayoutEffect } from "react";
 import IconComponent from "../Components/Icons/IconComponent";
 import WishesIcon from "../Components/Icons/WishesIcon";
 import LoadingComponent from "../Components/UI/LoadingComponent";
-import { getBookData_EP, getBookReviews_EP } from "../Utils/API";
+import { addReview_EP, getBookData_EP, getBookReviews_EP } from "../Utils/API";
 import { authToken_header } from "../Utils/LocalStorageUtils";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import InputTile from "../Components/UI/InputTile";
+import CrossIcon from "../Components/Icons/CrossIcon";
 
 export default function BookPage() {
     const params = useParams();
     const [isImgLoaded, setIsImgLoaded] = useState(false);
     const [bookData, setBookData] = useState({});
     const [reviewsView, setReviewsView] = useState([]);
-
-    // const book = {
-    //     name: "Любовь по залету",
-    //     author: "Лина Филимонова",
-    //     genres: ["Fantasy", "Adventure"],
-    //     isAvailable: false,
-    //     coverType: "Мягкий переплет",
-    //     publisher: "АСТ",
-    //     series: "Звездная коллекция романов о любви",
-    //     language: "Русский",
-    //     size: "16.5x11.3x2.3",
-    //     weight: 158,
-    //     ISBN: "978-5-17-127247-0",
-    //     pagesCount: 320,
-    //     ageLimit: 18,
-    //     year: 2023,
-    //     circulation: 3000,
-    //     annotation:
-    //         "Аня хотела от него только одного - ребенка. Потому что часики тикают, нормальных парней все равно нет, а этот… просто настоящий мачо! Она уверена в том, что не любит Демида и вовсе не собирается за него замуж, ведь самое ценное в нем - его прекрасные гены, которые ей и нужны. Демид же вовсе не против развлечься, он и не думает о серьезных отношениях, в его жизни и так было немало беременных, мечтающих затащить его в загс и все пошли лесом. Так почему бы не провести время с удовольствием? Однако судьба приготовила свои сюрпризы для них обоих...",
-    //     reviews: [],
-    //     rating: 4,
-    //     ratingCount: 33,
-    //     discount: 10,
-    //     price: 270,
-    //     image: "https://cdn.img-gorod.ru/310x500/nomenclature/29/193/2919342.jpg",
-    //     category: "61824b6c77a53d0015fe5279",
-    //     collections: ["61824b6c77a53d0015fe527a", "61824b6c77a53d0015fe527b"],
-    // };
-
-    // async function getBookData() {
-    //     try {
-    //         const res = await axios.get(getBookData_EP, authToken_header());
-
-    //         let r = [];
-    //         for (const i of res.reviews) {
-    //             r.push(<ReviewTile key={i._id} review={i} />);
-    //         }
-
-    //         setReviewsView(r);
-    //     } catch (error) {
-    //         if (error?.response) console.log(error.response.data.error);
-    //         else console.log(error);
-    //     }
-    // }
+    const [isAddReviewOpened, setIsAddReviewOpened] = useState(false);
 
     async function getBookData() {
         try {
-            // const query = `?bookId=${params.id}`;
-            const query = "?bookId=646f259c1cd3f512ce8c349e";
+            const query = `?bookId=${params.bookId}`;
             const res = await axios.get(getBookData_EP + query);
+
             setBookData(res.data);
         } catch (error) {
             if (error?.response) console.log(error.response.data.error);
@@ -71,8 +30,7 @@ export default function BookPage() {
 
     async function getBookReviews() {
         try {
-            // const query = `?bookId=${params.id}`;
-            const query = "?bookId=646f259c1cd3f512ce8c349e";
+            const query = `?bookId=${params.bookId}`;
             const res = await axios.get(getBookReviews_EP + query);
 
             let a = [];
@@ -218,7 +176,17 @@ export default function BookPage() {
                 </div>
             </div>
             <div className="flex w-full justify-start">
-                <span className="text-3xl font-bold">Отзывы</span>
+                <div className="flex flex-col gap-2">
+                    <span className="text-3xl font-bold">Отзывы</span>
+                    <button
+                        onClick={() => {
+                            setIsAddReviewOpened(true);
+                        }}
+                        className={"py-2 px-10  rounded-md text-white animated-100 font-semibold " + (true ? "bg-sky-400 hover:bg-sky-500" : "bg-slate-400 pointer-events-none")}
+                    >
+                        Написать отзыв
+                    </button>
+                </div>
             </div>
             <div className="flex w-full justify-start">
                 <div className="flex justify-center gap-6">
@@ -233,6 +201,94 @@ export default function BookPage() {
                         </div>
                     </div>
                 </div>
+            </div>
+            {isAddReviewOpened ? <AddReviewPopUp setIsAddReviewOpened={setIsAddReviewOpened} /> : <></>}
+        </div>
+    );
+}
+
+function AddReviewPopUp({ setIsAddReviewOpened }) {
+    const [reviewInfo, setReviewInfo] = useState({});
+    const params = useParams();
+
+    async function addReview() {
+        try {
+            const res = await axios.post(
+                addReview_EP,
+                {
+                    bookId: params.bookId,
+                    title: reviewInfo.title,
+                    text: reviewInfo?.text,
+                    pros: reviewInfo?.pros,
+                    cons: reviewInfo?.cons,
+                    author: reviewInfo.author,
+                    rating: reviewInfo.rating,
+                },
+                authToken_header()
+            );
+        } catch (error) {
+            if (error?.response) console.log(error.response.data.error);
+            else console.log(error);
+        }
+    }
+
+    return (
+        <div className="fixed z-20 inset-0 bg-black/50 flex justify-center items-center overflow-y-auto">
+            <div className="bg-white rounded-md flex flex-col w-[400px] pb-10 pt-4 px-8">
+                <div className="w-full flex justify-between items-center mb-5">
+                    <span className="text-xl font-medium">Оcтавить отзыв</span>
+                    <IconComponent
+                        onClick={() => {
+                            setIsAddReviewOpened(false);
+                        }}
+                        Icon={CrossIcon}
+                        size={20}
+                        color={"#3BA5ED"}
+                        hoveredColor={"#1b90e0"}
+                        animation={"animated-100"}
+                        buttonStyle={"w-[40px] h-[40px] flex justify-center items-center bg-slate-200 animated-100 rounded-md hover:bg-slate-300"}
+                    />
+                </div>
+                <div className="flex flex-col gap-y-4">
+                    <InputTile
+                        title={"Заголовок"}
+                        onChange={(e) => {
+                            setReviewInfo({ ...reviewInfo, title: e.target.value });
+                        }}
+                    />
+                    <InputTile
+                        title={"Комментарий"}
+                        onChange={(e) => {
+                            setReviewInfo({ ...reviewInfo, text: e.target.value });
+                        }}
+                    />
+                    <InputTile
+                        title={"Плюсы"}
+                        onChange={(e) => {
+                            setReviewInfo({ ...reviewInfo, pros: e.target.value });
+                        }}
+                    />
+                    <InputTile
+                        title={"Минусы"}
+                        onChange={(e) => {
+                            setReviewInfo({ ...reviewInfo, cons: e.target.value });
+                        }}
+                    />
+                    <InputTile
+                        title={"Имя пользователя"}
+                        onChange={(e) => {
+                            setReviewInfo({ ...reviewInfo, author: e.target.value });
+                        }}
+                    />
+                </div>
+                <button
+                    onClick={() => {
+                        addReview();
+                    }}
+                    className={"py-3 px-10 mt-6 rounded-md text-white animated-100 font-semibold " + (true ? "bg-sky-400 hover:bg-sky-500" : "bg-slate-400 pointer-events-none")}
+                >
+                    Опубликовать
+                </button>
             </div>
         </div>
     );

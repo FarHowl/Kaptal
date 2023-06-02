@@ -2,8 +2,12 @@ kind: Deploy
 type: container
 name: reviews-redis
 description: The reviews-redis deployment
+dependencies: [deploy.reviews-mongodb]
 spec:
   image: redis
   ports:
-    - name: mongodb
+    - name: redis
       containerPort: 6379
+  volumes:
+    - name: data
+      containerPath: /data/db

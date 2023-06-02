@@ -57,8 +57,28 @@ const reviewSchema = new mongoose.Schema({
     },
 });
 
+const ratingSchema = new mongoose.Schema({
+    userId: {
+        required: true,
+        trim: true,
+        type: mongoose.Schema.Types.ObjectId,
+    },
+    bookRating: {
+        required: true,
+        trim: true,
+        type: Number,
+    },
+    bookId: {
+        required: true,
+        trim: true,
+        type: mongoose.Schema.Types.ObjectId,
+    },
+});
+
 const Review = mongoose.model("Review", reviewSchema);
+const Rating = mongoose.model("Rating", ratingSchema);
 
 module.exports = {
     Review,
+    Rating,
 };

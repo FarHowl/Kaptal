@@ -11,7 +11,7 @@ const bookSchema = new mongoose.Schema({
         trim: true,
         type: String,
     },
-    amount: {
+    stock: {
         required: true,
         trim: true,
         type: Number,
@@ -76,24 +76,6 @@ const bookSchema = new mongoose.Schema({
         required: true,
         trim: true,
         type: String,
-    },
-    ratings: [
-        {
-            required: true,
-            trim: true,
-            default: 0,
-            type: Number,
-            max: 5,
-            min: 1,
-            validate: {
-                validator: Number.isInteger,
-                message: "{VALUE} is not an integer value for rating.",
-            },
-        },
-    ],
-    averageRating: {
-        type: Number,
-        default: 0,
     },
     discount: {
         required: true,

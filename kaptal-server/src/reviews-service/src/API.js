@@ -1,9 +1,18 @@
 const express = require("express");
 const router = express.Router();
 
+const redis = require("redis");
+const redisClient = redis.createClient({ url: "redis://reviews-redis:6379" });
+
+redisClient.on("error", (error) => {
+    console.log("Redis Client Error", error);
+});
+
+redisClient.connect();
+
 const verifyJWT = require("./utils/verifyJWT");
 
-const { Review } = require("./models");
+const { Review, Rating } = require("./models");
 
 router.get("/user/getBookReviews", async (req, res) => {
     try {
@@ -12,9 +21,25 @@ router.get("/user/getBookReviews", async (req, res) => {
 
         const bookId = req.query?.bookId;
 
-        const reviews = await Review.findById(bookId);
+        const reviews = await Review.find({ status: "checked", _id: bookId });
 
         res.status(200).send(reviews);
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+        console.log(error);
+    }
+});
+
+router.get("/user/getBookRating", async (req, res) => {
+    try {
+        const hasToBeAuthorized = false;
+        verifyJWT(req, hasToBeAuthorized);
+
+        const bookId = req.query?.bookId;
+
+        const bookRatings = await Rating.findById(bookId);
+
+        res.status(200).send(bookRatings);
     } catch (error) {
         res.status(500).send({ error: error.message });
         console.log(error);
@@ -26,7 +51,7 @@ router.post("/user/addReview", async (req, res) => {
         const hasToBeAuthorized = true;
         verifyJWT(req, hasToBeAuthorized);
 
-        const hasAllFields = req.body?.text && req.body?.title && req.body?.bookRating && req.body?.author && req.body?.publicationDate && req.body?.bookId;
+        const hasAllFields = req.body?.text && req.body?.title && req.body?.bookRating && req.body?.author && req.body?.bookId;
         if (!hasAllFields) throw new Error("Please enter all fields");
 
         if (req.body?.rating < 1 || req.body?.rating > 5) throw new Error("Rating must be between 1 and 5");
@@ -41,18 +66,18 @@ router.post("/user/addReview", async (req, res) => {
 
         if (req.body?.author.length < 4) throw new Error("Author name must be at least 4 characters long");
 
-        const publicationDate = new Date(req.body?.publicationDate);
-        if (publicationDate > new Date()) throw new Error("Publication date must be in the past");
-
-        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!dateRegex.test(req.body?.publicationDate)) throw new Error("Invalid date format");
+        const publicationDate = new Date();
+        const day = publicationDate.getDate();
+        const month = publicationDate.getMonth() + 1;
+        const year = publicationDate.getFullYear();
+        publicationDate = day + "." + month + "." + year;
 
         const review = new Review({
             text: req.body?.text,
             title: req.body?.title,
             bookRating: req.body?.bookRating,
             author: req.body?.author,
-            publicationDate: req.body?.publicationDate,
+            publicationDate: publicationDate,
             bookId: req.body?.bookId,
             pros: req.body?.pros,
             cons: req.body?.cons,
@@ -84,6 +109,51 @@ router.post("/user/rateReview", async (req, res) => {
         await review.save();
 
         res.sendStatus(200);
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+        console.log(error);
+    }
+});
+
+router.post("/user/addRating", async (req, res) => {
+    try {
+        const hasToBeAuthorized = true;
+        verifyJWT(req, hasToBeAuthorized);
+
+        const hasAllFields = req.body?.bookId && req.body?.bookRating && req.body?.userId;
+        if (!hasAllFields) throw new Error("Please, enter book id and rating");
+
+        const rating = new Rating({ bookId: req.body?.bookId, bookRating: req.body?.bookRating, userId: req.body?.userId });
+
+        await rating.save();
+        res.sendStatus(200);
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+        console.log(error);
+    }
+});
+
+router.get("/moderator/getUncheckedReviews", async (req, res) => {
+    try {
+        const hasToBeAuthorized = true;
+        verifyJWT(req, hasToBeAuthorized);
+
+        const uncheckedReviews = Review.find({ status: "unchecked" });
+
+        res.status(200).send(uncheckedReviews);
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+        console.log(error);
+    }
+});
+
+router.post("/moderator/checkReview", async (req, res) => {
+    try {
+        const hasToBeAuthorized = true;
+        verifyJWT(req, hasToBeAuthorized);
+
+        const hasAllFields = req.body?.status && req.body?.reviewId;
+        if (!hasAllFields) throw new Error("Please, enter all fields");
     } catch (error) {
         res.status(500).send({ error: error.message });
         console.log(error);

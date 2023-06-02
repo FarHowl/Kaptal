@@ -4,7 +4,17 @@ const router = express.Router();
 const jwt = require("jsonwebtoken");
 const { SHA3 } = require("sha3");
 
+const redis = require("redis");
+const redisClient = redis.createClient({ url: "redis://users-redis:6379" });
+
+redisClient.on("error", (error) => {
+    console.log("Redis Client Error", error);
+});
+
+redisClient.connect();
+
 const { User } = require("./models");
+
 const verifyJWT = require("./utils/verifyJWT");
 
 router.post("/user/signIn", async (req, res) => {

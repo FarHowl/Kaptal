@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const express = require("express");
 const cors = require("cors");
+const redis = require("redis");
+
 const routes = require("./src/API");
 const app = express();
 

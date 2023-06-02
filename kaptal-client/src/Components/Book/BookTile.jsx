@@ -49,7 +49,7 @@ export default function BookTile({ book, isBookInAdminMenu, setAdminMenuTab }) {
             className="flex relative flex-col justify-center w-[250px] p-3 pt-[30px] pb-4 gap-[12px] rounded-md hover:shadow-lg animated-100 cursor-pointer"
         >
             <div className="absolute top-[6px] text-base flex w-[224px] items-center">
-                <span className={book.isAvailable ? "text-emerald-500" : "text-red-500"}>{book.isAvailable ? "В наличии" : "Нет в наличии"}</span>
+                <span className={book.stock !== 0 ? "text-emerald-500" : "text-red-500"}>{book.stock !== 0 ? "В наличии" : "Нет в наличии"}</span>
             </div>
 
             <div className="flex flex-col animated-200 w-full pt-5 flex-shrink-0 justify-center gap-[14px]">

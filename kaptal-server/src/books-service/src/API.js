@@ -1,6 +1,25 @@
 const express = require("express");
 const router = express.Router();
 
+const redis = require("redis");
+const redisClient = redis.createClient({ url: "redis://books-redis:6379" });
+
+redisClient.on("error", (error) => {
+    console.log("Redis Client Error", error);
+});
+
+redisClient.connect();
+
+const Minio = require("minio");
+
+const minioClient = new Minio.Client({
+    endPoint: "s3-service",
+    port: 9000,
+    useSSL: false,
+    accessKey: "myminioaccesskey",
+    secretKey: "myminiosecretkey",
+});
+
 const verifyJWT = require("./utils/verifyJWT");
 
 const { Book, Category, Collection } = require("./models");
@@ -10,13 +29,13 @@ router.get("/admin/getAllBooks", async (req, res) => {
         const hasToBeAuthorized = true;
         verifyJWT(req, hasToBeAuthorized);
 
-        const totalAmountOfBooks = await Book.countDocuments();
-        const totalPages = Math.ceil(totalAmountOfBooks / 1);
+        const totalstockOfBooks = await Book.countDocuments();
+        const totalPages = Math.ceil(totalstockOfBooks / 40);
         const currentPage = parseInt(req.query.page);
         if (currentPage > totalPages) throw new Error("Undefined page");
 
-        const amountOfBooksToSkip = (currentPage - 1) * 1;
-        const foundBooks = await Book.find().skip(amountOfBooksToSkip).limit(1);
+        const stockOfBooksToSkip = (currentPage - 1) * 40;
+        const foundBooks = await Book.find().skip(stockOfBooksToSkip).limit(40);
 
         res.status(200).send({ books: foundBooks, totalPages });
     } catch (error) {
@@ -43,31 +62,14 @@ router.post("/admin/addNewBook", async (req, res) => {
             req.body?.circulation ||
             req.body?.annotation ||
             req.body?.price ||
-            req.body?.image ||
+            req.files?.image ||
             req.body?.weight ||
             req.body?.series ||
-            req.body?.amount ||
+            req.body?.stock ||
             req.body?.categoryPath ||
             req.body?.collections ||
             req.body?.language;
         if (!hasAllFields) throw new Error("Enter all fields");
-
-        const urlRegex = /^(ftp|http|https):\/\/[^ "]+$/;
-        if (!urlRegex.test(req.body.image)) throw new Error("Invalid image URL");
-
-        // const imgOriginalName = req.files.image.originalFilename;
-        // let imgParsedName;
-        // let imgType;
-
-        // if (imgOriginalName.split(".").length === 2 && (imgOriginalName.split(".")[1] === "jpg" || imgOriginalName.split(".")[1] === "jpeg")) {
-        //     imgParsedName = imgOriginalName.split(".")[0];
-        //     imgType = imgOriginalName.split(".")[1];
-        // } else throw new Error();
-
-        // const hash = new SHA3(512);
-        // const imgHash = hash.update(imgParsedName + Date.now()).digest("hex");
-
-        // const imgDestPath = "../src/images/booksImages/" + stringHash + "." + imgType;
 
         async function addOrUpdateCategory(categoryNames) {
             const allCategories = await Category.find();
@@ -80,6 +82,7 @@ router.post("/admin/addNewBook", async (req, res) => {
                     upperCategoryExists = true;
                     categoryBuffer = category;
                     currentCategoryList = categoryBuffer.children;
+                    break;
                 }
             }
 
@@ -103,7 +106,6 @@ router.post("/admin/addNewBook", async (req, res) => {
 
                 if (existingCategory) {
                     currentCategoryList = existingCategory.children;
-                    categoriesArray.push(existingCategory.name);
                 } else {
                     const newCategory = { name: categoryName, children: [] };
                     currentCategoryList.push(newCategory);
@@ -130,30 +132,61 @@ router.post("/admin/addNewBook", async (req, res) => {
             }
         }
 
-        const book = new Book({
-            name: req.body.name,
-            author: req.body.author,
-            coverType: req.body.coverType,
-            publisher: req.body.publisher,
-            size: req.body.size,
-            ISBN: req.body.ISBN,
-            pagesCount: req.body.pagesCount,
-            ageLimit: req.body.ageLimit,
-            year: req.body.year,
-            circulation: req.body.circulation,
-            annotation: req.body.annotation,
-            price: req.body.price,
-            image: req.body.image,
-            weight: req.body.weight,
-            series: req.body.series,
-            language: req.body.language,
-            categories: req.body.categoryPath.split("/"),
-            collections: collectionsArray,
-            amount: req.body.amount,
-        });
+        // const book = new Book({
+        //     name: req.body.name,
+        //     author: req.body.author,
+        //     coverType: req.body.coverType,
+        //     publisher: req.body.publisher,
+        //     size: req.body.size,
+        //     ISBN: req.body.ISBN,
+        //     pagesCount: req.body.pagesCount,
+        //     ageLimit: req.body.ageLimit,
+        //     year: req.body.year,
+        //     circulation: req.body.circulation,
+        //     annotation: req.body.annotation,
+        //     price: req.body.price,
+        //     image: req.body.image,
+        //     weight: req.body.weight,
+        //     series: req.body.series,
+        //     language: req.body.language,
+        //     categories: req.body.categoryPath,
+        //     collections: collectionsArray,
+        //     stock: req.body.stock,
+        // });
 
-        await book.save();
-        // fs.copyFileSync(req.files.image.path, imgDestPath);
+        // const imgOriginalName = req.files.image.originalFilename;
+        // let imgParsedName;
+        // let imgType;
+        // if (imgOriginalName.split(".").length === 2 && (imgOriginalName.split(".")[1] === "jpg" || imgOriginalName.split(".")[1] === "jpeg")) {
+        //     imgParsedName = imgOriginalName.split(".")[0];
+        //     imgType = imgOriginalName.split(".")[1];
+        // } else throw new Error();
+
+        // const hash = new SHA3(512);
+        // const stringHash = hash.update(imgParsedName + Date.now()).digest("hex");
+
+        // const file = req.files.image;
+        // const bucketName = "bookImages";
+        // const fileName = stringHash + "." + imgType;
+        // const metaData = {
+        //     "Content-Type": file.mimetype,
+        //     "Content-Length": file.size,
+        // };
+
+        // minioClient.putObject(bucketName, fileName, file.data, metaData, function (err, etag) {
+        //     if (err) {
+        //         console.error(err);
+        //         throw new Error(err);
+        //     } else {
+        //         console.log("Файл успешно загружен в Minio");
+        //     }
+        // });
+
+        // await book.save();
+        // await redisClient.del("categories");
+
+        console.log(req.files.image);
+
         res.sendStatus(200);
     } catch (error) {
         res.status(500).send({ error: error.message });
@@ -169,66 +202,34 @@ router.post("/admin/updateBook", async (req, res) => {
         const hasBookId = req.body?.bookId;
         if (!hasBookId) throw new Error("Please, enter userId");
 
-        const book = await Book.findById(req.body.bookId);
+        await redisClient.del("book:" + req.body.bookId.toString());
 
+        const validFields = [
+            "name",
+            "author",
+            "stock",
+            "coverType",
+            "publisher",
+            "series",
+            "language",
+            "size",
+            "weight",
+            "ISBN",
+            "pagesCount",
+            "ageLimit",
+            "year",
+            "circulation",
+            "annotation",
+            "discount",
+            "price",
+            "image",
+            "categories",
+            "collections",
+        ];
         const update = {};
-
-        const hasChangeNameTo = req.body?.name !== undefined;
-        if (hasChangeNameTo) update.name = req.body.name;
-
-        const hasChangeAuthorTo = req.body?.author !== undefined;
-        if (hasChangeAuthorTo) update.author = req.body.author;
-
-        const hasChangeGenresTo = req.body?.genres !== undefined;
-        if (hasChangeGenresTo) update.genres = req.body.genres;
-
-        const hasChangeIsAvailableTo = req.body?.isAvailable !== undefined;
-        if (hasChangeIsAvailableTo) update.isAvailable = req.body.isAvailable;
-
-        const hasChangePublisherTo = req.body?.publisher !== undefined;
-        if (hasChangePublisherTo) update.publisher = req.body.publisher;
-
-        const hasChangeCoverTypeTo = req.body?.coverType !== undefined;
-        if (hasChangeCoverTypeTo) update.coverType = req.body.coverType;
-
-        const hasChangeSizeTo = req.body?.size !== undefined;
-        if (hasChangeSizeTo) update.size = req.body.size;
-
-        const hasChangeISBNTo = req.body?.ISBN !== undefined;
-        if (hasChangeISBNTo) update.ISBN = req.body.ISBN;
-
-        const hasChangePagesCountTo = req.body?.pagesCount !== undefined;
-        if (hasChangePagesCountTo) update.pagesCount = req.body.pagesCount;
-
-        const hasChangeAgeLimitTo = req.body?.ageLimit !== undefined;
-        if (hasChangeAgeLimitTo) update.ageLimit = req.body.ageLimit;
-
-        const hasChangeYearTo = req.body?.year !== undefined;
-        if (hasChangeYearTo) update.year = req.body.year;
-
-        const hasChangeCirculationTo = req.body?.circulation !== undefined;
-        if (hasChangeCirculationTo) update.circulation = req.body.circulation;
-
-        const hasChangeAnnotationTo = req.body?.annotation !== undefined;
-        if (hasChangeAnnotationTo) update.annotation = req.body.annotation;
-
-        const hasChangeDiscountTo = req.body?.discount !== undefined;
-        if (hasChangeDiscountTo) update.discount = req.body.discount;
-
-        const hasChangeLanguageTo = req.body?.language !== undefined;
-        if (hasChangeLanguageTo) update.language = req.body.language;
-
-        const hasChangeSeriesTo = req.body?.series !== undefined;
-        if (hasChangeSeriesTo) update.series = req.body.series;
-
-        const hasChangeWeightTo = req.body?.weight !== undefined;
-        if (hasChangeWeightTo) update.weight = req.body.weight;
-
-        const hasChangeRatingCountTo = req.body?.ratingCount !== undefined;
-        if (hasChangeRatingCountTo) update.ratingCount = req.body.ratingCount;
-
-        const hasChangeImageTo = req.body?.image !== undefined;
-        if (hasChangeImageTo) update.image = req.body.image;
+        for (const field in req.body) {
+            if (field !== "bookId" && validFields.includes(field)) update[field] = req.body[field];
+        }
 
         // const hasChangeImageTo = req.files?.image !== undefined;
         // if (hasChangeImageTo) {
@@ -257,7 +258,7 @@ router.post("/admin/updateBook", async (req, res) => {
         //     update.image = stringHash + "." + imgType;
         // }
 
-        await Book.findByIdAndUpdate(book._id.toString(), update);
+        await Book.findByIdAndUpdate(req.body.bookId.toString(), update);
 
         res.sendStatus(200);
     } catch (error) {
@@ -314,7 +315,7 @@ router.get("/user/searchBook", async (req, res) => {
         }
 
         const currentPage = parseInt(req.query.page) ?? 1;
-        const amountOfBooksToSkip = (currentPage - 1) * 46;
+        const stockOfBooksToSkip = (currentPage - 1) * 40;
 
         const regexPhrase = searchPhrase !== "undefined" ? RegExp(`^${searchPhrase}`, "i") : "";
         const bookAvailabilityCondition = bookAvailability === "true" ? { isAvailable: true } : {};
@@ -342,11 +343,66 @@ router.get("/user/searchBook", async (req, res) => {
             ],
             ...bookAvailabilityCondition,
         })
-            .skip(amountOfBooksToSkip)
+            .skip(stockOfBooksToSkip)
             .limit(46)
             .sort(sort);
 
-        const totalPages = Math.ceil(foundBooks.length / 46);
+        const totalPages = Math.ceil(foundBooks.length / 40);
+        if (currentPage > totalPages) throw new Error("Undefined page");
+
+        res.status(200).send({ books: foundBooks, totalPages });
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+        console.log(error);
+    }
+});
+
+router.get("/user/getBooksByCategory", async (req, res) => {
+    try {
+        const hasToBeAuthorized = false;
+        verifyJWT(req, hasToBeAuthorized);
+
+        const categoryPath = decodeURIComponent(req.query?.categoryPath);
+        const sortType = decodeURIComponent(req.query?.sort);
+        const sortOrder = parseInt(decodeURIComponent(req.query?.order));
+
+        let sort = "";
+        if (sortType === "byNew") {
+            if (sortOrder === 1) sort = { year: 1 };
+            else if (sortOrder === -1) sort = { year: -1 };
+            else throw new Error("Invalid sort order");
+        } else if (sortType === "byPrice") {
+            if (sortOrder === 1) sort = { price: 1 };
+            else if (sortOrder === -1) sort = { price: -1 };
+            else throw new Error("Invalid sort order");
+        } else if (sortType === "byRating") {
+            if (sortOrder === 1) sort = { rating: 1 };
+            else if (sortOrder === -1) sort = { rating: -1 };
+            else throw new Error("Invalid sort order");
+        }
+
+        const currentPage = parseInt(req.query.page) ?? 1;
+        const stockOfBooksToSkip = (currentPage - 1) * 40;
+
+        await redisClient.get("booksIn:" + categoryPath, async (err, reply) => {
+            if (reply) {
+                const totalPages = Math.ceil(JSON.parse(reply).length / 40);
+                if (currentPage > totalPages) throw new Error("Undefined page");
+
+                res.status(200).send({ books: JSON.parse(reply), totalPages });
+            } else {
+                const foundBooks = await Book.find({ categories: categoryPath }).skip(stockOfBooksToSkip).limit(46).sort(sort);
+
+                await redisClient.set("booksIn:" + categoryPath, JSON.stringify(foundBooks), "EX", 60 * 60);
+
+                const totalPages = Math.ceil(foundBooks.length / 40);
+                if (currentPage > totalPages) throw new Error("Undefined page");
+
+                res.status(200).send({ books: foundBooks, totalPages });
+            }
+        });
+
+        const totalPages = Math.ceil(foundBooks.length / 40);
         if (currentPage > totalPages) throw new Error("Undefined page");
 
         res.status(200).send({ books: foundBooks, totalPages });
@@ -361,8 +417,14 @@ router.get("/user/getAllCategories", async (req, res) => {
         const hasToBeAuthorized = false;
         verifyJWT(req, hasToBeAuthorized);
 
-        const categories = Category.find();
-        res.status(200).send(categories);
+        const cachedCategories = await redisClient.get("categories");
+        if (cachedCategories) {
+            res.status(200).send(JSON.parse(cachedCategories));
+        } else {
+            const categories = await Category.find();
+            await redisClient.set("categories", JSON.stringify(categories), "EX", 60 * 60 * 24);
+            res.status(200).send(categories);
+        }
     } catch (error) {
         res.status(500).send({ error: error.message });
         console.log(error);
@@ -374,32 +436,19 @@ router.get("/user/getBookData", async (req, res) => {
         const hasToBeAuthorized = false;
         verifyJWT(req, hasToBeAuthorized);
 
-        const bookId = req.query?.bookId;
-        if (!bookId) throw new Error("Please, enter book id");
+        const cachedBook = await redisClient.get("book:" + req.query?.bookId.toString());
+        if (cachedBook) {
+            res.status(200).send(JSON.parse(cachedBook));
+        } else {
+            const bookId = req.query?.bookId;
+            if (!bookId) throw new Error("Please, enter book id");
 
-        const book = await Book.findById(bookId);
-        res.status(200).send({ ...book });
-    } catch (error) {
-        res.status(500).send({ error: error.message });
-        console.log(error);
-    }
-});
+            const book = await Book.findById(bookId);
 
-router.post("/user/addRating", async (req, res) => {
-    try {
-        const hasToBeAuthorized = true;
-        verifyJWT(req, hasToBeAuthorized);
+            await redisClient.set("book:" + bookId.toString(), JSON.stringify(book), "EX", 60 * 60 * 24);
 
-        const bookId = req.body?.bookId;
-        const rating = req.body?.rating;
-        if (!bookId || !rating) throw new Error("Please, enter book id and rating");
-
-        const book = await Book.findById(bookId);
-        book.ratings.push(rating);
-        book.averageRating = book.ratings.reduce((a, b) => a + b, 0) / book.ratings.length;
-
-        await book.save();
-        res.sendStatus(200);
+            res.status(200).send(book);
+        }
     } catch (error) {
         res.status(500).send({ error: error.message });
         console.log(error);

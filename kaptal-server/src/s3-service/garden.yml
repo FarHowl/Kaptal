@@ -1,0 +1,16 @@
+kind: Deploy
+type: container
+name: s3-service
+description: S3 service for storing images
+spec:
+  args: ["server", "/data"]
+  image: minio/minio
+  env:
+    MINIO_ROOT_USER: myminioaccesskey
+    MINIO_ROOT_PASSWORD: myminiosecretkey
+  ports:
+    - name: http
+      containerPort: 9000
+  volumes:
+    - name: data
+      containerPath: /data
