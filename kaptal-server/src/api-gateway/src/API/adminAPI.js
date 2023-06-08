@@ -71,7 +71,13 @@ router.post("/books-service/admin/addNewBook", async (req, res) => {
             {
                 ...req.body,
             },
-            { headers: { Authorization: "Bearer " + newToken } }
+            {
+                data: req.files,
+                headers: {
+                    Authorization: "Bearer " + newToken,
+                    "Content-Type": "multipart/form-data",
+                },
+            }
         );
         res.status(200).send(response.data);
     } catch (error) {
@@ -107,13 +113,13 @@ router.post("/books-service/admin/deleteBook", async (req, res) => {
         const newToken = jwt.sign({ parentToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
 
         const response = await axios.post(
-            "http://books-service:3000" + "/api/admin/updateBook",
+            "http://books-service:3000" + "/api/admin/deleteBook",
             {
                 ...req.body,
             },
             { headers: { Authorization: "Bearer " + newToken } }
         );
-        res.status(200).send(response.data);
+        res.status(200)
     } catch (error) {
         if (error?.response) res.status(500).send({ error: error.response.data.error });
         else res.status(500).send({ error: error.message });

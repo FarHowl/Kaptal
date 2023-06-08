@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const express = require("express");
+const os = require("os");
+const formData = require("express-form-data");
 const cors = require("cors");
 
 const routes = require("./src/API");
@@ -15,6 +17,16 @@ mongoose.connection.on("error", (error) => {
 mongoose.connection.once("connected", () => {
     console.log("Database Connected");
 });
+
+const options = {
+    uploadDir: os.tmpdir(),
+    autoClean: true,
+};
+
+app.use(formData.parse(options));
+app.use(formData.format());
+app.use(formData.stream());
+app.use(formData.union());
 
 app.use(
     cors({

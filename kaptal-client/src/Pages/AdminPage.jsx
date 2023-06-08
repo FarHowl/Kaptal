@@ -16,7 +16,13 @@ export default function AdminPage() {
     const [tabOption, setTabOption] = useSessionState("AllBooks");
     const [isTabLoading, setIsTabLoading] = useState(false);
 
+    const isFirstRender = useRef(true);
+
     useLayoutEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
         setIsTabLoading(true);
         setTimeout(() => {
             setIsTabLoading(false);

@@ -56,6 +56,11 @@ export const addReview_EP = apiAddress + "/api/reviews-service/user/addReview";
  */
 export const getAllCategories_EP = apiAddress + "/api/books-service/user/getAllCategories";
 
+/**
+ * @returns {array}
+ */
+export const getAllCollections_EP = apiAddress + "/api/books-service/user/getAllCollections";
+
 //
 
 // Admin

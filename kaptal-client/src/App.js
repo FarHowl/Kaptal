@@ -119,7 +119,7 @@ export default function App() {
                 </div>
             </div>
             <div className="w-full h-[80px]"></div>
-            {isRouteLoaded ? <></> : <LoadingComponent customStyle={"absolute inset-0 top-[90px] bg-white z-10 flex justify-center items-center"} />}
+            {isRouteLoaded ? <></> : <LoadingComponent customStyle={"absolute inset-0 top-[80px] bg-white z-10 flex justify-center items-center"} />}
             <Suspense>
                 <Routes>
                     <Route path="/" element={<MainPage />} />

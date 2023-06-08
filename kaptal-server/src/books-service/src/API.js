@@ -1,4 +1,6 @@
 const express = require("express");
+const { SHA3 } = require("sha3");
+const url = require("url");
 const router = express.Router();
 
 const redis = require("redis");
@@ -12,14 +14,6 @@ redisClient.connect();
 
 const Minio = require("minio");
 
-const minioClient = new Minio.Client({
-    endPoint: "s3-service",
-    port: 9000,
-    useSSL: false,
-    accessKey: "myminioaccesskey",
-    secretKey: "myminiosecretkey",
-});
-
 const verifyJWT = require("./utils/verifyJWT");
 
 const { Book, Category, Collection } = require("./models");
@@ -29,8 +23,8 @@ router.get("/admin/getAllBooks", async (req, res) => {
         const hasToBeAuthorized = true;
         verifyJWT(req, hasToBeAuthorized);
 
-        const totalstockOfBooks = await Book.countDocuments();
-        const totalPages = Math.ceil(totalstockOfBooks / 40);
+        const totalStockOfBooks = await Book.countDocuments();
+        const totalPages = Math.ceil(totalStockOfBooks / 40);
         const currentPage = parseInt(req.query.page);
         if (currentPage > totalPages) throw new Error("Undefined page");
 
@@ -66,7 +60,7 @@ router.post("/admin/addNewBook", async (req, res) => {
             req.body?.weight ||
             req.body?.series ||
             req.body?.stock ||
-            req.body?.categoryPath ||
+            req.body?.categories ||
             req.body?.collections ||
             req.body?.language;
         if (!hasAllFields) throw new Error("Enter all fields");
@@ -87,7 +81,7 @@ router.post("/admin/addNewBook", async (req, res) => {
             }
 
             if (!upperCategoryExists) {
-                const newCategory = new Category({ name: categoryNames[0], children: [], containsBooks: false });
+                const newCategory = new Category({ name: categoryNames[0], children: [] });
                 await newCategory.save();
                 categoryBuffer = newCategory;
                 currentCategoryList = newCategory.children;
@@ -116,76 +110,72 @@ router.post("/admin/addNewBook", async (req, res) => {
             await Category.findByIdAndUpdate(categoryBuffer._id.toString(), categoryBuffer);
         }
 
-        const categoryNames = req.body.categoryPath.split("/");
-        await addOrUpdateCategory(categoryNames);
+        await addOrUpdateCategory(req.body.categories);
 
-        const collectionsArray = [];
+        const allCollections = (await Collection.findOne({})) ?? new Collection({ collections: [] });
+
         for (const collection of req.body.collections) {
-            const existingCollection = await Collection.findOne({ name: collection });
+            const existingCollection = allCollections?.collections.find((col) => col === collection);
 
-            if (existingCollection) {
-                collectionsArray.push(existingCollection.name);
-            } else {
-                const newCollection = new Collection({ name: collection });
-                await newCollection.save();
-                collectionsArray.push(newCollection.name);
+            if (!existingCollection) {
+                const newCollection = { name: collection };
+                allCollections.collections.push(newCollection);
             }
         }
+        await allCollections.save();
 
-        // const book = new Book({
-        //     name: req.body.name,
-        //     author: req.body.author,
-        //     coverType: req.body.coverType,
-        //     publisher: req.body.publisher,
-        //     size: req.body.size,
-        //     ISBN: req.body.ISBN,
-        //     pagesCount: req.body.pagesCount,
-        //     ageLimit: req.body.ageLimit,
-        //     year: req.body.year,
-        //     circulation: req.body.circulation,
-        //     annotation: req.body.annotation,
-        //     price: req.body.price,
-        //     image: req.body.image,
-        //     weight: req.body.weight,
-        //     series: req.body.series,
-        //     language: req.body.language,
-        //     categories: req.body.categoryPath,
-        //     collections: collectionsArray,
-        //     stock: req.body.stock,
-        // });
+        const minioClient = new Minio.Client({
+            endPoint: "s3-service",
+            port: 9000,
+            useSSL: false,
+            accessKey: "myminioaccesskey",
+            secretKey: "myminiosecretkey",
+        });
 
-        // const imgOriginalName = req.files.image.originalFilename;
-        // let imgParsedName;
-        // let imgType;
-        // if (imgOriginalName.split(".").length === 2 && (imgOriginalName.split(".")[1] === "jpg" || imgOriginalName.split(".")[1] === "jpeg")) {
-        //     imgParsedName = imgOriginalName.split(".")[0];
-        //     imgType = imgOriginalName.split(".")[1];
-        // } else throw new Error();
+        const imgFullName = req.files.image.path.split("/")[2];
+        const imgType = imgFullName.split(".")[1];
+        const imgName = imgFullName.split(".")[0];
 
-        // const hash = new SHA3(512);
-        // const stringHash = hash.update(imgParsedName + Date.now()).digest("hex");
+        const hash = new SHA3(512);
+        const imgHashName = hash.update(imgName + Date.now()).digest("hex");
 
-        // const file = req.files.image;
-        // const bucketName = "bookImages";
-        // const fileName = stringHash + "." + imgType;
-        // const metaData = {
-        //     "Content-Type": file.mimetype,
-        //     "Content-Length": file.size,
-        // };
+        const bucketName = "books-images";
+        const imgFullHashName = imgHashName + "." + imgType;
 
-        // minioClient.putObject(bucketName, fileName, file.data, metaData, function (err, etag) {
-        //     if (err) {
-        //         console.error(err);
-        //         throw new Error(err);
-        //     } else {
-        //         console.log("Файл успешно загружен в Minio");
-        //     }
-        // });
+        const book = new Book({
+            name: req.body.name,
+            author: req.body.author,
+            coverType: req.body.coverType,
+            publisher: req.body.publisher,
+            size: req.body.size,
+            ISBN: req.body.ISBN,
+            pagesCount: req.body.pagesCount,
+            ageLimit: req.body.ageLimit,
+            year: req.body.year,
+            circulation: req.body.circulation,
+            annotation: req.body.annotation,
+            price: req.body.price,
+            image: imgFullHashName,
+            weight: req.body.weight,
+            series: req.body.series,
+            language: req.body.language,
+            categories: req.body.categories,
+            collections: req.body.collections,
+            stock: req.body.stock,
+        });
 
-        // await book.save();
-        // await redisClient.del("categories");
+        if (!(await minioClient.bucketExists(bucketName))) {
+            minioClient.makeBucket(bucketName, "us-east-1", (err) => {
+                if (err) throw new Error(err);
+            });
+        }
 
-        console.log(req.files.image);
+        await minioClient.putObject(bucketName, imgFullHashName, req.files.image);
+
+        await book.save();
+        await redisClient.del("categories");
+
+        console.log(req.body);
 
         res.sendStatus(200);
     } catch (error) {
@@ -276,9 +266,15 @@ router.post("/admin/deleteBook", async (req, res) => {
         if (!hasBookId) throw new Error("Please, enter book id");
 
         const book = await Book.findById(req.body.bookId);
-        // fs.unlink("../src/images/booksImages/" + book.image, (err) => {
-        //     if (err) throw new Error();
-        // });
+
+        const minioClient = new Minio.Client({
+            endPoint: "s3-service",
+            port: 9000,
+            useSSL: false,
+            accessKey: "myminioaccesskey",
+            secretKey: "myminiosecretkey",
+        });
+        await minioClient.removeObject("books-images", book.image);
 
         await Book.findByIdAndDelete(req.body.bookId);
 
@@ -431,6 +427,27 @@ router.get("/user/getAllCategories", async (req, res) => {
     }
 });
 
+router.get("/user/getAllCollections", async (req, res) => {
+    try {
+        const hasToBeAuthorized = false;
+        verifyJWT(req, hasToBeAuthorized);
+
+        const cachedCollections = await redisClient.get("collections");
+        if (1 === 0) {
+            console.log("first");
+            res.status(200).send(JSON.parse(cachedCollections));
+        } else {
+            const collections = await Collection.find();
+            console.log(collections);
+            await redisClient.set("collections", JSON.stringify(collections), "EX", 60 * 60 * 24);
+            res.status(200).send(collections);
+        }
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+        console.log(error);
+    }
+});
+
 router.get("/user/getBookData", async (req, res) => {
     try {
         const hasToBeAuthorized = false;
@@ -455,19 +472,31 @@ router.get("/user/getBookData", async (req, res) => {
     }
 });
 
-// router.get("/book/getBookImage", async (req, res) => {
-//     try {
-//         verifyJWT(req);
+router.get("/user/getBookImage", async (req, res) => {
+    try {
+        const hasToBeAuthorized = false;
+        verifyJWT(req, hasToBeAuthorized);
 
-//         const parsedURL = url.parse(req.url, true);
-//         const imgName = parsedURL.query.imgName;
+        const parsedURL = url.parse(req.url, true);
+        const imgName = parsedURL.query.imgName;
+        const imageBucketName = "books-images";
 
-//         res.set({ "Content-Type": "image/png" });
-//         res.sendFile("C:/Users/dima3/OneDrive/Документы/GitHub/KaptalServer/src/images/booksImages/" + imgName);
-//     } catch (error) {
-//         console.log(error);
-//         res.send(500, { error: error.message });
-//     }
-// });
+        const minioClient = new Minio.Client({
+            endPoint: "s3-service",
+            port: 9000,
+            useSSL: false,
+            accessKey: "myminioaccesskey",
+            secretKey: "myminiosecretkey",
+        });
+
+        const imageStream = await minioClient.getObject(imageBucketName, imgName);
+        res.set({ "Content-Type": "image" });
+
+        imageStream.pipe(res);
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+        console.log(error);
+    }
+});
 
 module.exports = router;

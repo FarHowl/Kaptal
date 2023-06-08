@@ -2,7 +2,7 @@ import { useEffect, React, useState, useLayoutEffect } from "react";
 import IconComponent from "../Components/Icons/IconComponent";
 import WishesIcon from "../Components/Icons/WishesIcon";
 import LoadingComponent from "../Components/UI/LoadingComponent";
-import { addReview_EP, getBookData_EP, getBookReviews_EP } from "../Utils/API";
+import { addReview_EP, getBookData_EP, getBookImage_EP, getBookReviews_EP } from "../Utils/API";
 import { authToken_header } from "../Utils/LocalStorageUtils";
 import { useParams } from "react-router-dom";
 import axios from "axios";
@@ -22,6 +22,7 @@ export default function BookPage() {
             const res = await axios.get(getBookData_EP + query);
 
             setBookData(res.data);
+            console.log(res.data)
         } catch (error) {
             if (error?.response) console.log(error.response.data.error);
             else console.log(error);
@@ -66,7 +67,7 @@ export default function BookPage() {
                                     setIsImgLoaded(true);
                                 }}
                                 className="object-cover w-full h-full"
-                                src={bookData.image}
+                                src={getBookImage_EP + `?imgName=${bookData.image}`}
                                 alt=""
                             />
                         </div>
@@ -149,7 +150,7 @@ export default function BookPage() {
                         </div>
                         {bookData.discount === 0 ? (
                             <div className="fle px-20w-full gap-10 items-center">
-                                <span className="font-bold text-xl">{100 + "₽"}</span>
+                                <span className="font-bold text-xl">{bookData.price + "₽"}</span>
                             </div>
                         ) : (
                             <div className="flex w-full gap-10 items-center">

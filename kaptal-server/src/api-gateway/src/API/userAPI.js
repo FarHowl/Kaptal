@@ -88,6 +88,20 @@ router.get("/books-service/user/getAllCategories", async (req, res) => {
     }
 });
 
+router.get("/books-service/user/getAllCollections", async (req, res) => {
+    try {
+        const token = jwt.sign({}, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
+
+        const response = await axios.get("http://books-service:3000" + "/api/user/getAllCollections", { headers: { Authorization: "Bearer " + token } });
+
+        res.status(200).send(response.data);
+    } catch (error) {
+        console.log(error);
+        if (error?.response) res.status(500).send({ error: error.response.data.error });
+        else res.status(500).send({ error: error.message });
+    }
+});
+
 router.post("/reviews-service/user/addRating", async (req, res) => {
     try {
         const parentToken = verifyJWT(req, ["admin", "user", "moderator"]);
@@ -148,26 +162,22 @@ router.get("/reviews-service/user/getBookRating", async (req, res) => {
     }
 });
 
-// router.get("/book/getBookImage", async (req, res) => {
-// try {
-//     const parsedURL = url.parse(req.url, true);
-//     const imgName = parsedURL.query.imgName;
+router.get("/books-service/user/getBookImage", async (req, res) => {
+    try {
+        const token = jwt.sign({}, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
 
-//     res.set({ "Content-Type": "image/png" });
-//     res.sendFile("C:/Users/dima3/OneDrive/Документы/GitHub/KaptalServer/src/images/booksImages/" + imgName);
-// } catch (error) {
-//     res.send(500, { error: error.message });
-// }
-//     try {
-//         const response = await axios.get("http://books-service:3003" + "/api/book/getBookImage", {
-//             ...req.body,
-//         });
-//         res.status(200).send(response.data);
-//     } catch (error) {
-//         res.status(500).send({ error: error.response.data.error });
-//     }
-// });
+        const query = "?" + req.originalUrl.split("?")[1];
 
+        const response = await axios.get("http://books-service:3000" + "/api/user/getBookImage" + query, { headers: { Authorization: "Bearer " + token }, responseType: "arraybuffer" });
+
+        res.set("Content-Type", "image");
+
+        res.send(Buffer.from(response.data, "binary"));
+    } catch (error) {
+        if (error?.response) res.status(500).send({ error: error.response.error });
+        else res.status(500).send({ error: error.message });
+    }
+});
 // router.get("/user/getAvailableStaff", async (req, res) => {
 //     try {
 //         verifyJWT(req, ["user"]);

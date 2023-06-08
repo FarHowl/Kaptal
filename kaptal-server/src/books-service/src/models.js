@@ -122,12 +122,16 @@ const categorySchema = new mongoose.Schema({
 });
 
 const collectionSchema = new mongoose.Schema({
-    name: {
-        unique: true,
-        required: true,
-        trim: true,
-        type: String,
-    },
+    collections: [
+        {
+            name: {
+                unique: true,
+                required: true,
+                trim: true,
+                type: String,
+            },
+        },
+    ],
 });
 
 const Category = mongoose.model("Category", categorySchema);

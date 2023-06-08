@@ -4,7 +4,7 @@ name: s3-service
 description: S3 service for storing images
 spec:
   args: ["server", "/data"]
-  image: minio/minio
+  image: minio/minio:latest
   env:
     MINIO_ROOT_USER: myminioaccesskey
     MINIO_ROOT_PASSWORD: myminiosecretkey

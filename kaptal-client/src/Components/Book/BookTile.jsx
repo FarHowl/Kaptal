@@ -30,6 +30,7 @@ export default function BookTile({ book, isBookInAdminMenu, setAdminMenuTab }) {
                 },
                 authToken_header()
             );
+            console.log(res)
         } catch (error) {
             console.log(error);
         }
@@ -57,19 +58,11 @@ export default function BookTile({ book, isBookInAdminMenu, setAdminMenuTab }) {
                     <div className="h-[200px] max-w-[150px] relative mb-1">
                         {isImgLoaded ? <></> : <LoadingComponent customStyle={"absolute inset-0 flex justify-center items-center bg-white z-5"} />}
                         <div className={"perspective w-full h-full"}>
-                            {/* <img
-                                onLoad={() => {
-                                    setIsImgLoaded(true);
-                                }}
-                                src={getBookImage_EP + "?imgName=" + book.image}
-                                className={"book w-full h-full object-cover " + (isTileHovered ? "book-hover" : "")}
-                                alt=""
-                            /> */}
                             <img
                                 onLoad={() => {
                                     setIsImgLoaded(true);
                                 }}
-                                src={book.image}
+                                src={getBookImage_EP + "?imgName=" + book.image}
                                 className={"book w-full h-full object-cover " + (isTileHovered ? "book-hover" : "")}
                                 alt=""
                             />
