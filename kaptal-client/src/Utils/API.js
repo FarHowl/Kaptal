@@ -131,6 +131,16 @@ export const updateBook_EP = apiAddress + "/api/books-service/admin/updateBook";
 export const deleteBook_EP = apiAddress + "/api/books-service/admin/deleteBook";
 
 /**
+ * @returns {array}
+ */
+export const getUncheckedReviews_EP = apiAddress + "/api/reviews-service/moderator/getUncheckedReviews";
+
+/**
+ * @returns {status}
+ */
+export const checkReview_EP = apiAddress + "/api/reviews-service/moderator/checkReview";
+
+/**
  * @param {string} userId
  * @param {string} role
  */

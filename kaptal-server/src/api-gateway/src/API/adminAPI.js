@@ -119,7 +119,7 @@ router.post("/books-service/admin/deleteBook", async (req, res) => {
             },
             { headers: { Authorization: "Bearer " + newToken } }
         );
-        res.status(200)
+        res.status(200);
     } catch (error) {
         if (error?.response) res.status(500).send({ error: error.response.data.error });
         else res.status(500).send({ error: error.message });
@@ -128,17 +128,11 @@ router.post("/books-service/admin/deleteBook", async (req, res) => {
 
 router.get("/reviews-service/moderator/getUncheckedReviews", async (req, res) => {
     try {
-        const parentToken = verifyJWT(req, ["moderator"]);
+        const parentToken = verifyJWT(req, ["moderator", "admin"]);
 
         const newToken = jwt.sign({ parentToken }, process.env.GATEWAY_REVIEWS_KEY, { expiresIn: "100d" });
 
-        const response = await axios.get(
-            "http://reviews-service:3000" + "/api/moderator/getUncheckedReviews",
-            {
-                ...req.body,
-            },
-            { headers: { Authorization: "Bearer " + newToken } }
-        );
+        const response = await axios.get("http://reviews-service:3000" + "/api/moderator/getUncheckedReviews", { headers: { Authorization: "Bearer " + newToken } });
 
         res.status(200).send(response.data);
     } catch (error) {
@@ -149,7 +143,7 @@ router.get("/reviews-service/moderator/getUncheckedReviews", async (req, res) =>
 
 router.post("/reviews-service/moderator/checkReview", async (req, res) => {
     try {
-        const parentToken = verifyJWT(req, ["moderator"]);
+        const parentToken = verifyJWT(req, ["moderator", "admin"]);
 
         const newToken = jwt.sign({ parentToken }, process.env.GATEWAY_REVIEWS_KEY, { expiresIn: "100d" });
 

@@ -1,13 +1,17 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import LoadingComponent from "../Components/UI/LoadingComponent";
 import { authToken_header, getUserData } from "../Utils/LocalStorageUtils";
-import { getAllBooks_EP, getAllUsers_EP, getAvailableStaffForChat_EP, updateUserInformation_EP } from "../Utils/API";
+import { checkReview_EP, getAllBooks_EP, getAllUsers_EP, getAvailableStaffForChat_EP, getUncheckedReviews_EP, updateUserInformation_EP } from "../Utils/API";
 import { useSessionState } from "../Utils/CustomHooks";
 import { useNavigate } from "react-router-dom";
 import BookTile from "../Components/Book/BookTile";
 import axios from "axios";
 import EditBookTab from "../Components/AdminPage/EditBookTab";
 import AddBookTab from "../Components/AdminPage/AddBookTab";
+import IconComponent from "../Components/Icons/IconComponent";
+import CrossIcon from "../Components/Icons/CrossIcon";
+import ApproveIcon from "../Components/Icons/ApproveIcon";
+import RatingStarIcon from "../Components/Icons/RatingStarIcon";
 
 export default function AdminPage() {
     /**
@@ -61,6 +65,20 @@ export default function AdminPage() {
                 ) : (
                     <></>
                 )}
+                <div className="flex flex-col w-full items-left mt-6 pl-6">
+                    <span className="font-semibold">Отзывы</span>
+                </div>
+                <div className="relative w-full flex mt-4 h-10 pl-6">
+                    {tabOption === "CheckReviewsTab" ? <div className="absolute left-0 border-r-[3px] h-full border-blue-600"></div> : <></>}
+                    <button
+                        onClick={() => {
+                            setTabOption("CheckReviewsTab");
+                        }}
+                        className={"text-gray-500 animated-100 " + (tabOption === "CheckReviewsTab" ? "text-blue-600" : "hover:text-blue-600")}
+                    >
+                        Отзывы на проверку
+                    </button>
+                </div>
                 <div className="flex flex-col w-full items-left mt-6 pl-6">
                     <span className="font-semibold">Пользователи</span>
                 </div>
@@ -118,9 +136,106 @@ export default function AdminPage() {
                 <OnlineChatsTab setTabOption={setTabOption} />
             ) : tabOption === "ChatStarted" ? (
                 <ChatWindowTab />
+            ) : tabOption === "CheckReviewsTab" ? (
+                <CheckReviewsTab />
             ) : (
                 <></>
             )}
+        </div>
+    );
+}
+
+function CheckReviewsTab() {
+    const [reviewsView, setReviewsView] = useState();
+
+    async function getUncheckedReviews() {
+        try {
+            const res = await axios.get(getUncheckedReviews_EP, authToken_header());
+
+            let b = [];
+            for (const i of res.data) {
+                b.push(<ReviewTile key={i._id} review={i} />);
+            }
+            setReviewsView(b);
+        } catch (error) {
+            if (error?.response) console.log(error.response.data.error);
+            else console.log(error);
+        }
+    }
+
+    useEffect(() => {
+        getUncheckedReviews();
+    }, []);
+
+    return (
+        <div className="absolute top-[80px] left-[254px] pb-6 pt-8 px-10 right-0 bottom-0 flex flex-col items-center overflow-y-auto">
+            <div className="w-full flex flex-col items-center">{reviewsView}</div>
+        </div>
+    );
+}
+
+function ReviewTile({ review }) {
+    async function checkReview(status) {
+        try {
+            const res = await axios.post(
+                checkReview_EP,
+                {
+                    reviewId: review._id,
+                    status,
+                },
+                authToken_header()
+            );
+            console.log("All good!")
+        } catch (error) {
+            if (error?.response) console.log(error.response.data.error);
+            else console.log(error);
+        }
+    }
+
+    return (
+        <div className={"w-[700px] rounded-lg flex flex-col items-center px-6 py-6 gap-4 " + (review.rating >= 4 ? "bg-green-100/70" : review.rating === 3 ? "bg-neutral-100/70" : "bg-red-100/70")}>
+            <div className="flex w-full justify-between">
+                <span className="text-lg text-gray-600">{review.author}</span>
+                <div className="flex gap-2 items-center">
+                    <div className="flex">
+                        <IconComponent Icon={RatingStarIcon} size={18} color={"#C0C0C0"} hoveredUntil={review.bookRating >= 1} hoveredColor={"#ffc117"} buttonStyle={"pointer-events-none"} />
+                        <IconComponent Icon={RatingStarIcon} size={18} color={"#C0C0C0"} hoveredUntil={review.bookRating >= 2} hoveredColor={"#ffc117"} buttonStyle={"pointer-events-none"} />
+                        <IconComponent Icon={RatingStarIcon} size={18} color={"#C0C0C0"} hoveredUntil={review.bookRating >= 3} hoveredColor={"#ffc117"} buttonStyle={"pointer-events-none"} />
+                        <IconComponent Icon={RatingStarIcon} size={18} color={"#C0C0C0"} hoveredUntil={review.bookRating >= 4} hoveredColor={"#ffc117"} buttonStyle={"pointer-events-none"} />
+                        <IconComponent Icon={RatingStarIcon} size={18} color={"#C0C0C0"} hoveredUntil={review.bookRating >= 5} hoveredColor={"#ffc117"} buttonStyle={"pointer-events-none"} />
+                    </div>
+                    <span className="text-gray-600 font-light pt-1">{review.publicationDate}</span>
+                </div>
+            </div>
+            <div className="w-full flex justify-start">
+                <span className="text-xl font-semibold">{review.title}</span>
+            </div>
+            <div className="w-full">
+                <span className="font-light tracking-wide">{review.text}</span>
+            </div>
+            <div className="w-full flex justify-end">
+                <div className="flex justify-center gap-x-2">
+                    <IconComponent
+                        onClick={() => {
+                            checkReview("checked");
+                        }}
+                        Icon={ApproveIcon}
+                        size={24}
+                        color={"#000000"}
+                        buttonStyle={"w-[40px] h-[40px] flex justify-center items-center px-2 py-2 rounded-full bg-emerald-300 font-medium hover:scale-105 hover:bg-emerald-400 animated-100"}
+                    />
+                    <IconComponent
+                        onClick={() => {
+                            checkReview("unchecked");
+                        }}
+                        Icon={CrossIcon}
+                        size={24}
+                        color={"#100000"}
+                        hoveredColor={"#100000"}
+                        buttonStyle={"w-[40px] h-[40px] flex justify-center items-center px-2 py-2 rounded-full bg-red-300 font-medium hover:scale-105 hover:bg-red-400 animated-100"}
+                    />
+                </div>
+            </div>
         </div>
     );
 }

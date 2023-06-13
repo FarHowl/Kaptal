@@ -3,11 +3,12 @@ import IconComponent from "../Components/Icons/IconComponent";
 import WishesIcon from "../Components/Icons/WishesIcon";
 import LoadingComponent from "../Components/UI/LoadingComponent";
 import { addReview_EP, getBookData_EP, getBookImage_EP, getBookReviews_EP } from "../Utils/API";
-import { authToken_header } from "../Utils/LocalStorageUtils";
+import { authToken_header, getUserData } from "../Utils/LocalStorageUtils";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import InputTile from "../Components/UI/InputTile";
 import CrossIcon from "../Components/Icons/CrossIcon";
+import RatingStarIcon from "../Components/Icons/RatingStarIcon";
 
 export default function BookPage() {
     const params = useParams();
@@ -22,7 +23,7 @@ export default function BookPage() {
             const res = await axios.get(getBookData_EP + query);
 
             setBookData(res.data);
-            console.log(res.data)
+            console.log(res.data);
         } catch (error) {
             if (error?.response) console.log(error.response.data.error);
             else console.log(error);
@@ -223,10 +224,13 @@ function AddReviewPopUp({ setIsAddReviewOpened }) {
                     pros: reviewInfo?.pros,
                     cons: reviewInfo?.cons,
                     author: reviewInfo.author,
-                    rating: reviewInfo.rating,
+                    bookRating: reviewInfo.bookRating,
+                    userId: getUserData().userId,
                 },
                 authToken_header()
             );
+
+            setIsAddReviewOpened(false);
         } catch (error) {
             if (error?.response) console.log(error.response.data.error);
             else console.log(error);
@@ -236,7 +240,7 @@ function AddReviewPopUp({ setIsAddReviewOpened }) {
     return (
         <div className="fixed z-20 inset-0 bg-black/50 flex justify-center items-center overflow-y-auto">
             <div className="bg-white rounded-md flex flex-col w-[400px] pb-10 pt-4 px-8">
-                <div className="w-full flex justify-between items-center mb-5">
+                <div className="w-full flex justify-between items-center">
                     <span className="text-xl font-medium">Оcтавить отзыв</span>
                     <IconComponent
                         onClick={() => {
@@ -248,6 +252,68 @@ function AddReviewPopUp({ setIsAddReviewOpened }) {
                         hoveredColor={"#1b90e0"}
                         animation={"animated-100"}
                         buttonStyle={"w-[40px] h-[40px] flex justify-center items-center bg-slate-200 animated-100 rounded-md hover:bg-slate-300"}
+                    />
+                </div>
+                <div className="flex ">
+                    <IconComponent
+                        onClick={() => {
+                            setReviewInfo({ ...reviewInfo, bookRating: 1 });
+                        }}
+                        Icon={RatingStarIcon}
+                        size={24}
+                        color={"#C0C0C0"}
+                        hoveredUntil={reviewInfo.bookRating >= 1}
+                        hoveredColor={"#ffc117"}
+                        animation={"animated-100"}
+                        buttonStyle={"w-[40px] h-[40px] flex justify-center items-center"}
+                    />
+                    <IconComponent
+                        onClick={() => {
+                            setReviewInfo({ ...reviewInfo, bookRating: 2 });
+                        }}
+                        Icon={RatingStarIcon}
+                        size={24}
+                        color={"#C0C0C0"}
+                        hoveredUntil={reviewInfo.bookRating >= 2}
+                        hoveredColor={"#ffc117"}
+                        animation={"animated-100"}
+                        buttonStyle={"w-[40px] h-[40px] flex justify-center items-center"}
+                    />
+                    <IconComponent
+                        onClick={() => {
+                            setReviewInfo({ ...reviewInfo, bookRating: 3 });
+                        }}
+                        Icon={RatingStarIcon}
+                        size={24}
+                        color={"#C0C0C0"}
+                        hoveredUntil={reviewInfo.bookRating >= 3}
+                        hoveredColor={"#ffc117"}
+                        animation={"animated-100"}
+                        buttonStyle={"w-[40px] h-[40px] flex justify-center items-center"}
+                    />
+                    <IconComponent
+                        onClick={() => {
+                            setReviewInfo({ ...reviewInfo, bookRating: 4 });
+                        }}
+                        Icon={RatingStarIcon}
+                        size={24}
+                        color={"#C0C0C0"}
+                        hoveredUntil={reviewInfo.bookRating >= 4}
+                        hoveredColor={"#ffc117"}
+                        animation={"animated-100"}
+                        buttonStyle={"w-[40px] h-[40px] flex justify-center items-center"}
+                    />
+                    <IconComponent
+                        onClick={() => {
+                            setReviewInfo({ ...reviewInfo, bookRating: 5 });
+                        }}
+                        Icon={RatingStarIcon}
+                        size={24}
+                        color={"#C0C0C0"}
+                        hoveredUntil={reviewInfo.bookRating >= 5}
+                        hoveredColor={"#ffc117"}
+                        animation={"animated-100"}
+                        buttonStyle={"w-[40px] h-[40px] flex justify-center items-center"}
                     />
                 </div>
                 <div className="flex flex-col gap-y-4">
@@ -297,12 +363,22 @@ function AddReviewPopUp({ setIsAddReviewOpened }) {
 
 function ReviewTile({ review }) {
     return (
-        <div className={"w-[700px] rounded-lg flex flex-col items-center px-6 py-6 gap-4 " + (review.rating >= 4 ? "bg-green-100/70" : review.rating === 3 ? "bg-neutral-100/70" : "bg-red-100/70")}>
+        <div
+            className={
+                "w-[700px] rounded-lg flex flex-col items-center px-6 py-6 gap-4 " + (review.bookRating >= 4 ? "bg-green-100/70" : review.bookRating === 3 ? "bg-neutral-100/70" : "bg-red-100/70")
+            }
+        >
             <div className="flex w-full justify-between">
                 <span className="text-lg text-gray-600">{review.author}</span>
-                <div className="flex gap-2">
-                    <span className="text-gray-600 font-light">{review.publicationDate}</span>
-                    <span>{review.bookRating}</span>
+                <div className="flex gap-2 items-center">
+                    <div className="flex">
+                        <IconComponent Icon={RatingStarIcon} size={18} color={"#C0C0C0"} hoveredUntil={review.bookRating >= 1} hoveredColor={"#ffc117"} buttonStyle={"pointer-events-none"} />
+                        <IconComponent Icon={RatingStarIcon} size={18} color={"#C0C0C0"} hoveredUntil={review.bookRating >= 2} hoveredColor={"#ffc117"} buttonStyle={"pointer-events-none"} />
+                        <IconComponent Icon={RatingStarIcon} size={18} color={"#C0C0C0"} hoveredUntil={review.bookRating >= 3} hoveredColor={"#ffc117"} buttonStyle={"pointer-events-none"} />
+                        <IconComponent Icon={RatingStarIcon} size={18} color={"#C0C0C0"} hoveredUntil={review.bookRating >= 4} hoveredColor={"#ffc117"} buttonStyle={"pointer-events-none"} />
+                        <IconComponent Icon={RatingStarIcon} size={18} color={"#C0C0C0"} hoveredUntil={review.bookRating >= 5} hoveredColor={"#ffc117"} buttonStyle={"pointer-events-none"} />
+                    </div>
+                    <span className="text-gray-600 font-light pt-1">{review.publicationDate}</span>
                 </div>
             </div>
             <div className="w-full flex justify-start">

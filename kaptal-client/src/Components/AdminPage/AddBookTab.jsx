@@ -325,7 +325,8 @@ function CollectionsInputTile({ setBookInfo, bookInfo }) {
     async function getCollections() {
         try {
             const res = await axios.get(getAllCollections_EP, authToken_header());
-            setCollections(res.data);
+
+            setCollections(res.data[0].collections);
         } catch (error) {
             if (error?.response) {
                 console.log(error.response.data.error);

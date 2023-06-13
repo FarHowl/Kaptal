@@ -55,6 +55,11 @@ const reviewSchema = new mongoose.Schema({
         type: String,
         trim: true,
     },
+    userId: {
+        required: true,
+        trim: true,
+        type: mongoose.Schema.Types.ObjectId,
+    }
 });
 
 const ratingSchema = new mongoose.Schema({

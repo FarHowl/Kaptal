@@ -21,7 +21,7 @@ router.get("/user/getBookReviews", async (req, res) => {
 
         const bookId = req.query?.bookId;
 
-        const reviews = await Review.find({ status: "checked", _id: bookId });
+        const reviews = await Review.find({ status: "checked", bookId: bookId });
 
         res.status(200).send(reviews);
     } catch (error) {
@@ -51,8 +51,13 @@ router.post("/user/addReview", async (req, res) => {
         const hasToBeAuthorized = true;
         verifyJWT(req, hasToBeAuthorized);
 
-        const hasAllFields = req.body?.text && req.body?.title && req.body?.bookRating && req.body?.author && req.body?.bookId;
+        const hasAllFields = req.body?.text && req.body?.title && req.body?.bookRating && req.body?.author && req.body?.bookId && req.body?.userId;
         if (!hasAllFields) throw new Error("Please enter all fields");
+
+        const bookReviews = await Review.find({ bookId: req.body?.bookId });
+        for (const review of bookReviews) {
+            if (review.userId.toString() === req.body?.userId) throw new Error("You already reviewed this book");
+        }
 
         if (req.body?.rating < 1 || req.body?.rating > 5) throw new Error("Rating must be between 1 and 5");
 
@@ -66,7 +71,7 @@ router.post("/user/addReview", async (req, res) => {
 
         if (req.body?.author.length < 4) throw new Error("Author name must be at least 4 characters long");
 
-        const publicationDate = new Date();
+        let publicationDate = new Date();
         const day = publicationDate.getDate();
         const month = publicationDate.getMonth() + 1;
         const year = publicationDate.getFullYear();
@@ -81,6 +86,8 @@ router.post("/user/addReview", async (req, res) => {
             bookId: req.body?.bookId,
             pros: req.body?.pros,
             cons: req.body?.cons,
+            userId: req.body?.userId,
+            status: "unchecked",
         });
 
         await review.save();
@@ -138,7 +145,7 @@ router.get("/moderator/getUncheckedReviews", async (req, res) => {
         const hasToBeAuthorized = true;
         verifyJWT(req, hasToBeAuthorized);
 
-        const uncheckedReviews = Review.find({ status: "unchecked" });
+        const uncheckedReviews = await Review.find({ status: "unchecked" });
 
         res.status(200).send(uncheckedReviews);
     } catch (error) {
@@ -154,6 +161,14 @@ router.post("/moderator/checkReview", async (req, res) => {
 
         const hasAllFields = req.body?.status && req.body?.reviewId;
         if (!hasAllFields) throw new Error("Please, enter all fields");
+
+        if (req.body?.status === "checked") {
+            const review = await Review.findByIdAndUpdate(req.body?.reviewId, { status: req.body?.status });
+        } else if (req.body?.status === "unchecked") {
+            const review = await Review.findByIdAndDelete(req.body?.reviewId);
+        }
+
+        res.sendStatus(200);
     } catch (error) {
         res.status(500).send({ error: error.message });
         console.log(error);
