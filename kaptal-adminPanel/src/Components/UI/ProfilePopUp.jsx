@@ -13,18 +13,6 @@ export default function ProfilePopUp({ profilePopUpRef }) {
                     <span className={getUserData().role !== "user" ? "text-red-500" : "text-green-500"}>{getUserData().role === "admin" ? "Администратор" : getUserData().role === "moderator" ? "Модератор" : "Пользователь"}</span>
                 </div>
                 <div className="w-[280px] text-base flex flex-shrink-0 flex-col gap-2 justify-center px-3 pb-2 pt-4 items-start">
-                    {getUserData().role === "admin" ? (
-                        <Link to={"/admin"} className="hover:text-sky-500">
-                            Меню администратора
-                        </Link>
-                    ) : getUserData().role === "moderator" ? (
-                        <Link to={"/admin"} className="hover:text-sky-500">
-                            Меню модератора
-                        </Link>
-                    ) : (
-                        <></>
-                    )}
-                    <button className="hover:text-sky-500">Заказы</button>
                     <button className="hover:text-sky-500">Настройки профиля</button>
                     <button
                         onClick={() => {

@@ -26,7 +26,7 @@ const reviewSchema = new mongoose.Schema({
             userId: {
                 required: true,
                 trim: true,
-                type: mongoose.Schema.Types.ObjectId,
+                type: String,
             },
             isReviewUseful: {
                 required: true,
@@ -38,7 +38,7 @@ const reviewSchema = new mongoose.Schema({
     bookId: {
         required: true,
         trim: true,
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
     },
     pros: {
         required: false,
@@ -58,7 +58,7 @@ const reviewSchema = new mongoose.Schema({
     userId: {
         required: true,
         trim: true,
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
     }
 });
 
@@ -66,7 +66,7 @@ const ratingSchema = new mongoose.Schema({
     userId: {
         required: true,
         trim: true,
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
     },
     bookRating: {
         required: true,
@@ -76,7 +76,7 @@ const ratingSchema = new mongoose.Schema({
     bookId: {
         required: true,
         trim: true,
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
     },
 });
 

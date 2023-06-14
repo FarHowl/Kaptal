@@ -104,14 +104,15 @@ router.get("/books-service/user/getAllCollections", async (req, res) => {
 
 router.post("/reviews-service/user/addRating", async (req, res) => {
     try {
-        const parentToken = verifyJWT(req, ["admin", "user", "moderator"]);
+        const frontendToken = verifyJWT(req, ["admin", "user", "moderator"]);
 
-        const newToken = jwt.sign({ parentToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
+        const newToken = jwt.sign({ frontendToken }, process.env.GATEWAY_REVIEWS_KEY, { expiresIn: "100d" });
 
-        const response = await axios.post("http://reviews-service:3000" + "/api/user/addRating", { ...req.body }, { headers: { Authorization: "Bearer " + newToken } });
+        await axios.post("http://reviews-service:3000" + "/api/user/addRating", { ...req.body }, { headers: { Authorization: "Bearer " + newToken } });
 
-        res.status(200).send(response.data);
+        res.sendStatus(200);
     } catch (error) {
+        console.log(error)
         if (error?.response) res.status(500).send({ error: error.response.data.error });
         else res.status(500).send({ error: error.message });
     }
@@ -119,11 +120,26 @@ router.post("/reviews-service/user/addRating", async (req, res) => {
 
 router.post("/reviews-service/user/addReview", async (req, res) => {
     try {
-        const parentToken = verifyJWT(req, ["admin", "user", "moderator"]);
+        const frontendToken = verifyJWT(req, ["admin", "user", "moderator"]);
 
-        const newToken = jwt.sign({ parentToken }, process.env.GATEWAY_REVIEWS_KEY, { expiresIn: "100d" });
+        const newToken = jwt.sign({ frontendToken }, process.env.GATEWAY_REVIEWS_KEY, { expiresIn: "100d" });
 
         await axios.post("http://reviews-service:3000" + "/api/user/addReview", { ...req.body }, { headers: { Authorization: "Bearer " + newToken } });
+
+        res.sendStatus(200);
+    } catch (error) {
+        if (error?.response) res.status(500).send({ error: error.response.data.error });
+        else res.status(500).send({ error: error.message });
+    }
+});
+
+router.post("/reviews-service/user/rateReview", async (req, res) => {
+    try {
+        const frontendToken = verifyJWT(req, ["admin", "user", "moderator"]);
+
+        const newToken = jwt.sign({ frontendToken }, process.env.GATEWAY_REVIEWS_KEY, { expiresIn: "100d" });
+
+        await axios.post("http://reviews-service:3000" + "/api/user/rateReview", { ...req.body }, { headers: { Authorization: "Bearer " + newToken } });
 
         res.sendStatus(200);
     } catch (error) {

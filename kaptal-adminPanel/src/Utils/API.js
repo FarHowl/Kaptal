@@ -40,30 +40,6 @@ export const getBookReviews_EP = apiAddress + "/api/reviews-service/user/getBook
 export const getBookRating_EP = apiAddress + "/api/reviews-service/user/getBookRating";
 
 /**
- * @param {string} bookId
- * @param {string} userId
- * @param {number} bookRating
- * @param {string} pros
- * @param {string} cons
- * @param {string} text
- * @param {string} title
- * @param {string} author
- */
-export const addReview_EP = apiAddress + "/api/reviews-service/user/addReview";
-
-/**
- * @param {string} bookId
- * @param {string} userId
- * @param {number} bookRating
- */
-export const addRating_EP = apiAddress + "/api/reviews-service/user/addRating";
-
-/**
- * @param {string} reviewId
- */
-export const rateReview_EP = apiAddress + "/api/reviews-service/user/rateReview";
-
-/**
  * @returns {array}
  */
 export const getAllCategories_EP = apiAddress + "/api/books-service/user/getAllCategories";

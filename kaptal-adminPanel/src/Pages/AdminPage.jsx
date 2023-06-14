@@ -50,7 +50,7 @@ export default function AdminPage() {
                         Все книги
                     </button>
                 </div>
-                {getUserData().role === "admin" ? (
+                {getUserData()?.role === "admin" ? (
                     <div className="relative w-full flex mt-4 h-10 pl-6">
                         {tabOption === "AddBook" ? <div className="absolute left-0 border-r-[3px] h-full border-blue-600"></div> : <></>}
                         <button

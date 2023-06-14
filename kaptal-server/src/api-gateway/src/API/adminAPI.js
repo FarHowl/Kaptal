@@ -10,9 +10,9 @@ const verifyJWT = require("../utils/verifyJWT");
 
 router.post("/users-service/admin/updateUser", async (req, res) => {
     try {
-        const parentToken = verifyJWT(req, ["admin"]);
+        const frontendToken = verifyJWT(req, ["admin"]);
 
-        const newToken = jwt.sign({ parentToken }, process.env.GATEWAY_USERS_KEY, { expiresIn: "100d" });
+        const newToken = jwt.sign({ frontendToken }, process.env.GATEWAY_USERS_KEY, { expiresIn: "100d" });
 
         const response = await axios.post(
             "http://users-service:3000" + "/api/admin/updateUser",
@@ -30,9 +30,9 @@ router.post("/users-service/admin/updateUser", async (req, res) => {
 
 router.get("/users-service/admin/getAllUsers", async (req, res) => {
     try {
-        const parentToken = verifyJWT(req, ["admin", "moderator"]);
+        const frontendToken = verifyJWT(req, ["admin", "moderator"]);
 
-        const newToken = jwt.sign({ parentToken }, process.env.GATEWAY_USERS_KEY, { expiresIn: "100d" });
+        const newToken = jwt.sign({ frontendToken }, process.env.GATEWAY_USERS_KEY, { expiresIn: "100d" });
 
         const query = "?" + req.originalUrl.split("?")[1];
 
@@ -46,9 +46,9 @@ router.get("/users-service/admin/getAllUsers", async (req, res) => {
 
 router.get("/books-service/admin/getAllBooks", async (req, res) => {
     try {
-        const parentToken = verifyJWT(req, ["admin"]);
+        const frontendToken = verifyJWT(req, ["admin"]);
 
-        const newToken = jwt.sign({ parentToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
+        const newToken = jwt.sign({ frontendToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
 
         const query = "?" + req.originalUrl.split("?")[1];
 
@@ -62,9 +62,9 @@ router.get("/books-service/admin/getAllBooks", async (req, res) => {
 
 router.post("/books-service/admin/addNewBook", async (req, res) => {
     try {
-        const parentToken = verifyJWT(req, ["admin"]);
+        const frontendToken = verifyJWT(req, ["admin"]);
 
-        const newToken = jwt.sign({ parentToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
+        const newToken = jwt.sign({ frontendToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
 
         const response = await axios.post(
             "http://books-service:3000" + "/api/admin/addNewBook",
@@ -88,9 +88,9 @@ router.post("/books-service/admin/addNewBook", async (req, res) => {
 
 router.post("/books-service/admin/updateBook", async (req, res) => {
     try {
-        const parentToken = verifyJWT(req, ["admin"]);
+        const frontendToken = verifyJWT(req, ["admin"]);
 
-        const newToken = jwt.sign({ parentToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
+        const newToken = jwt.sign({ frontendToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
 
         const response = await axios.post(
             "http://books-service:3000" + "/api/admin/updateBook",
@@ -108,9 +108,9 @@ router.post("/books-service/admin/updateBook", async (req, res) => {
 
 router.post("/books-service/admin/deleteBook", async (req, res) => {
     try {
-        const parentToken = verifyJWT(req, ["admin"]);
+        const frontendToken = verifyJWT(req, ["admin"]);
 
-        const newToken = jwt.sign({ parentToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
+        const newToken = jwt.sign({ frontendToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
 
         const response = await axios.post(
             "http://books-service:3000" + "/api/admin/deleteBook",
@@ -128,9 +128,9 @@ router.post("/books-service/admin/deleteBook", async (req, res) => {
 
 router.get("/reviews-service/moderator/getUncheckedReviews", async (req, res) => {
     try {
-        const parentToken = verifyJWT(req, ["moderator", "admin"]);
+        const frontendToken = verifyJWT(req, ["moderator", "admin"]);
 
-        const newToken = jwt.sign({ parentToken }, process.env.GATEWAY_REVIEWS_KEY, { expiresIn: "100d" });
+        const newToken = jwt.sign({ frontendToken }, process.env.GATEWAY_REVIEWS_KEY, { expiresIn: "100d" });
 
         const response = await axios.get("http://reviews-service:3000" + "/api/moderator/getUncheckedReviews", { headers: { Authorization: "Bearer " + newToken } });
 
@@ -143,9 +143,9 @@ router.get("/reviews-service/moderator/getUncheckedReviews", async (req, res) =>
 
 router.post("/reviews-service/moderator/checkReview", async (req, res) => {
     try {
-        const parentToken = verifyJWT(req, ["moderator", "admin"]);
+        const frontendToken = verifyJWT(req, ["moderator", "admin"]);
 
-        const newToken = jwt.sign({ parentToken }, process.env.GATEWAY_REVIEWS_KEY, { expiresIn: "100d" });
+        const newToken = jwt.sign({ frontendToken }, process.env.GATEWAY_REVIEWS_KEY, { expiresIn: "100d" });
 
         const response = await axios.post("http://reviews-service:3000" + "/api/moderator/checkReview", { ...req.body }, { headers: { Authorization: "Bearer " + newToken } });
 

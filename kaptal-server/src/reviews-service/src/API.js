@@ -37,7 +37,7 @@ router.get("/user/getBookRating", async (req, res) => {
 
         const bookId = req.query?.bookId;
 
-        const bookRatings = await Rating.findById(bookId);
+        const bookRatings = await Rating.find({ bookId });
 
         res.status(200).send(bookRatings);
     } catch (error) {
@@ -49,14 +49,20 @@ router.get("/user/getBookRating", async (req, res) => {
 router.post("/user/addReview", async (req, res) => {
     try {
         const hasToBeAuthorized = true;
-        verifyJWT(req, hasToBeAuthorized);
+        const frontendToken = verifyJWT(req, hasToBeAuthorized);
 
-        const hasAllFields = req.body?.text && req.body?.title && req.body?.bookRating && req.body?.author && req.body?.bookId && req.body?.userId;
+        console.log(req.body)
+        const hasAllFields = req.body?.text && req.body?.title && req.body?.bookRating && req.body?.author && req.body?.bookId;
         if (!hasAllFields) throw new Error("Please enter all fields");
 
         const bookReviews = await Review.find({ bookId: req.body?.bookId });
         for (const review of bookReviews) {
-            if (review.userId.toString() === req.body?.userId) throw new Error("You already reviewed this book");
+            if (review.userId === frontendToken.userId) throw new Error("You already reviewed this book");
+        }
+
+        const bookRatings = await Rating.find({ bookId: req.body?.bookId });
+        for (const rating of bookRatings) {
+            if (rating.userId === frontendToken.userId) throw new Error("You already rated this book");
         }
 
         if (req.body?.rating < 1 || req.body?.rating > 5) throw new Error("Rating must be between 1 and 5");
@@ -86,7 +92,7 @@ router.post("/user/addReview", async (req, res) => {
             bookId: req.body?.bookId,
             pros: req.body?.pros,
             cons: req.body?.cons,
-            userId: req.body?.userId,
+            userId: frontendToken.userId,
             status: "unchecked",
         });
 
@@ -101,19 +107,21 @@ router.post("/user/addReview", async (req, res) => {
 router.post("/user/rateReview", async (req, res) => {
     try {
         const hasToBeAuthorized = true;
-        verifyJWT(req, hasToBeAuthorized);
+        const frontendToken = verifyJWT(req, hasToBeAuthorized);
 
-        const hasAllFields = req.body?.reviewId && req.body?.isReviewUseful && req.body?.userId;
+        const hasAllFields = req.body?.reviewId && req.body?.isReviewUseful !== undefined;
         if (!hasAllFields) throw new Error("Please enter all fields");
 
         const review = await Review.findById(req.body?.reviewId);
         if (!review) throw new Error("Review not found");
 
-        const userAlreadyRated = review.ratings.find((i) => i.userId === req.body.userId);
+        const userAlreadyRated = review.reviewRating.find((i) => i.userId.toString() === frontendToken.userId);
         if (userAlreadyRated) throw new Error("You already rated this review");
 
-        review.ratings.push({ userId: req.user.id, isReviewUseful: req.body?.isReviewUseful });
-        await review.save();
+        const isSelfRate = review.userId.toString() === frontendToken.userId;
+        if (isSelfRate) throw new Error("You can't rate your own review");
+
+        await Review.updateOne({ _id: req.body?.reviewId }, { $push: { reviewRating: { userId: frontendToken.userId, isReviewUseful: req.body?.isReviewUseful } } });
 
         res.sendStatus(200);
     } catch (error) {
@@ -124,13 +132,19 @@ router.post("/user/rateReview", async (req, res) => {
 
 router.post("/user/addRating", async (req, res) => {
     try {
+        console.log(req.body);
         const hasToBeAuthorized = true;
-        verifyJWT(req, hasToBeAuthorized);
+        const frontendToken = verifyJWT(req, hasToBeAuthorized);
 
-        const hasAllFields = req.body?.bookId && req.body?.bookRating && req.body?.userId;
+        const hasAllFields = req.body?.bookId && req.body?.bookRating;
         if (!hasAllFields) throw new Error("Please, enter book id and rating");
 
-        const rating = new Rating({ bookId: req.body?.bookId, bookRating: req.body?.bookRating, userId: req.body?.userId });
+        const bookRatings = await Rating.find({ bookId: req.body?.bookId });
+        for (const rating of bookRatings) {
+            if (rating.userId === frontendToken.userId) throw new Error("You already rated this book");
+        }
+
+        const rating = new Rating({ bookId: req.body?.bookId, bookRating: req.body?.bookRating, userId: frontendToken.userId });
 
         await rating.save();
         res.sendStatus(200);

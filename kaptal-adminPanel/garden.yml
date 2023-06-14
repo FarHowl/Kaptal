@@ -1,0 +1,29 @@
+kind: Build
+type: container
+name: admin-panel
+description: The admin-panel container
+
+---
+
+kind: Deploy
+type: container
+name: admin-panel
+description: The admin-panel deployment
+build: admin-panel
+dependencies: [deploy.api-gateway]
+spec:
+  args: [npm, run, start]
+  ports:
+    - name: http
+      containerPort: 8070
+  ingresses:
+    - path: /
+      port: http
+      hostname: admin-panel.${var.base-hostname}
+  command: [npm, run, start] # Overrides the container's default when the service is deployed in dev mode
+  sync:
+    paths:
+    - target: /app/src
+      source: src
+      exclude: [node_modules]
+      mode: one-way-replica

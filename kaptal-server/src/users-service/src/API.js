@@ -32,7 +32,7 @@ router.post("/user/signIn", async (req, res) => {
         const isPasswordValid = currentUser.password !== passwordHash;
         if (isPasswordValid) throw new Error("Password is invalid");
 
-        const frontendToken = jwt.sign({ _id: currentUser._id.toString(), role: currentUser.role }, process.env.FRONTEND_GATEWAY_KEY, { expiresIn: "100d" });
+        const frontendToken = jwt.sign({ userId: currentUser._id.toString(), role: currentUser.role }, process.env.FRONTEND_GATEWAY_KEY, { expiresIn: "100d" });
 
         res.status(200).send({
             username: currentUser.username,

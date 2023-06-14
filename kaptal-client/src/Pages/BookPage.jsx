@@ -2,9 +2,9 @@ import { useEffect, React, useState, useLayoutEffect } from "react";
 import IconComponent from "../Components/Icons/IconComponent";
 import WishesIcon from "../Components/Icons/WishesIcon";
 import LoadingComponent from "../Components/UI/LoadingComponent";
-import { addReview_EP, getBookData_EP, getBookImage_EP, getBookReviews_EP } from "../Utils/API";
-import { authToken_header, getUserData } from "../Utils/LocalStorageUtils";
-import { useParams } from "react-router-dom";
+import { addRating_EP, addReview_EP, getBookData_EP, getBookImage_EP, getBookRating_EP, getBookReviews_EP, rateReview_EP } from "../Utils/API";
+import { authToken_header } from "../Utils/LocalStorageUtils";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import InputTile from "../Components/UI/InputTile";
 import CrossIcon from "../Components/Icons/CrossIcon";
@@ -16,29 +16,32 @@ export default function BookPage() {
     const [bookData, setBookData] = useState({});
     const [reviewsView, setReviewsView] = useState([]);
     const [isAddReviewOpened, setIsAddReviewOpened] = useState(false);
+    const [isAddRatingOpened, setIsAddRatingOpened] = useState(false);
 
     async function getBookData() {
         try {
             const query = `?bookId=${params.bookId}`;
-            const res = await axios.get(getBookData_EP + query);
 
-            setBookData(res.data);
-            console.log(res.data);
-        } catch (error) {
-            if (error?.response) console.log(error.response.data.error);
-            else console.log(error);
-        }
-    }
+            const res1 = axios.get(getBookData_EP + query);
+            const res2 = axios.get(getBookReviews_EP + query);
+            const res3 = axios.get(getBookRating_EP + query);
+            const res = await axios.all([res1, res2, res3]);
 
-    async function getBookReviews() {
-        try {
-            const query = `?bookId=${params.bookId}`;
-            const res = await axios.get(getBookReviews_EP + query);
-
+            let ratingSum = 0;
+            let ratingCount = 0;
             let a = [];
-            for (const review of res.data) {
+            for (const review of res[1].data) {
                 a.push(<ReviewTile key={review._id} review={review} />);
+                ratingSum += review.bookRating;
             }
+            ratingCount += res[1].data.length;
+
+            for (const rating of res[2].data) {
+                ratingSum += rating.bookRating;
+                ratingCount++;
+            }
+
+            setBookData({ ...res[0].data, bookRating: ratingSum / ratingCount, ratingCount });
             setReviewsView(a);
         } catch (error) {
             if (error?.response) console.log(error.response.data.error);
@@ -53,7 +56,6 @@ export default function BookPage() {
 
     useLayoutEffect(() => {
         getBookData();
-        getBookReviews();
     }, []);
 
     return (
@@ -63,14 +65,18 @@ export default function BookPage() {
                     <div className="flex justify-center gap-14">
                         <div className="w-[300px] h-[450px] relative">
                             {isImgLoaded ? <></> : <LoadingComponent customStyle={"absolute inset-0 flex justify-center items-center bg-white z-5"} />}
-                            <img
-                                onLoad={() => {
-                                    setIsImgLoaded(true);
-                                }}
-                                className="object-cover w-full h-full"
-                                src={getBookImage_EP + `?imgName=${bookData.image}`}
-                                alt=""
-                            />
+                            {bookData?.image ? (
+                                <img
+                                    onLoad={() => {
+                                        setIsImgLoaded(true);
+                                    }}
+                                    className="object-cover w-full h-full"
+                                    src={getBookImage_EP + `?imgName=${bookData.image}`}
+                                    alt=""
+                                />
+                            ) : (
+                                <></>
+                            )}
                         </div>
                         <div className="flex flex-col items-center w-[500px]">
                             <div className="w-full flex justify-between">
@@ -80,11 +86,59 @@ export default function BookPage() {
                                 <button className="text-sky-600 hover:text-sky-800 animated-100 font-medium">{bookData.author}</button>
                             </div>
                             <div className="flex w-full gap-x-2 items-center justify-start mt-2">
-                                <span>{bookData.rating}</span>
+                                <div className="flex ">
+                                    <IconComponent
+                                        Icon={RatingStarIcon}
+                                        size={18}
+                                        color={"#C0C0C0"}
+                                        hoveredUntil={bookData.bookRating >= 1}
+                                        hoveredColor={"#ffc117"}
+                                        buttonStyle={"flex justify-center items-center pointer-events-none"}
+                                    />
+                                    <IconComponent
+                                        Icon={RatingStarIcon}
+                                        size={18}
+                                        color={"#C0C0C0"}
+                                        hoveredUntil={bookData.bookRating >= 2}
+                                        hoveredColor={"#ffc117"}
+                                        buttonStyle={"flex justify-center items-center pointer-events-none"}
+                                    />
+                                    <IconComponent
+                                        Icon={RatingStarIcon}
+                                        size={18}
+                                        color={"#C0C0C0"}
+                                        hoveredUntil={bookData.bookRating >= 3}
+                                        hoveredColor={"#ffc117"}
+                                        buttonStyle={"flex justify-center items-center pointer-events-none"}
+                                    />
+                                    <IconComponent
+                                        Icon={RatingStarIcon}
+                                        size={18}
+                                        color={"#C0C0C0"}
+                                        hoveredUntil={bookData.bookRating >= 4}
+                                        hoveredColor={"#ffc117"}
+                                        buttonStyle={"flex justify-center items-center pointer-events-none"}
+                                    />
+                                    <IconComponent
+                                        Icon={RatingStarIcon}
+                                        size={18}
+                                        color={"#C0C0C0"}
+                                        hoveredUntil={bookData.bookRating >= 5}
+                                        hoveredColor={"#ffc117"}
+                                        buttonStyle={"flex justify-center items-center pointer-events-none"}
+                                    />
+                                </div>
                                 <span className="text-gray-500">({bookData.ratingCount})</span>
-                                <button className="text-sky-600 hover:text-sky-800 animated-100">Оценить</button>
+                                <button
+                                    onClick={() => {
+                                        setIsAddRatingOpened(true);
+                                    }}
+                                    className="text-sky-600 hover:text-sky-800 animated-100"
+                                >
+                                    Оценить
+                                </button>
                             </div>
-                            <div className="w-full flex flex-col gap-y-4 mt-6">
+                            <div className="w-full flex flex-col gap-y-3 mt-6">
                                 <div className="flex w-full">
                                     <div className="w-[50%] flex flex-shrink-0">
                                         <span className="text-gray-500">Издательство</span>
@@ -131,13 +185,13 @@ export default function BookPage() {
                                     <div className="w-[50%] flex flex-shrink-0">
                                         <span className="text-gray-500">Вес</span>
                                     </div>
-                                    <span>{bookData.weight}</span>
+                                    <span>{bookData.weight + " г."}</span>
                                 </div>
                                 <div className="flex w-full">
                                     <div className="w-[50%] flex flex-shrink-0">
                                         <span className="text-gray-500">Возрастные ограничения</span>
                                     </div>
-                                    <span>{bookData.ageLimit}</span>
+                                    <span>{bookData.ageLimit + "+"}</span>
                                 </div>
                             </div>
                         </div>
@@ -147,7 +201,7 @@ export default function BookPage() {
                 <div className="w-[270px] flex flex-col">
                     <div className="flex flex-col shadow-lg w-full px-4 py-4 gap-1">
                         <div className="w-full mb-1">
-                            <span className={"font-light " + (bookData.amount ? "text-teal-500" : "text-neutral-500")}>{bookData.amount ? "В наличии" : "Нет в наличии"}</span>
+                            <span className={"font-light " + (bookData.stock ? "text-teal-500" : "text-neutral-500")}>{bookData.stock ? "В наличии" : "Нет в наличии"}</span>
                         </div>
                         {bookData.discount === 0 ? (
                             <div className="fle px-20w-full gap-10 items-center">
@@ -204,14 +258,34 @@ export default function BookPage() {
                     </div>
                 </div>
             </div>
-            {isAddReviewOpened ? <AddReviewPopUp setIsAddReviewOpened={setIsAddReviewOpened} /> : <></>}
+            {isAddReviewOpened ? <AddFeedbackPopUp setIsAddReviewOpened={setIsAddReviewOpened} /> : isAddRatingOpened ? <AddFeedbackPopUp setIsAddRatingOpened={setIsAddRatingOpened} /> : <></>}
         </div>
     );
 }
 
-function AddReviewPopUp({ setIsAddReviewOpened }) {
-    const [reviewInfo, setReviewInfo] = useState({});
+function AddFeedbackPopUp({ setIsAddReviewOpened, setIsAddRatingOpened }) {
+    const [feedbackInfo, setFeedbackInfo] = useState({});
     const params = useParams();
+    const navigate = useNavigate();
+
+    async function addRating() {
+        try {
+            const res = await axios.post(
+                addRating_EP,
+                {
+                    bookId: params.bookId,
+                    bookRating: feedbackInfo.bookRating,
+                },
+                authToken_header()
+            );
+
+            setIsAddRatingOpened(false);
+            navigate("/book/" + params.bookId);
+        } catch (error) {
+            if (error?.response) console.log(error.response.data.error);
+            else console.log(error);
+        }
+    }
 
     async function addReview() {
         try {
@@ -219,18 +293,18 @@ function AddReviewPopUp({ setIsAddReviewOpened }) {
                 addReview_EP,
                 {
                     bookId: params.bookId,
-                    title: reviewInfo.title,
-                    text: reviewInfo?.text,
-                    pros: reviewInfo?.pros,
-                    cons: reviewInfo?.cons,
-                    author: reviewInfo.author,
-                    bookRating: reviewInfo.bookRating,
-                    userId: getUserData().userId,
+                    title: feedbackInfo.title,
+                    text: feedbackInfo?.text,
+                    pros: feedbackInfo?.pros,
+                    cons: feedbackInfo?.cons,
+                    author: feedbackInfo.author,
+                    bookRating: feedbackInfo.bookRating,
                 },
                 authToken_header()
             );
 
             setIsAddReviewOpened(false);
+            navigate("/book/" + params.bookId);
         } catch (error) {
             if (error?.response) console.log(error.response.data.error);
             else console.log(error);
@@ -241,10 +315,10 @@ function AddReviewPopUp({ setIsAddReviewOpened }) {
         <div className="fixed z-20 inset-0 bg-black/50 flex justify-center items-center overflow-y-auto">
             <div className="bg-white rounded-md flex flex-col w-[400px] pb-10 pt-4 px-8">
                 <div className="w-full flex justify-between items-center">
-                    <span className="text-xl font-medium">Оcтавить отзыв</span>
+                    <span className="text-xl font-medium">{setIsAddRatingOpened ? "Ваша оценка" : "Оставить отзыв"}</span>
                     <IconComponent
                         onClick={() => {
-                            setIsAddReviewOpened(false);
+                            setIsAddRatingOpened ? setIsAddRatingOpened(false) : setIsAddReviewOpened(false);
                         }}
                         Icon={CrossIcon}
                         size={20}
@@ -254,103 +328,107 @@ function AddReviewPopUp({ setIsAddReviewOpened }) {
                         buttonStyle={"w-[40px] h-[40px] flex justify-center items-center bg-slate-200 animated-100 rounded-md hover:bg-slate-300"}
                     />
                 </div>
-                <div className="flex ">
+                <div className="flex -ml-[6px]">
                     <IconComponent
                         onClick={() => {
-                            setReviewInfo({ ...reviewInfo, bookRating: 1 });
+                            setFeedbackInfo({ ...feedbackInfo, bookRating: 1 });
                         }}
                         Icon={RatingStarIcon}
                         size={24}
                         color={"#C0C0C0"}
-                        hoveredUntil={reviewInfo.bookRating >= 1}
+                        hoveredUntil={feedbackInfo.bookRating >= 1}
                         hoveredColor={"#ffc117"}
                         animation={"animated-100"}
-                        buttonStyle={"w-[40px] h-[40px] flex justify-center items-center"}
+                        buttonStyle={"w-[35px] h-[30px] flex justify-center items-center"}
                     />
                     <IconComponent
                         onClick={() => {
-                            setReviewInfo({ ...reviewInfo, bookRating: 2 });
+                            setFeedbackInfo({ ...feedbackInfo, bookRating: 2 });
                         }}
                         Icon={RatingStarIcon}
                         size={24}
                         color={"#C0C0C0"}
-                        hoveredUntil={reviewInfo.bookRating >= 2}
+                        hoveredUntil={feedbackInfo.bookRating >= 2}
                         hoveredColor={"#ffc117"}
                         animation={"animated-100"}
-                        buttonStyle={"w-[40px] h-[40px] flex justify-center items-center"}
+                        buttonStyle={"w-[35px] h-[30px] flex justify-center items-center"}
                     />
                     <IconComponent
                         onClick={() => {
-                            setReviewInfo({ ...reviewInfo, bookRating: 3 });
+                            setFeedbackInfo({ ...feedbackInfo, bookRating: 3 });
                         }}
                         Icon={RatingStarIcon}
                         size={24}
                         color={"#C0C0C0"}
-                        hoveredUntil={reviewInfo.bookRating >= 3}
+                        hoveredUntil={feedbackInfo.bookRating >= 3}
                         hoveredColor={"#ffc117"}
                         animation={"animated-100"}
-                        buttonStyle={"w-[40px] h-[40px] flex justify-center items-center"}
+                        buttonStyle={"w-[35px] h-[30px] flex justify-center items-center"}
                     />
                     <IconComponent
                         onClick={() => {
-                            setReviewInfo({ ...reviewInfo, bookRating: 4 });
+                            setFeedbackInfo({ ...feedbackInfo, bookRating: 4 });
                         }}
                         Icon={RatingStarIcon}
                         size={24}
                         color={"#C0C0C0"}
-                        hoveredUntil={reviewInfo.bookRating >= 4}
+                        hoveredUntil={feedbackInfo.bookRating >= 4}
                         hoveredColor={"#ffc117"}
                         animation={"animated-100"}
-                        buttonStyle={"w-[40px] h-[40px] flex justify-center items-center"}
+                        buttonStyle={"w-[35px] h-[30px] flex justify-center items-center"}
                     />
                     <IconComponent
                         onClick={() => {
-                            setReviewInfo({ ...reviewInfo, bookRating: 5 });
+                            setFeedbackInfo({ ...feedbackInfo, bookRating: 5 });
                         }}
                         Icon={RatingStarIcon}
                         size={24}
                         color={"#C0C0C0"}
-                        hoveredUntil={reviewInfo.bookRating >= 5}
+                        hoveredUntil={feedbackInfo.bookRating >= 5}
                         hoveredColor={"#ffc117"}
                         animation={"animated-100"}
-                        buttonStyle={"w-[40px] h-[40px] flex justify-center items-center"}
+                        buttonStyle={"w-[35px] h-[30px] flex justify-center items-center"}
                     />
                 </div>
-                <div className="flex flex-col gap-y-4">
-                    <InputTile
-                        title={"Заголовок"}
-                        onChange={(e) => {
-                            setReviewInfo({ ...reviewInfo, title: e.target.value });
-                        }}
-                    />
-                    <InputTile
-                        title={"Комментарий"}
-                        onChange={(e) => {
-                            setReviewInfo({ ...reviewInfo, text: e.target.value });
-                        }}
-                    />
-                    <InputTile
-                        title={"Плюсы"}
-                        onChange={(e) => {
-                            setReviewInfo({ ...reviewInfo, pros: e.target.value });
-                        }}
-                    />
-                    <InputTile
-                        title={"Минусы"}
-                        onChange={(e) => {
-                            setReviewInfo({ ...reviewInfo, cons: e.target.value });
-                        }}
-                    />
-                    <InputTile
-                        title={"Имя пользователя"}
-                        onChange={(e) => {
-                            setReviewInfo({ ...reviewInfo, author: e.target.value });
-                        }}
-                    />
-                </div>
+                {setIsAddReviewOpened ? (
+                    <div className="flex flex-col gap-y-4 mt-4">
+                        <InputTile
+                            title={"Заголовок"}
+                            onChange={(e) => {
+                                setFeedbackInfo({ ...feedbackInfo, title: e.target.value });
+                            }}
+                        />
+                        <InputTile
+                            title={"Комментарий"}
+                            onChange={(e) => {
+                                setFeedbackInfo({ ...feedbackInfo, text: e.target.value });
+                            }}
+                        />
+                        <InputTile
+                            title={"Плюсы"}
+                            onChange={(e) => {
+                                setFeedbackInfo({ ...feedbackInfo, pros: e.target.value });
+                            }}
+                        />
+                        <InputTile
+                            title={"Минусы"}
+                            onChange={(e) => {
+                                setFeedbackInfo({ ...feedbackInfo, cons: e.target.value });
+                            }}
+                        />
+                        <InputTile
+                            title={"Имя пользователя"}
+                            onChange={(e) => {
+                                setFeedbackInfo({ ...feedbackInfo, author: e.target.value });
+                            }}
+                        />
+                    </div>
+                ) : (
+                    <></>
+                )}
                 <button
                     onClick={() => {
-                        addReview();
+                        setIsAddRatingOpened ? addRating() : addReview();
                     }}
                     className={"py-3 px-10 mt-6 rounded-md text-white animated-100 font-semibold " + (true ? "bg-sky-400 hover:bg-sky-500" : "bg-slate-400 pointer-events-none")}
                 >
@@ -362,6 +440,34 @@ function AddReviewPopUp({ setIsAddReviewOpened }) {
 }
 
 function ReviewTile({ review }) {
+    const [reviewRating, setReviewRating] = useState({ likes: 0, dislikes: 0 });
+
+    async function rateReview(isReviewUseful) {
+        try {
+            const res = await axios.post(rateReview_EP, { reviewId: review._id, isReviewUseful }, authToken_header());
+            console.log(res);
+        } catch (error) {
+            if (error?.response) console.log(error.response.data.error);
+            else console.log(error);
+        }
+    }
+
+    useEffect(() => {
+        for (const rating of review.reviewRating) {
+            if (rating.isReviewUseful === true) {
+                setReviewRating((prevReviewRating) => ({
+                    ...prevReviewRating,
+                    likes: prevReviewRating.likes + 1,
+                }));
+            } else {
+                setReviewRating((prevReviewRating) => ({
+                    ...prevReviewRating,
+                    dislikes: prevReviewRating.dislikes + 1,
+                }));
+            }
+        }
+    }, []);
+
     return (
         <div
             className={
@@ -389,13 +495,23 @@ function ReviewTile({ review }) {
             </div>
             <div className="w-full flex justify-end">
                 <div className="flex justify-center gap-x-2">
-                    <button className="flex justify-center gap-2 rounded-full bg-gray-300/20 font-medium px-4 py-2 hover:scale-105 hover:bg-gray-400/20 animated-100">
+                    <button
+                        onClick={() => {
+                            rateReview(true);
+                        }}
+                        className="flex justify-center gap-2 rounded-full bg-gray-300/20 font-medium px-4 py-2 hover:scale-105 hover:bg-gray-400/20 animated-100"
+                    >
                         <span>Полезно</span>
-                        <span className="text-neutral-500">{review.likes}</span>
+                        <span className="text-neutral-500">{reviewRating.likes}</span>
                     </button>
-                    <button className="flex justify-center gap-2 rounded-full bg-gray-300/20 font-medium px-4 py-2 hover:scale-105 hover:bg-gray-400/20 animated-100">
+                    <button
+                        onClick={() => {
+                            rateReview(false);
+                        }}
+                        className="flex justify-center gap-2 rounded-full bg-gray-300/20 font-medium px-4 py-2 hover:scale-105 hover:bg-gray-400/20 animated-100"
+                    >
                         <span>Нет</span>
-                        <span className="text-neutral-500">{review.dislikes}</span>
+                        <span className="text-neutral-500">{reviewRating.dislikes}</span>
                     </button>
                 </div>
             </div>
