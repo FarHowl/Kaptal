@@ -4,7 +4,7 @@ import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { Routes, Route, useLocation, Link } from "react-router-dom";
 import IconComponent from "./Components/Icons/IconComponent";
 import jwt_decode from "jwt-decode";
-import { getUserData, logOut } from "./Utils/LocalStorageUtils";
+import { authToken_header, getUserData, logOut } from "./Utils/LocalStorageUtils";
 import LogInIcon from "./Components/Icons/LogInIcon";
 import SearchIcon from "./Components/Icons/SearchIcon";
 import ShoppingCart from "./Components/Icons/ShoppingCart";
@@ -12,18 +12,34 @@ import UserProfileIcon from "./Components/Icons/UserProfileIcon";
 import WishesIcon from "./Components/Icons/WishesIcon";
 import LoadingComponent from "./Components/UI/LoadingComponent";
 import ProfilePopUp from "./Components/UI/ProfilePopUp";
+import axios from "axios";
 import { Store } from "pullstate";
 import "./index.css";
+import { refreshToken_EP, signIn_EP } from "./Utils/API";
 
 const MainPage = React.lazy(() => import("./Pages/MainPage"));
 const SignUpPage = React.lazy(() => import("./Pages/SignUpPage"));
 const BookPage = React.lazy(() => import("./Pages/BookPage"));
+const ShoppingCartPage = React.lazy(() => import("./Pages/ShoppingCartPage"));
 
 export default function App() {
     const [isRouteLoaded, setIsRouteLoaded] = useState(false);
     const [isProfileHovered, setIsProfileHovered] = useState(false);
 
     const profilePopUpRef = useRef();
+
+    async function refreshToken() {
+        try {
+            const res = await axios.get(refreshToken_EP, authToken_header());
+
+            let user = getUserData();
+            user.authToken = res.data.authToken;
+            user = JSON.stringify(user);
+            localStorage.setItem("userData", user);
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
     function profilePopUpOn() {
         profilePopUpRef.current.classList.remove("opacity-0");
@@ -51,16 +67,20 @@ export default function App() {
         if (location.pathname !== sessionStorage.getItem("currentPage")) sessionStorage.clear();
     }, [location]);
 
-    useLayoutEffect(() => {
-        if (getUserData()?.authToken) {
-            const decodedToken = jwt_decode(getUserData()?.authToken);
+    useEffect(() => {
+        if (getUserData()) {
+            const decodedAuthToken = jwt_decode(getUserData().authToken);
             const currentTime = Date.now() / 1000;
 
-            if (decodedToken.exp < currentTime) {
+            const expirationTime = decodedAuthToken.exp - currentTime;
+
+            if (expirationTime <= 12 * 60 * 60 && expirationTime > 0) {
+                refreshToken();
+            } else if (expirationTime <= 0) {
                 logOut();
             }
         }
-    }, []);
+    }, [location]);
 
     return (
         <div className="flex flex-col w-full items-center">
@@ -84,7 +104,9 @@ export default function App() {
                 </div>
                 <div className="flex gap-4">
                     <IconComponent Icon={WishesIcon} size={28} color={"#000"} hoveredColor={"#3BA5ED"} iconTitle={"Желаемое"} animation={"animated-100"} />
-                    <IconComponent Icon={ShoppingCart} size={28} color={"#000"} hoveredColor={"#3BA5ED"} iconTitle={"Корзина"} animation={"animated-100"} />
+                    <Link to={"/shoppingCart"}>
+                        <IconComponent Icon={ShoppingCart} size={28} color={"#000"} hoveredColor={"#3BA5ED"} iconTitle={"Корзина"} animation={"animated-100"} />
+                    </Link>
                     {getUserData() ? (
                         <div
                             onMouseOver={() => {
@@ -124,6 +146,7 @@ export default function App() {
                     <Route path="/" element={<MainPage />} />
                     <Route path="/signIn" element={<SignUpPage />} />
                     <Route path="/book/:bookId" element={<BookPage />} />
+                    <Route path="/shoppingCart" element={<ShoppingCartPage />} />
                 </Routes>
             </Suspense>
         </div>

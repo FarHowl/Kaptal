@@ -19,20 +19,18 @@ const verifyJWT = require("./utils/verifyJWT");
 
 router.post("/user/signIn", async (req, res) => {
     try {
-        const currentToken = req.headers.authorization.split(" ")[1];
-
-        jwt.verify(currentToken, process.env.GATEWAY_USERS_KEY);
-
-        const findUserOrValidEmail = await User.findOne({ email: req.body.email });
-        if (!findUserOrValidEmail) throw new Error("User does not exist or email is invalid");
+        const hasToBeAuthorized = false;
+        verifyJWT(req, hasToBeAuthorized);
 
         const currentUser = await User.findOne({ email: req.body.email });
+        if (!currentUser) throw new Error("User does not exist or email is invalid");
+
         const hash = new SHA3(512);
         const passwordHash = hash.update(req.body.password).digest("hex");
         const isPasswordValid = currentUser.password !== passwordHash;
         if (isPasswordValid) throw new Error("Password is invalid");
 
-        const frontendToken = jwt.sign({ userId: currentUser._id.toString(), role: currentUser.role }, process.env.FRONTEND_GATEWAY_KEY, { expiresIn: "100d" });
+        const frontendToken = jwt.sign({ userId: currentUser._id.toString(), role: currentUser.role }, process.env.FRONTEND_GATEWAY_KEY, { expiresIn: "1d" });
 
         res.status(200).send({
             username: currentUser.username,
@@ -44,14 +42,31 @@ router.post("/user/signIn", async (req, res) => {
         });
     } catch (error) {
         res.status(400).send({ error: error.message });
+        console.log(error);
+    }
+});
+
+router.get("/user/refreshToken", async (req, res) => {
+    try {
+        console.log("first")
+        const hasToBeAuthorized = true;
+        const frontendToken = verifyJWT(req, hasToBeAuthorized);
+
+        const newFrontendToken = jwt.sign({ userId: frontendToken.userId.toString(), role: frontendToken.role }, process.env.FRONTEND_GATEWAY_KEY, { expiresIn: "1d" });
+
+        res.status(200).send({
+            authToken: newFrontendToken,
+        });
+    } catch (error) {
+        res.status(400).send({ error: error.message });
+        console.log(error);
     }
 });
 
 router.post("/user/signUp", async (req, res) => {
     try {
-        const currentToken = req.headers.authorization.split(" ")[1];
-
-        jwt.verify(currentToken, process.env.GATEWAY_USERS_KEY);
+        const hasToBeAuthorized = false;
+        verifyJWT(req, hasToBeAuthorized);
 
         const hasAllFields = req.body?.username || req.body?.email || req.body?.password;
         if (!hasAllFields) throw new Error("Please, enter all fields");
@@ -74,7 +89,7 @@ router.post("/user/signUp", async (req, res) => {
     }
 });
 
-router.post("/user/addToShoppingCart", async (req, res) => {
+router.post("/user/addBookToShoppingCart", async (req, res) => {
     try {
         const hasToBeAuthorized = true;
         const frontendToken = verifyJWT(req, hasToBeAuthorized);
@@ -107,7 +122,7 @@ router.post("/user/addToShoppingCart", async (req, res) => {
     }
 });
 
-router.post("/user/removeFromShoppingCart", async (req, res) => {
+router.post("/user/removeBookFromShoppingCart", async (req, res) => {
     try {
         const hasToBeAuthorized = true;
         const frontendToken = verifyJWT(req, hasToBeAuthorized);
@@ -142,7 +157,7 @@ router.post("/user/removeFromShoppingCart", async (req, res) => {
     }
 });
 
-router.post("/user/addToWishlist", async (req, res) => {
+router.post("/user/addBooksToWishlist", async (req, res) => {
     try {
         const hasToBeAuthorized = true;
         const frontendToken = verifyJWT(req, hasToBeAuthorized);
@@ -153,7 +168,7 @@ router.post("/user/addToWishlist", async (req, res) => {
         const currentUser = await User.findById(frontendToken.userId);
         const isBookAlreadyInWishlist = currentUser.wishlist.includes(req.body.bookId);
         if (!isBookAlreadyInWishlist) {
-            const user = await User.findByIdAndUpdate(currentUser._id.toString(), {
+            await User.findByIdAndUpdate(currentUser._id.toString(), {
                 $push: {
                     wishlist: req.body.bookId,
                 },
@@ -166,7 +181,7 @@ router.post("/user/addToWishlist", async (req, res) => {
     }
 });
 
-router.post("/user/removeFromWishlist", async (req, res) => {
+router.post("/user/removeBookFromWishlist", async (req, res) => {
     try {
         const hasToBeAuthorized = true;
         const frontendToken = verifyJWT(req, hasToBeAuthorized);
@@ -177,7 +192,7 @@ router.post("/user/removeFromWishlist", async (req, res) => {
         const currentUser = await User.findById(frontendToken.userId);
         const isBookAlreadyInWishlist = currentUser.wishlist.includes(req.body.bookId);
         if (isBookAlreadyInWishlist) {
-            const user = await User.findByIdAndUpdate(currentUser._id.toString(), {
+            await User.findByIdAndUpdate(currentUser._id.toString(), {
                 $pull: {
                     wishlist: req.body.bookId,
                 },
@@ -190,28 +205,61 @@ router.post("/user/removeFromWishlist", async (req, res) => {
     }
 });
 
+router.get("/user/getWishlist", async (req, res) => {
+    try {
+        const hasToBeAuthorized = true;
+        const frontendToken = verifyJWT(req, hasToBeAuthorized);
+
+        const currentUser = await User.findById(frontendToken.userId);
+
+        res.status(200).send(currentUser.wishlist);
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+    }
+});
+
+router.get("/user/getShoppingCart", async (req, res) => {
+    try {
+        const hasToBeAuthorized = true;
+        const frontendToken = verifyJWT(req, hasToBeAuthorized);
+
+        const currentUser = await User.findById(frontendToken.userId);
+
+        res.status(200).send(currentUser.shoppingCart);
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+    }
+});
+
 router.post("/admin/updateUser", async (req, res) => {
     try {
-        verifyJWT(req);
+        const hasToBeAuthorized = true;
+        const frontendToken = verifyJWT(req, hasToBeAuthorized);
 
-        const hasUserId = req.body?.userId;
-        if (!hasUserId) throw new Error("Please, enter userId");
+        if (!frontendToken.userId) {
+            throw new Error("Please enter userId");
+        }
 
-        const currentUser = await User.findById(req.body.userId);
+        const currentUser = await User.findById(frontendToken.userId);
+        if (!currentUser) {
+            throw new Error("User not found");
+        }
 
-        let update = {};
+        const { role } = req.body;
 
-        const hasChangeRoleTo = req.body?.role !== undefined;
-        if (hasChangeRoleTo && req.body.role === currentUser.role) throw new Error("You have entered the same role");
+        if (role === currentUser.role) {
+            throw new Error("You have entered the same role");
+        }
 
-        if (currentUser.role === "user" && req.body.role === "moderator") {
+        let update = { role };
+
+        if (currentUser.role === "user" && role === "moderator") {
             update.isStaffAvailableForChat = true;
-        } else if (req.body.role === "user") {
+        } else if (role === "user") {
             update.$unset = { isStaffAvailableForChat: "" };
         }
-        update.role = req.body.role;
 
-        const user = await User.findByIdAndUpdate(currentUser._id.toString(), update);
+        await User.findByIdAndUpdate(currentUser._id.toString(), update);
         res.sendStatus(200);
     } catch (error) {
         res.status(400).send({ error: error.message });
@@ -220,7 +268,8 @@ router.post("/admin/updateUser", async (req, res) => {
 
 router.get("/admin/getAllUsers", async (req, res) => {
     try {
-        verifyJWT(req);
+        const hasToBeAuthorized = true;
+        verifyJWT(req, hasToBeAuthorized);
 
         const totalAmountOfUsers = await User.countDocuments();
         const totalPages = Math.ceil(totalAmountOfUsers / 1);

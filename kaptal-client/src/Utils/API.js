@@ -6,6 +6,8 @@ export const apiAddress = "http://api.local.app.garden";
  */
 export const signIn_EP = apiAddress + "/api/users-service/user/signIn";
 
+export const refreshToken_EP = apiAddress + "/api/users-service/user/refreshToken";
+
 /**
  * @param {string} bookId
  */
@@ -82,5 +84,17 @@ export const getBooksByCollection_EP = apiAddress + "/api/books-service/user/get
  */
 export const getBooksBarByCollection_EP = apiAddress + "/api/books-service/user/getBooksBarByCollection";
 
+
+export const addBookToWishlist_EP = apiAddress + "/api/users-service/user/addBookToWishlist";
+
+export const removeBookFromWishlist_EP = apiAddress + "/api/users-service/user/removeBookFromWishlist";
+
+export const addBookToShoppingCart_EP = apiAddress + "/api/users-service/user/addBookToShoppingCart";
+
+export const removeBookFromShoppingCart_EP = apiAddress + "/api/users-service/user/removeBookFromShoppingCart";
+
+export const getShoppingCart_EP = apiAddress + "/api/users-service/user/getShoppingCart";
+
+export const getWishlist_EP = apiAddress + "/api/users-service/user/getWishlist";
 //
 
