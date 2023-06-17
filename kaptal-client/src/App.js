@@ -17,7 +17,6 @@ import "./index.css";
 
 const MainPage = React.lazy(() => import("./Pages/MainPage"));
 const SignUpPage = React.lazy(() => import("./Pages/SignUpPage"));
-const AdminPage = React.lazy(() => import("./Pages/AdminPage"));
 const BookPage = React.lazy(() => import("./Pages/BookPage"));
 
 export default function App() {
@@ -124,7 +123,6 @@ export default function App() {
                 <Routes>
                     <Route path="/" element={<MainPage />} />
                     <Route path="/signIn" element={<SignUpPage />} />
-                    <Route path="/admin" element={<AdminPage />} />
                     <Route path="/book/:bookId" element={<BookPage />} />
                 </Routes>
             </Suspense>

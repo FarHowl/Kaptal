@@ -34,7 +34,7 @@ export default function AddBookTab({ setIsTabLoading }) {
                     image: formData.get("image"),
                     weight: bookInfo.weight,
                     series: bookInfo.series,
-                    language: bookInfo.language,
+                    cycle: bookInfo.cycle,
                     stock: bookInfo.stock,
                     categories: categoriesArray,
                     collections: collectionsArray,
@@ -136,9 +136,9 @@ export default function AddBookTab({ setIsTabLoading }) {
                         }}
                     />
                     <InputTile
-                        title={"Язык"}
+                        title={"Цикл"}
                         onChange={(e) => {
-                            setBookInfo({ ...bookInfo, language: e.target.value });
+                            setBookInfo({ ...bookInfo, cycle: e.target.value });
                         }}
                     />
                     <InputTile
@@ -326,7 +326,7 @@ function CollectionsInputTile({ setBookInfo, bookInfo }) {
         try {
             const res = await axios.get(getAllCollections_EP, authToken_header());
 
-            setCollections(res.data[0].collections);
+            setCollections(res.data.collections);
         } catch (error) {
             if (error?.response) {
                 console.log(error.response.data.error);
@@ -343,6 +343,7 @@ function CollectionsInputTile({ setBookInfo, bookInfo }) {
 
     useEffect(() => {
         getCollections();
+        console.log(collections)
     }, []);
 
     const handleCollectionRemove = (collection) => {
@@ -386,9 +387,9 @@ function CollectionsInputTile({ setBookInfo, bookInfo }) {
         >
             <div className="flex gap-2 flex-wrap mt-[12px]">
                 {collectionsView.map((collection) => (
-                    <div key={collection.name} className="flex items-center gap-2">
+                    <div key={collection} className="flex items-center gap-2">
                         <div className="flex gap-2 justify-center items-center px-3 py-1 bg-stone-200/70 rounded-md">
-                            <span className="">{collection.name}</span>
+                            <span className="">{collection}</span>
                             <button onClick={() => handleCollectionRemove(collection)} className="text-gray-500 ">
                                 x
                             </button>
@@ -409,8 +410,8 @@ function CollectionsInputTile({ setBookInfo, bookInfo }) {
                         {collections
                             .filter((collection) => !collectionsView.includes(collection))
                             .map((collection) => (
-                                <button key={collection.name} onClick={() => handleCollectionSelect(collection)} className="text-left px-2 py-2">
-                                    {collection.name}
+                                <button key={collection} onClick={() => handleCollectionSelect(collection)} className="text-left px-2 py-2">
+                                    {collection}
                                 </button>
                             ))}
                     </div>

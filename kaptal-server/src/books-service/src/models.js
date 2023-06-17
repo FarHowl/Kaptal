@@ -9,7 +9,7 @@ const bookSchema = new mongoose.Schema({
     author: {
         required: true,
         trim: true,
-        type: String,
+        type: Array,
     },
     stock: {
         required: true,
@@ -27,12 +27,12 @@ const bookSchema = new mongoose.Schema({
         type: String,
     },
     series: {
-        required: true,
+        required: false,
         trim: true,
         type: String,
     },
-    language: {
-        required: true,
+    cycle: {
+        required: false,
         trim: true,
         type: String,
     },
@@ -124,12 +124,10 @@ const categorySchema = new mongoose.Schema({
 const collectionSchema = new mongoose.Schema({
     collections: [
         {
-            name: {
-                unique: true,
-                required: true,
-                trim: true,
-                type: String,
-            },
+            unique: true,
+            required: true,
+            trim: true,
+            type: String,
         },
     ],
 });

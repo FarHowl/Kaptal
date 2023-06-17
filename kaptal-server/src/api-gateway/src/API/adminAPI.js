@@ -110,15 +110,13 @@ router.post("/books-service/admin/deleteBook", async (req, res) => {
     try {
         const frontendToken = verifyJWT(req, ["admin"]);
 
-        const newToken = jwt.sign({ frontendToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
+        const newTokenForBooks = jwt.sign({ frontendToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
+        const newTokenForReviews = jwt.sign({ frontendToken }, process.env.GATEWAY_REVIEWS_KEY, { expiresIn: "100d" });
 
-        const response = await axios.post(
-            "http://books-service:3000" + "/api/admin/deleteBook",
-            {
-                ...req.body,
-            },
-            { headers: { Authorization: "Bearer " + newToken } }
-        );
+        const response1 = axios.post("http://books-service:3000" + "/api/admin/deleteBook", { ...req.body }, { headers: { Authorization: "Bearer " + newTokenForBooks } });
+        const response2 = axios.post("http://reviews-service:3000" + "/api/admin/deleteBookReviews", { ...req.body }, { headers: { Authorization: "Bearer " + newTokenForReviews } });
+
+        const response = await axios.all([response1, response2]);
         res.status(200);
     } catch (error) {
         if (error?.response) res.status(500).send({ error: error.response.data.error });

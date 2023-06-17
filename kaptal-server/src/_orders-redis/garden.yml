@@ -1,0 +1,13 @@
+kind: Deploy
+type: container
+name: orders-redis
+description: The orders-redis deployment
+dependencies: [deploy.orders-mongodb]
+spec:
+  image: redis
+  ports:
+    - name: redis
+      containerPort: 6379
+  volumes:
+    - name: data
+      containerPath: /data/db

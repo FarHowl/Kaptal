@@ -209,10 +209,9 @@ const chatHistorySchema = new mongoose.Schema({
 const orderSchema = new mongoose.Schema({
     books: [
         {
-            type: mongoose.Schema.Types.ObjectId,
+            type: String,
             required: true,
             trim: true,
-            ref: "Book",
         },
     ],
     date: {
@@ -229,6 +228,16 @@ const orderSchema = new mongoose.Schema({
         type: String,
         trim: true,
     },
+    userId: {
+        required: true,
+        type: String,
+        trim: true,
+    },
+    paymentMethod: {
+        required: true,
+        type: String,
+        trim: true,
+    }
 });
 
 const userSchema = new mongoose.Schema({

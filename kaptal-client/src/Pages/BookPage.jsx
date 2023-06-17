@@ -280,7 +280,7 @@ function AddFeedbackPopUp({ setIsAddReviewOpened, setIsAddRatingOpened }) {
             );
 
             setIsAddRatingOpened(false);
-            navigate("/book/" + params.bookId);
+            window.location.reload();
         } catch (error) {
             if (error?.response) console.log(error.response.data.error);
             else console.log(error);
@@ -304,7 +304,7 @@ function AddFeedbackPopUp({ setIsAddReviewOpened, setIsAddRatingOpened }) {
             );
 
             setIsAddReviewOpened(false);
-            navigate("/book/" + params.bookId);
+            window.location.reload();
         } catch (error) {
             if (error?.response) console.log(error.response.data.error);
             else console.log(error);
@@ -453,17 +453,19 @@ function ReviewTile({ review }) {
     }
 
     useEffect(() => {
-        for (const rating of review.reviewRating) {
-            if (rating.isReviewUseful === true) {
-                setReviewRating((prevReviewRating) => ({
-                    ...prevReviewRating,
-                    likes: prevReviewRating.likes + 1,
-                }));
-            } else {
-                setReviewRating((prevReviewRating) => ({
-                    ...prevReviewRating,
-                    dislikes: prevReviewRating.dislikes + 1,
-                }));
+        if (review.reviewRating) {
+            for (const rating of review.reviewRating) {
+                if (rating.isReviewUseful === true) {
+                    setReviewRating((prevReviewRating) => ({
+                        ...prevReviewRating,
+                        likes: prevReviewRating.likes + 1,
+                    }));
+                } else {
+                    setReviewRating((prevReviewRating) => ({
+                        ...prevReviewRating,
+                        dislikes: prevReviewRating.dislikes + 1,
+                    }));
+                }
             }
         }
     }, []);

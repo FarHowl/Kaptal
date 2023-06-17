@@ -1,78 +1,54 @@
 import React, { useEffect, useState, useLayoutEffect } from "react";
 import { authToken_header, getUserData } from "../Utils/LocalStorageUtils";
-import { getAllBooks_EP } from "../Utils/API";
+import { getAllBooks_EP, getBooksBarByCollection_EP } from "../Utils/API";
 import BookTile from "../Components/Book/BookTile";
 import axios from "axios";
 import { socket } from "../Utils/socketIO";
+import { useSessionState } from "../Utils/CustomHooks";
 
 export default function MainPage() {
+    return (
+        <div className="w-full flex flex-col justify-center items-center px-6">
+            <div className="max-w-[1400px] w-full flex flex-col justify-center items-center mt-8 flex-wrap gap-y-16">
+                <div className="flex flex-col gap-y-3 w-full">
+                    <span className="text-3xl font-bold">Новинки</span>
+                    <BooksBar collection={"Новинки"} />
+                </div>
+                <div className="flex flex-col gap-y-3 w-full">
+                    <span className="text-3xl font-bold">Бестселлеры</span>
+                    <BooksBar collection={"Бестселлеры"} />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function BooksBar({ collection }) {
     const [booksList, setBooksList] = useState([]);
 
-    async function getBooks() {
-        try {
-            const res = await axios.get(getAllBooks_EP, authToken_header());
+    async function getBooksByCollectionBar(collection) {
+        const query = `?collection=${collection}`;
 
-            let b = [];
-            for (const i of res.data) {
-                b.push(<BookTile key={i._id} book={i} />);
+        try {
+            const res = await axios.get(getBooksBarByCollection_EP + query, authToken_header());
+
+            let a = [];
+            for (const book of res.data) {
+                a.push(<BookTile key={book._id} book={book} />);
             }
-            setBooksList(b);
+            setBooksList(a);
         } catch (error) {
-            if (error?.response) console.log(error.response.data.error);
-            else console.log(error);
+            console.log(error);
         }
     }
-    // useLayoutEffect(() => {
-    //     socket.on("connect", () => {
-    //         console.log(socket.id);
-    //     });
-    // }, []);
+
+    useEffect(() => {
+        getBooksByCollectionBar(collection);
+    }, []);
 
     return (
-        <>
-            <div className="w-full flex flex-col justify-center items-center">
-                {/* <div className="max-w-[1400px] w-full flex justify-center items-center mt-8 flex-wrap gap-4">{booksList}</div> */}
-                <div className="absolute top-[90px] left-[254px] pb-6 pt-6 px-10 right-0 bottom-0 flex flex-col items-center overflow-y-auto">
-                    <div className="w-full flex flex-col items-center shadow-lg rounded-lg py-4 border-[1px]">
-                        <div className="w-full flex flex-col justify-start items-center h-[300px] overflow-y-auto py-2 px-2">
-                            <div className="w-full flex justify-start">
-                                <div className="bg-gray-100 py-4 px-6 rounded-xl">
-                                    <span>Привет!</span>
-                                </div>
-                            </div>
-                            <div className="w-full flex justify-end">
-                                <div className="bg-indigo-600/90 text-white py-4 px-6 rounded-xl">
-                                    <span>Привет!</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="w-full px-3 flex justify-center gap-3">
-                            <input
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                        console.log("Enter");
-                                    }
-                                }}
-                                className="w-full border-[1px] border-gray-100 bg-gray-100 border-opacity-80 rounded-full focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:border-[1px] focus:bg-white focus:ring-indigo-300 py-3 px-4"
-                                type="text"
-                                placeholder="Напишите сообщение"
-                            />
-                            <button className="bg-blue-500 text-white rounded-full px-3 py-1">Отправить</button>
-                        </div>
-                    </div>
-                </div>
-                {/* {getUserData()?.role === "user" ? (
-                    <div className="w-[400px] flex flex-col items-center shadow-lg rounded-lg py-4">
-                        <div className="w-full flex justify-center h-[300px] overflow-y-auto py-2 px-2"></div>
-                        <div className="w-full px-3 flex justify-center gap-3">
-                            <input className="w-full rounded-lg bg-gray-100" type="text" />
-                            <button className="bg-blue-300 text-white rounded-md px-3 py-1">Send</button>
-                        </div>
-                    </div>
-                ) : (
-                    <></>
-                )} */}
-            </div>
-        </>
+        <div className="w-full flex flex-col justify-center items-center">
+            <div className="max-w-[1400px] w-full flex justify-start items-center flex-wrap gap-4">{booksList}</div>
+        </div>
     );
 }

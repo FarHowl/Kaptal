@@ -1,0 +1,15 @@
+kind: Deploy
+type: container
+name: orders-mongodb
+description: The orders-mongodb deployment
+spec:
+  env:
+    MONGO_INITDB_ROOT_USERNAME: root
+    MONGO_INITDB_ROOT_PASSWORD: root
+  image: mongo
+  ports:
+    - name: mongodb
+      containerPort: 27017
+  volumes:
+    - name: data
+      containerPath: /data/db

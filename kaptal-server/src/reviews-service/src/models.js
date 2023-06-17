@@ -2,11 +2,11 @@ const mongoose = require("mongoose");
 
 const reviewSchema = new mongoose.Schema({
     text: {
-        required: true,
+        required: false,
         type: String,
     },
     title: {
-        required: true,
+        required: false,
         type: String,
     },
     bookRating: {
@@ -14,27 +14,30 @@ const reviewSchema = new mongoose.Schema({
         type: Number,
     },
     author: {
-        required: true,
+        required: false,
         type: String,
     },
     publicationDate: {
-        required: true,
+        required: false,
         type: String,
     },
-    reviewRating: [
-        {
-            userId: {
-                required: true,
-                trim: true,
-                type: String,
+    reviewRating: {
+        type: [
+            {
+                userId: {
+                    required: false,
+                    trim: true,
+                    type: String,
+                },
+                isReviewUseful: {
+                    required: false,
+                    trim: true,
+                    type: Boolean,
+                },
             },
-            isReviewUseful: {
-                required: true,
-                trim: true,
-                type: Boolean,
-            },
-        },
-    ],
+        ],
+        default: undefined,
+    },
     bookId: {
         required: true,
         trim: true,
@@ -51,29 +54,11 @@ const reviewSchema = new mongoose.Schema({
         trim: true,
     },
     status: {
-        required: true,
+        required: false,
         type: String,
         trim: true,
     },
     userId: {
-        required: true,
-        trim: true,
-        type: String,
-    }
-});
-
-const ratingSchema = new mongoose.Schema({
-    userId: {
-        required: true,
-        trim: true,
-        type: String,
-    },
-    bookRating: {
-        required: true,
-        trim: true,
-        type: Number,
-    },
-    bookId: {
         required: true,
         trim: true,
         type: String,
@@ -81,9 +66,7 @@ const ratingSchema = new mongoose.Schema({
 });
 
 const Review = mongoose.model("Review", reviewSchema);
-const Rating = mongoose.model("Rating", ratingSchema);
 
 module.exports = {
     Review,
-    Rating,
 };

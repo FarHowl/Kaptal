@@ -74,6 +74,122 @@ router.post("/user/signUp", async (req, res) => {
     }
 });
 
+router.post("/user/addToShoppingCart", async (req, res) => {
+    try {
+        const hasToBeAuthorized = true;
+        const frontendToken = verifyJWT(req, hasToBeAuthorized);
+
+        const hasAllFields = req.body?.bookId;
+        if (!hasAllFields) throw new Error("Please, enter all fields");
+
+        const currentUser = await User.findById(frontendToken.userId);
+        const isBookAlreadyInShoppingCart = currentUser.shoppingCart.includes(req.body.bookId);
+        if (isBookAlreadyInShoppingCart) {
+            const user = await User.findByIdAndUpdate(currentUser._id.toString(), {
+                $inc: {
+                    "shoppingCart.$.amount": 1,
+                },
+            });
+        } else {
+            const user = await User.findByIdAndUpdate(currentUser._id.toString(), {
+                $push: {
+                    shoppingCart: {
+                        bookId: req.body.bookId,
+                        amount: 1,
+                    },
+                },
+            });
+        }
+
+        res.sendStatus(200);
+    } catch (error) {
+        res.status(400).send({ error: error.message });
+    }
+});
+
+router.post("/user/removeFromShoppingCart", async (req, res) => {
+    try {
+        const hasToBeAuthorized = true;
+        const frontendToken = verifyJWT(req, hasToBeAuthorized);
+
+        const hasAllFields = req.body?.bookId && req.body?.amount;
+        if (!hasAllFields) throw new Error("Please, enter all fields");
+
+        const currentUser = await User.findById(frontendToken.userId);
+        if (req.body.amount >= currentUser.shoppingCart.find((book) => book.bookId === req.body.bookId).amount) {
+            await User.findByIdAndUpdate(currentUser._id.toString(), {
+                $pull: {
+                    shoppingCart: {
+                        bookId: req.body.bookId,
+                    },
+                },
+            });
+        } else {
+            await User.findByIdAndUpdate(
+                currentUser._id.toString(),
+                {
+                    $inc: {
+                        "shoppingCart.$[elem].amount": -req.body.amount,
+                    },
+                },
+                {
+                    arrayFilters: [{ "elem.bookId": req.body.bookId }],
+                }
+            );
+        }
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+    }
+});
+
+router.post("/user/addToWishlist", async (req, res) => {
+    try {
+        const hasToBeAuthorized = true;
+        const frontendToken = verifyJWT(req, hasToBeAuthorized);
+
+        const hasAllFields = req.body?.bookId;
+        if (!hasAllFields) throw new Error("Please, enter all fields");
+
+        const currentUser = await User.findById(frontendToken.userId);
+        const isBookAlreadyInWishlist = currentUser.wishlist.includes(req.body.bookId);
+        if (!isBookAlreadyInWishlist) {
+            const user = await User.findByIdAndUpdate(currentUser._id.toString(), {
+                $push: {
+                    wishlist: req.body.bookId,
+                },
+            });
+        }
+
+        res.sendStatus(200);
+    } catch (error) {
+        res.status(400).send({ error: error.message });
+    }
+});
+
+router.post("/user/removeFromWishlist", async (req, res) => {
+    try {
+        const hasToBeAuthorized = true;
+        const frontendToken = verifyJWT(req, hasToBeAuthorized);
+
+        const hasAllFields = req.body?.bookId;
+        if (!hasAllFields) throw new Error("Please, enter all fields");
+
+        const currentUser = await User.findById(frontendToken.userId);
+        const isBookAlreadyInWishlist = currentUser.wishlist.includes(req.body.bookId);
+        if (isBookAlreadyInWishlist) {
+            const user = await User.findByIdAndUpdate(currentUser._id.toString(), {
+                $pull: {
+                    wishlist: req.body.bookId,
+                },
+            });
+        }
+
+        res.sendStatus(200);
+    } catch (error) {
+        res.status(400).send({ error: error.message });
+    }
+});
+
 router.post("/admin/updateUser", async (req, res) => {
     try {
         verifyJWT(req);

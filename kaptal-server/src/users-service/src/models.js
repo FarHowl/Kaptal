@@ -25,10 +25,18 @@ const userSchema = new mongoose.Schema({
     },
     shoppingCart: [
         {
-            type: mongoose.Schema.Types.ObjectId,
+            type: Object,
             required: true,
             trim: true,
-            default: "",
+            default: undefined,
+        },
+    ],
+    wishlist: [
+        {
+            type: String,
+            required: true,
+            trim: true,
+            default: undefined,
         },
     ],
     isStaffAvailableForChat: {

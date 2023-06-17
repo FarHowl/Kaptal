@@ -264,7 +264,7 @@ function AllBooksTab({ setTabOption }) {
 
     return (
         <div className="absolute top-[80px] left-[254px] pb-6 pt-8 px-10 right-0 bottom-0 flex flex-col items-center overflow-y-auto">
-            <div className="w-full flex justify-center">{booksView}</div>
+            <div className="w-full flex justify-center flex-wrap gap-x-4 gap-y-1">{booksView}</div>
         </div>
     );
 }

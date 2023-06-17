@@ -96,8 +96,37 @@ router.get("/books-service/user/getAllCollections", async (req, res) => {
 
         res.status(200).send(response.data);
     } catch (error) {
-        console.log(error);
         if (error?.response) res.status(500).send({ error: error.response.data.error });
+        else res.status(500).send({ error: error.message });
+    }
+});
+
+router.get("/books-service/user/getBooksByCollection", async (req, res) => {
+    try {
+        const token = jwt.sign({}, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
+
+        const query = "?" + req.originalUrl.split("?")[1];
+
+        const response = await axios.get("http://books-service:3000" + "/api/user/getBooksByCollection" + query, { headers: { Authorization: "Bearer " + token } });
+
+        res.status(200).send(response.data);
+    } catch (error) {
+        if (error?.response) res.status(500).send({ error: error.response.data.error });
+        else res.status(500).send({ error: error.message });
+    }
+});
+
+router.get("/books-service/user/getBooksBarByCollection", async (req, res) => {
+    try {
+        const token = jwt.sign({}, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "100d" });
+
+        const query = "?" + req.originalUrl.split("?")[1];
+
+        const response = await axios.get("http://books-service:3000" + "/api/user/getBooksBarByCollection" + query, { headers: { Authorization: "Bearer " + token } });
+    
+        res.status(200).send(response.data);
+    } catch (error) {
+        if (error?.response) res.status(500).send({ error: error.response.error });
         else res.status(500).send({ error: error.message });
     }
 });
@@ -112,7 +141,7 @@ router.post("/reviews-service/user/addRating", async (req, res) => {
 
         res.sendStatus(200);
     } catch (error) {
-        console.log(error)
+        console.log(error);
         if (error?.response) res.status(500).send({ error: error.response.data.error });
         else res.status(500).send({ error: error.message });
     }
@@ -194,17 +223,5 @@ router.get("/books-service/user/getBookImage", async (req, res) => {
         else res.status(500).send({ error: error.message });
     }
 });
-// router.get("/user/getAvailableStaff", async (req, res) => {
-//     try {
-//         verifyJWT(req, ["user"]);
-
-//         const response = await axios.post("", {
-//             ...req.body,
-//         });
-//         res.status(200).send(response.data);
-//     } catch (error) {
-//         res.status(500).send({ error: error.response.data.error });
-//     }
-// });
 
 module.exports = router;

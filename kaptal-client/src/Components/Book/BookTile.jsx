@@ -83,7 +83,7 @@ export default function BookTile({ book }) {
                 )}
             </div>
             <div className="w-full flex justify-between px-4">
-                <button className={"py-2 px-10  rounded-md text-white animated-100 font-semibold " + (book.isAvailable ? "bg-sky-400 hover:bg-sky-500" : "bg-slate-400 pointer-events-none")}>
+                <button className={"py-2 px-10  rounded-md text-white animated-100 font-semibold " + (book.stock ? "bg-sky-400 hover:bg-sky-500" : "bg-slate-400 pointer-events-none")}>
                     Купить
                 </button>
                 <IconComponent

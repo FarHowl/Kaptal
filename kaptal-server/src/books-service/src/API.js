@@ -58,11 +58,9 @@ router.post("/admin/addNewBook", async (req, res) => {
             req.body?.price ||
             req.files?.image ||
             req.body?.weight ||
-            req.body?.series ||
             req.body?.stock ||
             req.body?.categories ||
-            req.body?.collections ||
-            req.body?.language;
+            req.body?.collections;
         if (!hasAllFields) throw new Error("Enter all fields");
 
         async function addOrUpdateCategory(categoryNames) {
@@ -118,8 +116,7 @@ router.post("/admin/addNewBook", async (req, res) => {
             const existingCollection = allCollections?.collections.find((col) => col === collection);
 
             if (!existingCollection) {
-                const newCollection = { name: collection };
-                allCollections.collections.push(newCollection);
+                allCollections.collections.push(collection);
             }
         }
         await allCollections.save();
@@ -157,8 +154,8 @@ router.post("/admin/addNewBook", async (req, res) => {
             price: req.body.price,
             image: imgFullHashName,
             weight: req.body.weight,
-            series: req.body.series,
-            language: req.body.language,
+            series: req.body?.series,
+            cycle: req.body?.cycle,
             categories: req.body.categories,
             collections: req.body.collections,
             stock: req.body.stock,
@@ -174,8 +171,7 @@ router.post("/admin/addNewBook", async (req, res) => {
 
         await book.save();
         await redisClient.del("categories");
-
-        console.log(req.body);
+        await redisClient.del("collections");
 
         res.sendStatus(200);
     } catch (error) {
@@ -201,7 +197,7 @@ router.post("/admin/updateBook", async (req, res) => {
             "coverType",
             "publisher",
             "series",
-            "language",
+            "cycle",
             "size",
             "weight",
             "ISBN",
@@ -431,17 +427,75 @@ router.get("/user/getAllCollections", async (req, res) => {
     try {
         const hasToBeAuthorized = false;
         verifyJWT(req, hasToBeAuthorized);
+        await redisClient.del("collections");
 
         const cachedCollections = await redisClient.get("collections");
-        if (1 === 0) {
-            console.log("first");
+        if (cachedCollections) {
             res.status(200).send(JSON.parse(cachedCollections));
         } else {
-            const collections = await Collection.find();
-            console.log(collections);
-            await redisClient.set("collections", JSON.stringify(collections), "EX", 60 * 60 * 24);
+            const collections = await Collection.findOne();
+            await redisClient.set("collections", JSON.stringify(collections.collections), "EX", 60 * 60 * 24);
             res.status(200).send(collections);
         }
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+        console.log(error);
+    }
+});
+
+router.get("/user/getBooksByCollection", async (req, res) => {
+    try {
+        const hasToBeAuthorized = false;
+        verifyJWT(req, hasToBeAuthorized);
+
+        const collectionName = decodeURIComponent(req.query?.collectionName);
+        const sortType = decodeURIComponent(req.query?.sort);
+        const sortOrder = parseInt(decodeURIComponent(req.query?.order));
+
+        let sort = "";
+        if (sortType === "byNew") {
+            if (sortOrder === 1) sort = { year: 1 };
+            else if (sortOrder === -1) sort = { year: -1 };
+            else throw new Error("Invalid sort order");
+        }
+        if (sortType === "byPrice") {
+            if (sortOrder === 1) sort = { price: 1 };
+            else if (sortOrder === -1) sort = { price: -1 };
+            else throw new Error("Invalid sort order");
+        }
+        if (sortType === "byRating") {
+            if (sortOrder === 1) sort = { rating: 1 };
+            else if (sortOrder === -1) sort = { rating: -1 };
+            else throw new Error("Invalid sort order");
+        }
+
+        const currentPage = parseInt(req.query.page) ?? 1;
+        const stockOfBooksToSkip = (currentPage - 1) * 46;
+
+        const foundBooks = await Book.find({ collections: collectionName }).skip(stockOfBooksToSkip).limit(46).sort(sort);
+
+        const totalPages = Math.ceil(foundBooks.length / 46);
+        if (currentPage > totalPages) throw new Error("Undefined page");
+
+        res.status(200).send({ books: foundBooks, totalPages });
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+        console.log(error);
+    }
+});
+
+router.get("/user/getBooksBarByCollection", async (req, res) => {
+    try {
+        const hasToBeAuthorized = false;
+        verifyJWT(req, hasToBeAuthorized);
+
+        const collection = decodeURIComponent(req.query?.collection);
+        console.log(collection);
+
+        const foundBooks = await Book.find({ collections: { $in: [collection] } }).limit(16);
+        console.log(foundBooks);
+
+        res.status(200).send(foundBooks);
     } catch (error) {
         res.status(500).send({ error: error.message });
         console.log(error);

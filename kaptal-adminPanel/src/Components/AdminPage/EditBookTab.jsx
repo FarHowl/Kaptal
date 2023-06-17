@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useLayoutEffect, useState, useRef, useEffect } from "react";
-import { getBookImage_EP, updateBook_EP } from "../../Utils/API";
+import { getAllCategories_EP, getAllCollections_EP, getBookImage_EP, updateBook_EP } from "../../Utils/API";
 import { authToken_header, getUserData } from "../../Utils/LocalStorageUtils";
 import InputTile from "../UI/InputTile";
 
@@ -48,7 +48,7 @@ export default function EditBookTab({ book }) {
                     price: bookInfo.price,
                     weight: bookInfo.weight,
                     series: bookInfo.series,
-                    language: bookInfo.language,
+                    cycle: bookInfo.cycle,
                     discount: bookInfo.discount,
                     ...(typeof bookInfo.image !== "string" ? { image: formData.get("image") } : {}),
                 },
@@ -148,7 +148,7 @@ export default function EditBookTab({ book }) {
                         onChange={(e) => {
                             setBookInfo({ ...bookInfo, series: e.target.value });
                         }}
-                        defaultValue={book.series}
+                        defaultValue={book?.series}
                     />
                     <InputTile
                         title={"Количество на складе"}
@@ -158,11 +158,11 @@ export default function EditBookTab({ book }) {
                         defaultValue={book.stock}
                     />
                     <InputTile
-                        title={"Язык"}
+                        title={"Цикл"}
                         onChange={(e) => {
-                            setBookInfo({ ...bookInfo, language: e.target.value });
+                            setBookInfo({ ...bookInfo, cycle: e.target.value });
                         }}
-                        defaultValue={book.language}
+                        defaultValue={book?.cycle}
                     />
                     <InputTile
                         title={"Возрастной рейтинг"}
@@ -182,10 +182,10 @@ export default function EditBookTab({ book }) {
             </div>
             <div className="flex flex-col gap-2 w-full mt-6">
                 <div className="w-full flex justify-center items-center">
-                    <CategoriesInputTile bookInfo={bookInfo} setBookInfo={setBookInfo} />
+                    <CategoriesInputTile bookInfo={bookInfo} setBookInfo={setBookInfo} currentCategories={book.categories} />
                 </div>
                 <div className="w-full flex justify-center items-center">
-                    <CollectionsInputTile bookInfo={bookInfo} setBookInfo={setBookInfo} />
+                    <CollectionsInputTile bookInfo={bookInfo} setBookInfo={setBookInfo} currentCollections={book.collections} />
                 </div>
             </div>
             <div className="relative flex flex-col max-w-[400px] w-full items-center mt-2">
@@ -231,7 +231,7 @@ export default function EditBookTab({ book }) {
     );
 }
 
-function CategoriesInputTile({ setBookInfo, bookInfo }) {
+function CategoriesInputTile({ setBookInfo, bookInfo, currentCategories }) {
     const [isFocused, setIsFocused] = useState(false);
     const [isEmpty, setIsEmpty] = useState(true);
     const [categoriesView, setCategoriesView] = useState([]);
@@ -242,6 +242,20 @@ function CategoriesInputTile({ setBookInfo, bookInfo }) {
     async function getCategories() {
         try {
             const res = await axios.get(getAllCategories_EP);
+
+            const parsedCategories = [];
+
+            let iterableList = res.data;
+
+            for (const category of currentCategories) {
+                const parsedCategory = iterableList.find((c) => c.name === category);
+                if (parsedCategory) {
+                    parsedCategories.push(parsedCategory);
+                    iterableList = parsedCategory.children;
+                }
+            }
+
+            setCategoriesView(parsedCategories);
             setCategories(res.data);
         } catch (error) {
             if (error?.response) {
@@ -340,7 +354,7 @@ function CategoriesInputTile({ setBookInfo, bookInfo }) {
     );
 }
 
-function CollectionsInputTile({ setBookInfo, bookInfo }) {
+function CollectionsInputTile({ setBookInfo, bookInfo, currentCollections }) {
     const [isFocused, setIsFocused] = useState(false);
     const [isEmpty, setIsEmpty] = useState(true);
     const [collectionsView, setCollectionsView] = useState([]);
@@ -352,7 +366,17 @@ function CollectionsInputTile({ setBookInfo, bookInfo }) {
         try {
             const res = await axios.get(getAllCollections_EP, authToken_header());
 
-            setCollections(res.data[0].collections);
+            const parsedCollections = [];
+
+            for (const collection of currentCollections) {
+                if (res.data.collections.includes(collection)) {
+                    parsedCollections.push(collection);
+                    res.data.collections = res.data.collections.filter((c) => c !== collection);
+                }
+            }
+
+            setCollectionsView(parsedCollections);
+            setCollections(res.data.collections);
         } catch (error) {
             if (error?.response) {
                 console.log(error.response.data.error);
@@ -369,6 +393,7 @@ function CollectionsInputTile({ setBookInfo, bookInfo }) {
 
     useEffect(() => {
         getCollections();
+        console.log(collections);
     }, []);
 
     const handleCollectionRemove = (collection) => {
@@ -412,9 +437,9 @@ function CollectionsInputTile({ setBookInfo, bookInfo }) {
         >
             <div className="flex gap-2 flex-wrap mt-[12px]">
                 {collectionsView.map((collection) => (
-                    <div key={collection.name} className="flex items-center gap-2">
+                    <div key={collection} className="flex items-center gap-2">
                         <div className="flex gap-2 justify-center items-center px-3 py-1 bg-stone-200/70 rounded-md">
-                            <span className="">{collection.name}</span>
+                            <span className="">{collection}</span>
                             <button onClick={() => handleCollectionRemove(collection)} className="text-gray-500 ">
                                 x
                             </button>
@@ -435,8 +460,8 @@ function CollectionsInputTile({ setBookInfo, bookInfo }) {
                         {collections
                             .filter((collection) => !collectionsView.includes(collection))
                             .map((collection) => (
-                                <button key={collection.name} onClick={() => handleCollectionSelect(collection)} className="text-left px-2 py-2">
-                                    {collection.name}
+                                <button key={collection} onClick={() => handleCollectionSelect(collection)} className="text-left px-2 py-2">
+                                    {collection}
                                 </button>
                             ))}
                     </div>
