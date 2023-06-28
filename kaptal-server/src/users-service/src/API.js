@@ -48,7 +48,7 @@ router.post("/user/signIn", async (req, res) => {
 
 router.get("/user/refreshToken", async (req, res) => {
     try {
-        console.log("first")
+        console.log("first");
         const hasToBeAuthorized = true;
         const frontendToken = verifyJWT(req, hasToBeAuthorized);
 
@@ -98,27 +98,27 @@ router.post("/user/addBookToShoppingCart", async (req, res) => {
         if (!hasAllFields) throw new Error("Please, enter all fields");
 
         const currentUser = await User.findById(frontendToken.userId);
-        const isBookAlreadyInShoppingCart = currentUser.shoppingCart.includes(req.body.bookId);
-        if (isBookAlreadyInShoppingCart) {
-            const user = await User.findByIdAndUpdate(currentUser._id.toString(), {
-                $inc: {
-                    "shoppingCart.$.amount": 1,
-                },
-            });
+        const existingBookIndex = currentUser.shoppingCart.findIndex((book) => book.bookId === req.body.bookId);
+
+        if (existingBookIndex !== -1) {
+            console.log(currentUser.shoppingCart[existingBookIndex].amount);
+            currentUser.shoppingCart[existingBookIndex].amount += 1;
+            console.log(currentUser.shoppingCart[existingBookIndex].amount);
         } else {
-            const user = await User.findByIdAndUpdate(currentUser._id.toString(), {
-                $push: {
-                    shoppingCart: {
-                        bookId: req.body.bookId,
-                        amount: 1,
-                    },
-                },
-            });
+            const newBook = {
+                bookId: req.body.bookId,
+                amount: 1,
+            };
+            currentUser.shoppingCart.push(newBook);
         }
+
+        currentUser.markModified("shoppingCart");
+        await currentUser.save();
 
         res.sendStatus(200);
     } catch (error) {
         res.status(400).send({ error: error.message });
+        console.log(error);
     }
 });
 
@@ -127,42 +127,35 @@ router.post("/user/removeBookFromShoppingCart", async (req, res) => {
         const hasToBeAuthorized = true;
         const frontendToken = verifyJWT(req, hasToBeAuthorized);
 
-        const hasAllFields = req.body?.bookId && req.body?.amount;
+        const hasAllFields = req.body?.bookId;
         if (!hasAllFields) throw new Error("Please, enter all fields");
 
         const currentUser = await User.findById(frontendToken.userId);
-        if (req.body.amount >= currentUser.shoppingCart.find((book) => book.bookId === req.body.bookId).amount) {
-            await User.findByIdAndUpdate(currentUser._id.toString(), {
-                $pull: {
-                    shoppingCart: {
-                        bookId: req.body.bookId,
-                    },
-                },
-            });
+        const bookIndex = currentUser.shoppingCart.findIndex((book) => book.bookId === req.body.bookId);
+
+        if (bookIndex === -1) throw new Error("Book not found in the shopping cart");
+
+        if (currentUser.shoppingCart[bookIndex].amount === 1) {
+            currentUser.shoppingCart.splice(bookIndex, 1);
         } else {
-            await User.findByIdAndUpdate(
-                currentUser._id.toString(),
-                {
-                    $inc: {
-                        "shoppingCart.$[elem].amount": -req.body.amount,
-                    },
-                },
-                {
-                    arrayFilters: [{ "elem.bookId": req.body.bookId }],
-                }
-            );
+            currentUser.shoppingCart[bookIndex].amount -= 1;
         }
+
+        currentUser.markModified("shoppingCart");
+        await currentUser.save();
+
+        res.sendStatus(200);
     } catch (error) {
         res.status(500).send({ error: error.message });
     }
 });
 
-router.post("/user/addBooksToWishlist", async (req, res) => {
+router.post("/user/addBookToWishlist", async (req, res) => {
     try {
         const hasToBeAuthorized = true;
         const frontendToken = verifyJWT(req, hasToBeAuthorized);
 
-        const hasAllFields = req.body?.bookId;
+        const hasAllFields = req.body?.bookId
         if (!hasAllFields) throw new Error("Please, enter all fields");
 
         const currentUser = await User.findById(frontendToken.userId);
@@ -170,14 +163,17 @@ router.post("/user/addBooksToWishlist", async (req, res) => {
         if (!isBookAlreadyInWishlist) {
             await User.findByIdAndUpdate(currentUser._id.toString(), {
                 $push: {
-                    wishlist: req.body.bookId,
+                    wishlist: {
+                        bookId: req.body.bookId,
+                    },
                 },
             });
-        }
+        } else throw new Error("Book is already in wishlist");
 
         res.sendStatus(200);
     } catch (error) {
         res.status(400).send({ error: error.message });
+        console.log(error);
     }
 });
 
@@ -190,11 +186,11 @@ router.post("/user/removeBookFromWishlist", async (req, res) => {
         if (!hasAllFields) throw new Error("Please, enter all fields");
 
         const currentUser = await User.findById(frontendToken.userId);
-        const isBookAlreadyInWishlist = currentUser.wishlist.includes(req.body.bookId);
+        const isBookAlreadyInWishlist = currentUser.wishlist.some((book) => book.bookId === req.body.bookId);
         if (isBookAlreadyInWishlist) {
             await User.findByIdAndUpdate(currentUser._id.toString(), {
                 $pull: {
-                    wishlist: req.body.bookId,
+                    wishlist: { bookId: req.body.bookId },
                 },
             });
         }
@@ -202,6 +198,7 @@ router.post("/user/removeBookFromWishlist", async (req, res) => {
         res.sendStatus(200);
     } catch (error) {
         res.status(400).send({ error: error.message });
+        console.log(error);
     }
 });
 
@@ -284,5 +281,38 @@ router.get("/admin/getAllUsers", async (req, res) => {
         res.status(500).send({ error: error.message });
     }
 });
+
+// router.post("/server/synchronizeShoppingCart", async (req, res) => {
+//     try {
+//         const currentToken = req.headers.authorization.split(" ")[1];
+//         jwt.verify(currentToken, process.env.GATEWAY_USERS_KEY);
+//         const serverCommand = jwt.decode(currentToken)?.serverCommand;
+
+//         if (!serverCommand) throw new Error("Access denied");
+
+//         const { bookId, stock, price, author, name } = req.body;
+//         const image = req.files.image;
+
+//         const users = await User.find({});
+
+//         for (const user of users) {
+//             const bookIndex = user.shoppingCart.findIndex((book) => book.bookId === bookId);
+
+//             if (bookIndex !== -1) {
+//                 if (stock !== undefined) user.shoppingCart[bookIndex].stock = stock;
+//                 if (image !== undefined) user.shoppingCart[bookIndex].image = image;
+//                 if (price !== undefined) user.shoppingCart[bookIndex].price = price;
+//                 if (author !== undefined) user.shoppingCart[bookIndex].author = author;
+//                 if (name !== undefined) user.shoppingCart[bookIndex].name = name;
+//             }
+//             user.markModified("shoppingCart");
+//             await user.save();
+//         }
+
+//         res.sendStatus(200);
+//     } catch (error) {
+//         res.status(500).send({ error: error.message });
+//     }
+// });
 
 module.exports = router;

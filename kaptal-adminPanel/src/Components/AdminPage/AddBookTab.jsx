@@ -14,7 +14,6 @@ export default function AddBookTab({ setIsTabLoading }) {
             formData.append("image", bookInfo.image);
 
             const categoriesArray = bookInfo.categories.map((category) => category.name);
-            const collectionsArray = bookInfo.collections.map((collection) => collection.name);
 
             const res = await axios.post(
                 addNewBook_EP,
@@ -37,7 +36,7 @@ export default function AddBookTab({ setIsTabLoading }) {
                     cycle: bookInfo.cycle,
                     stock: bookInfo.stock,
                     categories: categoriesArray,
-                    collections: collectionsArray,
+                    collections: bookInfo.collections,
                 },
                 { headers: { "Content-Type": "multipart/form-data", Authorization: "Bearer " + getUserData().authToken } }
             );
@@ -343,8 +342,12 @@ function CollectionsInputTile({ setBookInfo, bookInfo }) {
 
     useEffect(() => {
         getCollections();
-        console.log(collections)
+        console.log(collections);
     }, []);
+
+    useEffect(() => {
+        console.log(collectionsView)
+    }, [collectionsView])
 
     const handleCollectionRemove = (collection) => {
         setCollectionsView(collectionsView.filter((c) => c !== collection));
@@ -367,7 +370,7 @@ function CollectionsInputTile({ setBookInfo, bookInfo }) {
         if (e.key === "Enter" && e.target.value.length !== 0 && !collectionsView.includes(e.target.value)) {
             e.preventDefault();
             console.log(e.target.value);
-            setCollectionsView([...collectionsView, { name: e.target.value }]);
+            setCollectionsView([...collectionsView, e.target.value ]);
             inputRef.current.value = "";
         }
     };

@@ -12,7 +12,7 @@ redisClient.connect();
 
 const verifyJWT = require("./utils/verifyJWT");
 
-const { Review, Rating } = require("./models");
+const { Review } = require("./models");
 
 router.get("/user/getBookReviews", async (req, res) => {
     try {
@@ -133,7 +133,7 @@ router.post("/user/addRating", async (req, res) => {
         const hasAllFields = req.body?.bookId && req.body?.bookRating;
         if (!hasAllFields) throw new Error("Please, enter book id and rating");
 
-        const bookRatings = await Review.find({ bookId: req.body?.bookId, text: { $exists: false } });
+        const bookRatings = await Review.find({ bookId: req.body?.bookId });
         for (const rating of bookRatings) {
             if (rating.userId === frontendToken.userId) throw new Error("You already rated this book");
         }

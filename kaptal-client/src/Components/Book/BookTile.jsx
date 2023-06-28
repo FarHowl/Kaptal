@@ -3,39 +3,84 @@ import LoadingComponent from "../UI/LoadingComponent";
 import { compactString } from "../../Utils/CalculationUtils";
 import IconComponent from "../Icons/IconComponent";
 import WishesIcon from "../Icons/WishesIcon";
-import { addBookToShoppingCart_EP, addBookToWishlist_EP, deleteBook_EP, getBookImage_EP } from "../../Utils/API";
-import { authToken_header } from "../../Utils/LocalStorageUtils";
+import { addBookToShoppingCart_EP, addBookToWishlist_EP, getBookImage_EP, removeBookFromShoppingCart_EP, removeBookFromWishlist_EP } from "../../Utils/API";
+import { authToken_header, getUserData } from "../../Utils/LocalStorageUtils";
+import { ShoppingCartStore, WishlistStore, addToCartAction, addToWishlistAction, removeFromCartAction, removeFromWishlistAction } from "../../StoreState/StoreState";
+import { useStoreState } from "pullstate";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import WishesFilledIcon from "../Icons/WishesFilledIcon";
 
 export default function BookTile({ book }) {
     const [isImgLoaded, setIsImgLoaded] = useState(false);
     const [isTileHovered, setIsTileHovered] = useState(false);
 
+    const shoppingCart = useStoreState(ShoppingCartStore).shoppingCart;
+    const wishlist = useStoreState(WishlistStore).wishlist;
+
     const navigate = useNavigate();
 
-    function calculateDiscount(price, discount) {
-        let summary = price - price * (discount / 100);
+    const calculateDiscount = (price, discount) => {
+        const summary = price - price * (discount / 100);
         return Math.round(summary);
-    }
+    };
 
-    async function addBookToShoppingCart() {
+    const addBookToShoppingCart = async () => {
         try {
-            await axios.post(addBookToShoppingCart_EP, { bookId: book._id }, authToken_header());
-            console.log("Good");
+            if (getUserData()) {
+                await axios.post(
+                    addBookToShoppingCart_EP,
+                    {
+                        bookId: book._id,
+                    },
+                    authToken_header()
+                );
+
+                const newBook = { bookId: book._id };
+                addToCartAction(newBook);
+            }
         } catch (error) {
             console.log(error);
         }
-    }
+    };
 
-    async function addBookToWishlist() {
+    const addBookToWishlist = async () => {
         try {
-            await axios.post(addBookToWishlist_EP, { bookId: book._id }, authToken_header());
+            await axios.post(
+                addBookToWishlist_EP,
+                {
+                    bookId: book._id,
+                },
+                authToken_header()
+            );
+
+            const newBook = { bookId: book._id };
+            addToWishlistAction(newBook);
         } catch (error) {
             console.log(error);
         }
-    }
+    };
 
+    const removeBookFromWishlist = async () => {
+        try {
+            await axios.post(removeBookFromWishlist_EP, { bookId: book._id }, authToken_header());
+
+            removeFromWishlistAction(book);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const removeBookFromShoppingCart = async () => {
+        try {
+            await axios.post(removeBookFromShoppingCart_EP, { bookId: book._id }, authToken_header());
+
+            removeFromCartAction(book);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+    
     return (
         <div className="flex relative flex-col justify-center w-[250px] p-3 pt-[30px] pb-4 gap-[12px] rounded-md hover:shadow-lg animated-100">
             <div className="absolute top-[6px] text-base flex w-[224px] items-center">
@@ -43,15 +88,9 @@ export default function BookTile({ book }) {
             </div>
 
             <div
-                onClick={() => {
-                    navigate("/book/" + book._id);
-                }}
-                onMouseOut={() => {
-                    setIsTileHovered(false);
-                }}
-                onMouseOver={() => {
-                    setIsTileHovered(true);
-                }}
+                onClick={() => navigate("/book/" + book._id)}
+                onMouseOut={() => setIsTileHovered(false)}
+                onMouseOver={() => setIsTileHovered(true)}
                 className="flex flex-col animated-200 w-full pt-5 flex-shrink-0 justify-center gap-[14px] cursor-pointer"
             >
                 <div className="flex w-full justify-center items-center">
@@ -59,9 +98,7 @@ export default function BookTile({ book }) {
                         {isImgLoaded ? <></> : <LoadingComponent customStyle={"absolute inset-0 flex justify-center items-center bg-white z-5"} />}
                         <div className={"perspective w-full h-full"}>
                             <img
-                                onLoad={() => {
-                                    setIsImgLoaded(true);
-                                }}
+                                onLoad={() => setIsImgLoaded(true)}
                                 src={getBookImage_EP + "?imgName=" + book.image}
                                 className={"book w-full h-full object-cover " + (isTileHovered ? "book-hover" : "")}
                                 alt=""
@@ -85,9 +122,31 @@ export default function BookTile({ book }) {
                 )}
             </div>
             <div className="w-full flex justify-between px-4">
-                <button className={"py-2 px-10  rounded-md text-white animated-100 font-semibold " + (book.stock ? "bg-sky-400 hover:bg-sky-500" : "bg-slate-400 pointer-events-none")}>Купить</button>
+                <button
+                    onClick={() => {
+                        if (!shoppingCart.some((item) => item.bookId === book._id)) {
+                            if (book.stock) {
+                                addBookToShoppingCart();
+                            }
+                        } else {
+                            navigate("/shoppingCart");
+                        }
+                    }}
+                    className={`py-2 w-[140px] rounded-md text-white animated-100 font-semibold ${book.stock ? "bg-sky-400 hover:bg-sky-500" : "bg-slate-400 pointer-events-none"}`}
+                >
+                    {shoppingCart.some((item) => item.bookId === book._id) ? "Оформить" : "Купить"}
+                </button>
                 <IconComponent
-                    Icon={WishesIcon}
+                    onClick={() => {
+                        if (getUserData()) {
+                            if (wishlist.some((item) => item.bookId === book._id)) {
+                                removeBookFromWishlist();
+                            } else {
+                                addBookToWishlist();
+                            }
+                        }
+                    }}
+                    Icon={wishlist?.some((item) => item.bookId === book._id) ? WishesFilledIcon : WishesIcon}
                     size={20}
                     color={"#3BA5ED"}
                     hoveredColor={"#1b90e0"}

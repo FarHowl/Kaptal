@@ -125,7 +125,7 @@ export default function AdminPage() {
             ) : tabOption === "AddBook" ? (
                 <AddBookTab setIsTabLoading={setIsTabLoading} />
             ) : tabOption.includes("EditBook") ? (
-                <EditBookTab book={tabOption[1]} />
+                <EditBookTab book={tabOption[1]} setTabOption={setTabOption} />
             ) : tabOption === "AllUsers" ? (
                 <AllUsersTab setTabOption={setTabOption} />
             ) : tabOption.includes("UserTab") ? (

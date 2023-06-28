@@ -4,7 +4,7 @@ import { getAllCategories_EP, getAllCollections_EP, getBookImage_EP, updateBook_
 import { authToken_header, getUserData } from "../../Utils/LocalStorageUtils";
 import InputTile from "../UI/InputTile";
 
-export default function EditBookTab({ book }) {
+export default function EditBookTab({ book, setTabOption }) {
     const [bookInfo, setBookInfo] = useState(book);
     const [imagePreview, setImagePreview] = useState();
 
@@ -32,28 +32,31 @@ export default function EditBookTab({ book }) {
                 updateBook_EP,
                 {
                     bookId: book._id,
-                    name: bookInfo.name,
-                    author: bookInfo.author,
-                    genres: bookInfo.genres,
-                    isAvailable: bookInfo.isAvailable,
-                    coverType: bookInfo.coverType,
-                    publisher: bookInfo.publisher,
-                    size: bookInfo.size,
-                    ISBN: bookInfo.ISBN,
-                    pagesCount: bookInfo.pagesCount,
-                    ageLimit: bookInfo.ageLimit,
-                    year: bookInfo.year,
-                    circulation: bookInfo.circulation,
-                    annotation: bookInfo.annotation,
-                    price: bookInfo.price,
-                    weight: bookInfo.weight,
-                    series: bookInfo.series,
-                    cycle: bookInfo.cycle,
-                    discount: bookInfo.discount,
-                    ...(typeof bookInfo.image !== "string" ? { image: formData.get("image") } : {}),
+                    name: bookInfo?.name,
+                    author: bookInfo?.author,
+                    stock: bookInfo?.stock,
+                    coverType: bookInfo?.coverType,
+                    publisher: bookInfo?.publisher,
+                    size: bookInfo?.size,
+                    ISBN: bookInfo?.ISBN,
+                    pagesCount: bookInfo?.pagesCount,
+                    ageLimit: bookInfo?.ageLimit,
+                    year: bookInfo?.year,
+                    circulation: bookInfo?.circulation,
+                    annotation: bookInfo?.annotation,
+                    price: bookInfo?.price,
+                    weight: bookInfo?.weight,
+                    series: bookInfo?.series,
+                    cycle: bookInfo?.cycle,
+                    discount: bookInfo?.discount,
+                    categories: bookInfo?.categories.map((c) => c.name),
+                    collections: bookInfo?.collections,
+                    ...(typeof bookInfo?.image !== "string" ? { image: formData.get("image") } : {}),
                 },
                 { headers: { "Content-Type": "multipart/form-data", Authorization: "Bearer " + getUserData().authToken } }
             );
+            
+            setTabOption("AllBooks");
             console.log("Книга успешно обновлена");
         } catch (error) {
             if (error?.response) console.log(error.response.data.error);
@@ -217,15 +220,11 @@ export default function EditBookTab({ book }) {
             </div>
             <button
                 onClick={() => {
-                    setIsTabLoading(true);
-                    addNewBook();
-                    setTimeout(() => {
-                        setIsTabLoading(false);
-                    }, 300);
+                    updateBook();
                 }}
                 className="py-2 px-2 mt-6 bg-blue-400 rounded-lg text-medium text-white hover:bg-blue-500 animated-100 font-semibold"
             >
-                Добавить книгу
+                Обновить книгу
             </button>
         </div>
     );

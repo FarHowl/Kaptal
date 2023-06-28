@@ -12,19 +12,24 @@ import UserProfileIcon from "./Components/Icons/UserProfileIcon";
 import WishesIcon from "./Components/Icons/WishesIcon";
 import LoadingComponent from "./Components/UI/LoadingComponent";
 import ProfilePopUp from "./Components/UI/ProfilePopUp";
+import { initCartAction, initWishlistAction, ShoppingCartStore, WishlistStore } from "./StoreState/StoreState";
+import { useStoreState } from "pullstate";
 import axios from "axios";
-import { Store } from "pullstate";
 import "./index.css";
-import { refreshToken_EP, signIn_EP } from "./Utils/API";
+import { getShoppingCart_EP, getWishlist_EP, refreshToken_EP, signIn_EP } from "./Utils/API";
 
 const MainPage = React.lazy(() => import("./Pages/MainPage"));
 const SignUpPage = React.lazy(() => import("./Pages/SignUpPage"));
 const BookPage = React.lazy(() => import("./Pages/BookPage"));
 const ShoppingCartPage = React.lazy(() => import("./Pages/ShoppingCartPage"));
+const WishlistPage = React.lazy(() => import("./Pages/WishlistPage"));
 
 export default function App() {
     const [isRouteLoaded, setIsRouteLoaded] = useState(false);
     const [isProfileHovered, setIsProfileHovered] = useState(false);
+
+    const shoppingCart = useStoreState(ShoppingCartStore).shoppingCart;
+    const wishlist = useStoreState(WishlistStore).wishlist;
 
     const profilePopUpRef = useRef();
 
@@ -36,6 +41,26 @@ export default function App() {
             user.authToken = res.data.authToken;
             user = JSON.stringify(user);
             localStorage.setItem("userData", user);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async function getShoppingCart() {
+        try {
+            const res = await axios.get(getShoppingCart_EP, authToken_header());
+
+            initCartAction(res.data);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async function getWishlist() {
+        try {
+            const res = await axios.get(getWishlist_EP, authToken_header());
+
+            initWishlistAction(res.data);
         } catch (error) {
             console.log(error);
         }
@@ -55,6 +80,14 @@ export default function App() {
         profilePopUpRef.current.classList.add("scale-0");
         profilePopUpRef.current.classList.add("pointer-events-none");
         profilePopUpRef.current.classList.add("opacity-0");
+    }
+
+    function countShoppingCartItems() {
+        let items = 0;
+        for (const item of shoppingCart) {
+            items += item.amount;
+        }
+        return items;
     }
 
     let location = useLocation();
@@ -82,6 +115,13 @@ export default function App() {
         }
     }, [location]);
 
+    useEffect(() => {
+        if (getUserData()) {
+            getShoppingCart();
+            getWishlist();
+        }
+    }, []);
+
     return (
         <div className="flex flex-col w-full items-center">
             <div className="w-full flex gap-6 justify-between items-center h-[80px] rounded-md px-6 border-b-2 fixed bg-white z-20">
@@ -103,9 +143,21 @@ export default function App() {
                     </button>
                 </div>
                 <div className="flex gap-4">
-                    <IconComponent Icon={WishesIcon} size={28} color={"#000"} hoveredColor={"#3BA5ED"} iconTitle={"Желаемое"} animation={"animated-100"} />
+                    <Link to={"/wishlist"}>
+                        <div className="relative">
+                            <IconComponent Icon={WishesIcon} size={28} color={"#000"} hoveredColor={"#3BA5ED"} iconTitle={"Желаемое"} animation={"animated-100"} />
+                            <span className={"absolute top-0 right-0 rounded-full text-white bg-blue-500 px-[9px] text-center font-semibold " + (wishlist.length !== 0 ? "pt-[2px]" : "")}>
+                                {wishlist.length !== 0 ? wishlist.length : ""}
+                            </span>
+                        </div>
+                    </Link>
                     <Link to={"/shoppingCart"}>
-                        <IconComponent Icon={ShoppingCart} size={28} color={"#000"} hoveredColor={"#3BA5ED"} iconTitle={"Корзина"} animation={"animated-100"} />
+                        <div className="relative">
+                            <span className={"absolute top-0 right-0 rounded-full text-white bg-blue-500 px-[9px] text-center font-semibold " + (countShoppingCartItems() !== 0 ? "pt-[2px]" : "")}>
+                                {countShoppingCartItems() !== 0 ? countShoppingCartItems() : ""}
+                            </span>
+                            <IconComponent Icon={ShoppingCart} size={28} color={"#000"} hoveredColor={"#3BA5ED"} iconTitle={"Корзина"} animation={"animated-100"} />
+                        </div>
                     </Link>
                     {getUserData() ? (
                         <div
@@ -147,6 +199,7 @@ export default function App() {
                     <Route path="/signIn" element={<SignUpPage />} />
                     <Route path="/book/:bookId" element={<BookPage />} />
                     <Route path="/shoppingCart" element={<ShoppingCartPage />} />
+                    <Route path="/wishlist" element={<WishlistPage />} />
                 </Routes>
             </Suspense>
         </div>

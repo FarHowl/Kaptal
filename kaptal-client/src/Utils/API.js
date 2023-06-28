@@ -84,7 +84,6 @@ export const getBooksByCollection_EP = apiAddress + "/api/books-service/user/get
  */
 export const getBooksBarByCollection_EP = apiAddress + "/api/books-service/user/getBooksBarByCollection";
 
-
 export const addBookToWishlist_EP = apiAddress + "/api/users-service/user/addBookToWishlist";
 
 export const removeBookFromWishlist_EP = apiAddress + "/api/users-service/user/removeBookFromWishlist";
@@ -96,5 +95,9 @@ export const removeBookFromShoppingCart_EP = apiAddress + "/api/users-service/us
 export const getShoppingCart_EP = apiAddress + "/api/users-service/user/getShoppingCart";
 
 export const getWishlist_EP = apiAddress + "/api/users-service/user/getWishlist";
-//
 
+export const getShoppingCartBooks_EP = apiAddress + "/api/books-service/user/getShoppingCartBooks";
+
+export const getWishlistBooks_EP = apiAddress + "/api/books-service/user/getWishlistBooks";
+
+//

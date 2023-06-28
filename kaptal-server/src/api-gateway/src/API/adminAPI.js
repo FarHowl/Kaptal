@@ -97,12 +97,20 @@ router.post("/books-service/admin/updateBook", async (req, res) => {
             {
                 ...req.body,
             },
-            { headers: { Authorization: "Bearer " + newToken } }
+            {
+                data: req.files,
+                headers: {
+                    Authorization: "Bearer " + newToken,
+                    "Content-Type": "multipart/form-data",
+                },
+            }
         );
-        res.status(200).send(response.data);
+
+        res.sendStatus(200);
     } catch (error) {
         if (error?.response) res.status(500).send({ error: error.response.data.error });
         else res.status(500).send({ error: error.message });
+        console.log(error);
     }
 });
 

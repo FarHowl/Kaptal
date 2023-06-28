@@ -1,5 +1,6 @@
 const express = require("express");
 const { SHA3 } = require("sha3");
+const jwt = require("jsonwebtoken");
 const url = require("url");
 const router = express.Router();
 
@@ -42,6 +43,8 @@ router.post("/admin/addNewBook", async (req, res) => {
     try {
         const hasToBeAuthorized = true;
         verifyJWT(req, hasToBeAuthorized);
+
+        console.log(req.body.collections);
 
         const hasAllFields =
             req.body?.name ||
@@ -186,7 +189,7 @@ router.post("/admin/updateBook", async (req, res) => {
         verifyJWT(req, hasToBeAuthorized);
 
         const hasBookId = req.body?.bookId;
-        if (!hasBookId) throw new Error("Please, enter userId");
+        if (!hasBookId) throw new Error("Please enter bookId");
 
         await redisClient.del("book:" + req.body.bookId.toString());
 
@@ -212,37 +215,47 @@ router.post("/admin/updateBook", async (req, res) => {
             "categories",
             "collections",
         ];
+
         const update = {};
         for (const field in req.body) {
             if (field !== "bookId" && validFields.includes(field)) update[field] = req.body[field];
         }
 
-        // const hasChangeImageTo = req.files?.image !== undefined;
-        // if (hasChangeImageTo) {
-        //     const book = await Book.findById(req.body.bookId);
-        //     fs.unlink("../src/images/booksImages/" + book.image, (err) => {
-        //         if (err) throw new Error();
-        //     });
+        const hasChangeImageTo = req.files?.image !== undefined;
+        if (hasChangeImageTo) {
+            const book = await Book.findById(req.body.bookId);
+            const minioClient = new Minio.Client({
+                endPoint: "s3-service",
+                port: 9000,
+                useSSL: false,
+                accessKey: "myminioaccesskey",
+                secretKey: "myminiosecretkey",
+            });
 
-        //     const imgOriginalName = req.files.image.originalFilename;
-        //     let imgParsedName;
-        //     let imgType;
+            const imgFullName = req.files.image.path.split("/")[2];
+            const imgType = imgFullName.split(".")[1];
+            const imgName = imgFullName.split(".")[0];
 
-        //     if (imgOriginalName.split(".").length === 2 && (imgOriginalName.split(".")[1] === "jpg" || imgOriginalName.split(".")[1] === "jpeg")) {
-        //         imgParsedName = imgOriginalName.split(".")[0];
-        //         imgType = imgOriginalName.split(".")[1];
-        //     } else throw new Error();
+            const hash = new SHA3(512);
+            const imgHashName = hash.update(imgName + Date.now()).digest("hex");
 
-        //     const imgHash = new SHA3(512);
+            const bucketName = "books-images";
+            const imgFullHashName = imgHashName + "." + imgType;
 
-        //     imgHash.update(imgParsedName + Date.now());
-        //     const stringHash = imgHash.digest("hex");
+            if (!(await minioClient.bucketExists(bucketName))) {
+                minioClient.makeBucket(bucketName, "us-east-1", (err) => {
+                    if (err) throw new Error(err);
+                });
+            }
 
-        //     const imgDestPath = "../src/images/booksImages/" + stringHash + "." + imgType;
-        //     fs.copyFileSync(req.files.image.path, imgDestPath);
+            await minioClient.putObject(bucketName, imgFullHashName, req.files.image);
 
-        //     update.image = stringHash + "." + imgType;
-        // }
+            if (book.image) {
+                await minioClient.removeObject(bucketName, book.image);
+            }
+
+            update.image = imgFullHashName;
+        }
 
         await Book.findByIdAndUpdate(req.body.bookId.toString(), update);
 
@@ -490,10 +503,8 @@ router.get("/user/getBooksBarByCollection", async (req, res) => {
         verifyJWT(req, hasToBeAuthorized);
 
         const collection = decodeURIComponent(req.query?.collection);
-        console.log(collection);
 
         const foundBooks = await Book.find({ collections: { $in: [collection] } }).limit(16);
-        console.log(foundBooks);
 
         res.status(200).send(foundBooks);
     } catch (error) {
@@ -552,5 +563,37 @@ router.get("/user/getBookImage", async (req, res) => {
         console.log(error);
     }
 });
+
+router.post("/user/getShoppingCartBooks", async (req, res) => {
+    try {
+        const hasToBeAuthorized = true;
+        verifyJWT(req, hasToBeAuthorized);
+
+        const bookIds = req.body?.bookIds;
+
+        const foundBooks = await Book.find({ _id: { $in: bookIds } });
+
+        res.status(200).send(foundBooks);
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+        console.log(error);
+    }
+});
+
+router.post("/user/getWishlistBooks", async (req, res) => {
+    try {
+        const hasToBeAuthorized = true;
+        verifyJWT(req, hasToBeAuthorized);
+
+        const bookIds = req.body?.bookIds;
+
+        const foundBooks = await Book.find({ _id: { $in: bookIds } });
+
+        res.status(200).send(foundBooks);
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+        console.log(error);
+    }
+})
 
 module.exports = router;

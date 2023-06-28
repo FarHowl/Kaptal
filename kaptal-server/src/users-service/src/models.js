@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema({
     ],
     wishlist: [
         {
-            type: String,
+            type: Object,
             required: true,
             trim: true,
             default: undefined,
