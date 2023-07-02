@@ -2,9 +2,10 @@ import { React, useEffect, useState } from "react";
 import { getWishlistBooks_EP } from "../Utils/API";
 import { authToken_header } from "../Utils/LocalStorageUtils";
 import { useStoreState } from "pullstate";
-import { ShoppingCartStore, WishlistStore } from "../StoreState/StoreState";
 import axios from "axios";
 import BookTile from "../Components/Book/BookTile";
+import { ShoppingCartStore } from "../StoreState/ShoppingCartStore";
+import { WishlistStore } from "../StoreState/WishlistStore";
 
 export default function WishlistPage() {
     const shoppingCart = useStoreState(ShoppingCartStore).shoppingCart;

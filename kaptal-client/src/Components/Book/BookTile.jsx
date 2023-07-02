@@ -5,11 +5,12 @@ import IconComponent from "../Icons/IconComponent";
 import WishesIcon from "../Icons/WishesIcon";
 import { addBookToShoppingCart_EP, addBookToWishlist_EP, getBookImage_EP, removeBookFromShoppingCart_EP, removeBookFromWishlist_EP } from "../../Utils/API";
 import { authToken_header, getUserData } from "../../Utils/LocalStorageUtils";
-import { ShoppingCartStore, WishlistStore, addToCartAction, addToWishlistAction, removeFromCartAction, removeFromWishlistAction } from "../../StoreState/StoreState";
 import { useStoreState } from "pullstate";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import WishesFilledIcon from "../Icons/WishesFilledIcon";
+import { WishlistStore, addToWishlistAction, removeFromWishlistAction } from "../../StoreState/WishlistStore";
+import { ShoppingCartStore, addToCartAction, removeFromCartAction } from "../../StoreState/ShoppingCartStore";
 
 export default function BookTile({ book }) {
     const [isImgLoaded, setIsImgLoaded] = useState(false);
@@ -126,7 +127,7 @@ export default function BookTile({ book }) {
                     onClick={() => {
                         if (!shoppingCart.some((item) => item.bookId === book._id)) {
                             if (book.stock) {
-                                addBookToShoppingCart();
+                                addToCartAction(book);
                             }
                         } else {
                             navigate("/shoppingCart");
@@ -140,9 +141,9 @@ export default function BookTile({ book }) {
                     onClick={() => {
                         if (getUserData()) {
                             if (wishlist.some((item) => item.bookId === book._id)) {
-                                removeBookFromWishlist();
+                                removeFromWishlistAction(book);
                             } else {
-                                addBookToWishlist();
+                                addToWishlistAction(book);
                             }
                         }
                     }}

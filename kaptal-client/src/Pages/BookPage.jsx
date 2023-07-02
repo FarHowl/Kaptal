@@ -9,6 +9,7 @@ import axios from "axios";
 import InputTile from "../Components/UI/InputTile";
 import CrossIcon from "../Components/Icons/CrossIcon";
 import RatingStarIcon from "../Components/Icons/RatingStarIcon";
+import { showErrorNotification } from "../StoreState/NotificationStore";
 
 export default function BookPage() {
     const params = useParams();
@@ -44,8 +45,8 @@ export default function BookPage() {
             setBookData({ ...res[0].data, bookRating: ratingSum / ratingCount, ratingCount });
             setReviewsView(a);
         } catch (error) {
-            if (error?.response) console.log(error.response.data.error);
-            else console.log(error);
+            if (error?.response) showErrorNotification(error.response.data.error);
+            else showErrorNotification(error);
         }
     }
 
@@ -282,8 +283,8 @@ function AddFeedbackPopUp({ setIsAddReviewOpened, setIsAddRatingOpened }) {
             setIsAddRatingOpened(false);
             window.location.reload();
         } catch (error) {
-            if (error?.response) console.log(error.response.data.error);
-            else console.log(error);
+            if (error?.response) showErrorNotification(error.response.data.error);
+            else showErrorNotification(error);
         }
     }
 
@@ -306,8 +307,8 @@ function AddFeedbackPopUp({ setIsAddReviewOpened, setIsAddRatingOpened }) {
             setIsAddReviewOpened(false);
             window.location.reload();
         } catch (error) {
-            if (error?.response) console.log(error.response.data.error);
-            else console.log(error);
+            if (error?.response) showErrorNotification(error.response.data.error);
+            else showErrorNotification(error);
         }
     }
 
@@ -447,8 +448,8 @@ function ReviewTile({ review }) {
             const res = await axios.post(rateReview_EP, { reviewId: review._id, isReviewUseful }, authToken_header());
             console.log(res);
         } catch (error) {
-            if (error?.response) console.log(error.response.data.error);
-            else console.log(error);
+            if (error?.response) showErrorNotification(error.response.data.error);
+            else showErrorNotification(error);
         }
     }
 

@@ -12,11 +12,14 @@ import UserProfileIcon from "./Components/Icons/UserProfileIcon";
 import WishesIcon from "./Components/Icons/WishesIcon";
 import LoadingComponent from "./Components/UI/LoadingComponent";
 import ProfilePopUp from "./Components/UI/ProfilePopUp";
-import { initCartAction, initWishlistAction, ShoppingCartStore, WishlistStore } from "./StoreState/StoreState";
 import { useStoreState } from "pullstate";
 import axios from "axios";
 import "./index.css";
-import { getShoppingCart_EP, getWishlist_EP, refreshToken_EP, signIn_EP } from "./Utils/API";
+import { refreshToken_EP } from "./Utils/API";
+import { ShoppingCartStore } from "./StoreState/ShoppingCartStore";
+import { WishlistStore } from "./StoreState/WishlistStore";
+import { NotificationStore, showErrorNotification, showSuccessNotification, showWarningNotification } from "./StoreState/NotificationStore";
+import Notification from "./Components/UI/Notification";
 
 const MainPage = React.lazy(() => import("./Pages/MainPage"));
 const SignUpPage = React.lazy(() => import("./Pages/SignUpPage"));
@@ -30,6 +33,7 @@ export default function App() {
 
     const shoppingCart = useStoreState(ShoppingCartStore).shoppingCart;
     const wishlist = useStoreState(WishlistStore).wishlist;
+    const notifications = useStoreState(NotificationStore).notifications;
 
     const profilePopUpRef = useRef();
 
@@ -42,27 +46,7 @@ export default function App() {
             user = JSON.stringify(user);
             localStorage.setItem("userData", user);
         } catch (error) {
-            console.log(error);
-        }
-    }
-
-    async function getShoppingCart() {
-        try {
-            const res = await axios.get(getShoppingCart_EP, authToken_header());
-
-            initCartAction(res.data);
-        } catch (error) {
-            console.log(error);
-        }
-    }
-
-    async function getWishlist() {
-        try {
-            const res = await axios.get(getWishlist_EP, authToken_header());
-
-            initWishlistAction(res.data);
-        } catch (error) {
-            console.log(error);
+            showErrorNotification("Ошибка обновления токена");
         }
     }
 
@@ -115,15 +99,15 @@ export default function App() {
         }
     }, [location]);
 
-    useEffect(() => {
-        if (getUserData()) {
-            getShoppingCart();
-            getWishlist();
-        }
-    }, []);
-
     return (
         <div className="flex flex-col w-full items-center">
+            <div className="fixed w-full flex justify-end pr-6 top-[90px] z-50">
+                <div className="flex flex-col gap-y-2">
+                    {notifications.slice(0, 3).map((notification) => {
+                        return <Notification key={notification.id} notification={notification} />;
+                    })}
+                </div>
+            </div>
             <div className="w-full flex gap-6 justify-between items-center h-[80px] rounded-md px-6 border-b-2 fixed bg-white z-20">
                 <Link to={"/"} className="title-font text-5xl text-center w-[204px] flex flex-shrink-0 justify-center">
                     Каптал
