@@ -22,20 +22,28 @@ router.post("/user/makeOrder", async (req, res) => {
         const hasToBeAuthorized = true;
         const frontendToken = verifyJWT(req, hasToBeAuthorized);
 
-        const hasAllFields = req.body?.books && req.body?.destination && req.body?.paymentMethod;
-        if (!hasAllFields) throw new Error("Please enter all fields");
+        const hasAllFields = req.body?.books && req.body?.deliveryAddress && req.body?.paymentMethod && req.body?.deliveryMethod;
+        if (!hasAllFields) throw new Error("Пожалуйста, введите все поля");
+
+        let orderDate = new Date();
+        const day = orderDate.getDate();
+        const month = orderDate.getMonth() + 1;
+        const year = publicationDate.getFullYear();
+        orderDate = day + "." + month + "." + year;
 
         const order = new Order({
             books: req.body?.books,
-            destination: req.body?.destination,
+            deliveryAddress: req.body?.deliveryAddress,
+            deliveryMethod: req.body?.deliveryMethod,
             paymentMethod: req.body?.paymentMethod,
             userId: frontendToken.userId,
-            status: "pending",
+            date: orderDate,
+            status: "created",
         });
 
         await order.save();
 
-        res.status(200).send({ message: "Order created" });
+        res.status(200).send({ message: "Заказ создан" });
     } catch (error) {
         res.status(500).send({ error: error.message });
         console.log(error);
@@ -76,11 +84,11 @@ router.post("/admin/updateOrderStatus", async (req, res) => {
         verifyJWT(req, hasToBeAuthorized);
 
         const hasAllFields = req.body?.orderId && req.body?.status;
-        if (!hasAllFields) throw new Error("Please enter all fields");
+        if (!hasAllFields) throw new Error("Пожалуйста, введите все поля");
 
         await Order.findByIdAndUpdate(req.body?.orderId, { status: req.body?.status });
 
-        res.status(200).send({ message: "Order updated" });
+        res.status(200).send({ message: "Статус заказа обновлен" });
     } catch (error) {
         res.status(500).send({ error: error.message });
         console.log(error);

@@ -15,17 +15,17 @@ import ProfilePopUp from "./Components/UI/ProfilePopUp";
 import { useStoreState } from "pullstate";
 import axios from "axios";
 import "./index.css";
-import { refreshToken_EP } from "./Utils/API";
+import { refreshToken_EP, sendEmailCode_EP } from "./Utils/API";
 import { ShoppingCartStore } from "./StoreState/ShoppingCartStore";
 import { WishlistStore } from "./StoreState/WishlistStore";
 import { NotificationStore, showErrorNotification, showSuccessNotification, showWarningNotification } from "./StoreState/NotificationStore";
-import Notification from "./Components/UI/Notification";
 
 const MainPage = React.lazy(() => import("./Pages/MainPage"));
 const SignUpPage = React.lazy(() => import("./Pages/SignUpPage"));
 const BookPage = React.lazy(() => import("./Pages/BookPage"));
 const ShoppingCartPage = React.lazy(() => import("./Pages/ShoppingCartPage"));
 const WishlistPage = React.lazy(() => import("./Pages/WishlistPage"));
+const OrderConfirmationPage = React.lazy(() => import("./Pages/OrderConfirmationPage"));
 
 export default function App() {
     const [isRouteLoaded, setIsRouteLoaded] = useState(false);
@@ -68,6 +68,8 @@ export default function App() {
 
     function countShoppingCartItems() {
         let items = 0;
+
+        if (!shoppingCart) return items;
         for (const item of shoppingCart) {
             items += item.amount;
         }
@@ -84,7 +86,7 @@ export default function App() {
         if (location.pathname !== sessionStorage.getItem("currentPage")) sessionStorage.clear();
     }, [location]);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (getUserData()) {
             const decodedAuthToken = jwt_decode(getUserData().authToken);
             const currentTime = Date.now() / 1000;
@@ -99,12 +101,40 @@ export default function App() {
         }
     }, [location]);
 
+    async function sendEmail() {
+        try {
+            const res = await axios.post(sendEmailCode_EP, { email: "repobi4863@dronetz.com" });
+            showSuccessNotification("Все гуд!");
+        } catch (error) {
+            showErrorNotification(error);
+        }
+    }
+
+    useEffect(() => {
+        sendEmail();
+    }, []);
+
     return (
         <div className="flex flex-col w-full items-center">
             <div className="fixed w-full flex justify-end pr-6 top-[90px] z-50">
                 <div className="flex flex-col gap-y-2">
                     {notifications.slice(0, 3).map((notification) => {
-                        return <Notification key={notification.id} notification={notification} />;
+                        return (
+                            <div
+                                key={notification.id}
+                                className={
+                                    "w-[300px] flex px-4 py-2 rounded-md border-2 animated-200 " +
+                                    (notification.type === "success"
+                                        ? "bg-green-100 border-green-300"
+                                        : notification.type === "warning"
+                                        ? "bg-yellow-100 border-yellow-300"
+                                        : "bg-red-100 border-red-300 ") +
+                                    (notification.isTransparent ? " opacity-50" : " opacity-100")
+                                }
+                            >
+                                {notification.message}
+                            </div>
+                        );
                     })}
                 </div>
             </div>
@@ -130,8 +160,8 @@ export default function App() {
                     <Link to={"/wishlist"}>
                         <div className="relative">
                             <IconComponent Icon={WishesIcon} size={28} color={"#000"} hoveredColor={"#3BA5ED"} iconTitle={"Желаемое"} animation={"animated-100"} />
-                            <span className={"absolute top-0 right-0 rounded-full text-white bg-blue-500 px-[9px] text-center font-semibold " + (wishlist.length !== 0 ? "pt-[2px]" : "")}>
-                                {wishlist.length !== 0 ? wishlist.length : ""}
+                            <span className={"absolute top-0 right-0 rounded-full text-white bg-blue-500 px-[9px] text-center font-semibold " + (wishlist?.length !== 0 ? "pt-[2px]" : "")}>
+                                {wishlist?.length !== 0 ? wishlist?.length : ""}
                             </span>
                         </div>
                     </Link>
@@ -184,6 +214,7 @@ export default function App() {
                     <Route path="/book/:bookId" element={<BookPage />} />
                     <Route path="/shoppingCart" element={<ShoppingCartPage />} />
                     <Route path="/wishlist" element={<WishlistPage />} />
+                    <Route path="/orderConfirmation" element={<OrderConfirmationPage />} />
                 </Routes>
             </Suspense>
         </div>

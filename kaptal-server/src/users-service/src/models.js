@@ -17,6 +17,21 @@ const userSchema = new mongoose.Schema({
         trim: true,
         type: String,
     },
+    // firstName: {
+    //     required: true,
+    //     type: String,
+    //     trim: true,
+    // },
+    // lastName: {
+    //     required: true,
+    //     type: String,
+    //     trim: true,
+    // },
+    // phoneNumber: {
+    //     required: true,
+    //     type: String,
+    //     trim: true,
+    // },
     role: {
         required: true,
         trim: true,

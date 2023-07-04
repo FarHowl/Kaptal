@@ -53,9 +53,9 @@ export default function ShoppingCartPage() {
         }
     }, [shoppingCart]);
 
-    useEffect(()=>{
-        console.log(shoppingCart)
-    }, [shoppingCart])
+    useEffect(() => {
+        console.log(shoppingCart);
+    }, [shoppingCart]);
 
     return (
         <div className="w-full flex flex-col justify-center items-center px-6">
@@ -177,7 +177,14 @@ export default function ShoppingCartPage() {
                                 <span className="text-lg font-semibold">{totalPrice}</span>
                             </div>
                         </div>
-                        <button className="py-2 w-full rounded-md text-white animated-100 font-semibold bg-sky-400 hover:bg-sky-500 px-4">Оформить заказ</button>
+                        <button
+                            onClick={() => {
+                                navigate("/orderConfirmation");
+                            }}
+                            className="py-2 w-full rounded-md text-white animated-100 font-semibold bg-sky-400 hover:bg-sky-500 px-4"
+                        >
+                            Оформить заказ
+                        </button>
                     </div>
                 </div>
             </div>

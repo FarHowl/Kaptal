@@ -3,6 +3,7 @@ const router = express.Router();
 
 const jwt = require("jsonwebtoken");
 const { SHA3 } = require("sha3");
+const nodemailer = require("nodemailer");
 
 const redis = require("redis");
 const redisClient = redis.createClient({ url: "redis://users-redis:6379" });
@@ -89,6 +90,41 @@ router.post("/user/signUp", async (req, res) => {
     }
 });
 
+// router.post("/user/signIn", async (req, res) => {});
+
+router.post("/user/sendEmailCode", async (req, res) => {
+    try {
+        const hasToBeAuthorized = false;
+        verifyJWT(req, hasToBeAuthorized);
+
+        const email = req.body?.email;
+        if (!email) throw new Error("Please, enter email");
+
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+        redisClient.set(email, code, "EX", 60);
+
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: "kartashov104@gmail.com",
+                pass: "xtaeqiicczysbdol",
+            },
+        });
+
+        await transporter.sendMail({
+            from: "kartashov104@gmail.com",
+            to: email,
+            subject: "Код для входа",
+            text: `Ваш код для входа на Каптал: ${code}`,
+        });
+
+        res.sendStatus(200);
+    } catch (error) {
+        res.status(400).send({ error: error.message });
+    }
+});
+
 router.post("/user/addBookToShoppingCart", async (req, res) => {
     try {
         const hasToBeAuthorized = true;
@@ -155,7 +191,7 @@ router.post("/user/addBookToWishlist", async (req, res) => {
         const hasToBeAuthorized = true;
         const frontendToken = verifyJWT(req, hasToBeAuthorized);
 
-        const hasAllFields = req.body?.bookId
+        const hasAllFields = req.body?.bookId;
         if (!hasAllFields) throw new Error("Please, enter all fields");
 
         const currentUser = await User.findById(frontendToken.userId);

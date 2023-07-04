@@ -9,15 +9,16 @@ const orderSchema = new mongoose.Schema({
         },
     ],
     date: {
-        type: Number,
-        default: Date.now(),
+        type: String,
+        required: true,
+        trim: true,
     },
     status: {
         required: true,
         type: String,
         trim: true,
     },
-    destination: {
+    deliveryAddress: {
         required: true,
         type: String,
         trim: true,
@@ -28,6 +29,11 @@ const orderSchema = new mongoose.Schema({
         trim: true,
     },
     paymentMethod: {
+        required: true,
+        type: String,
+        trim: true,
+    },
+    deliveryMethod: {
         required: true,
         type: String,
         trim: true,

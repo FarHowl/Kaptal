@@ -100,4 +100,6 @@ export const getShoppingCartBooks_EP = apiAddress + "/api/books-service/user/get
 
 export const getWishlistBooks_EP = apiAddress + "/api/books-service/user/getWishlistBooks";
 
+export const sendEmailCode_EP = apiAddress + "/api/users-service/user/sendEmailCode";
+
 //

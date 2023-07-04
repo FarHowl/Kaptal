@@ -27,7 +27,7 @@ router.get("/admin/getAllBooks", async (req, res) => {
         const totalStockOfBooks = await Book.countDocuments();
         const totalPages = Math.ceil(totalStockOfBooks / 40);
         const currentPage = parseInt(req.query.page);
-        if (currentPage > totalPages) throw new Error("Undefined page");
+        if (currentPage > totalPages) throw new Error("Такой страницы не существует");
 
         const stockOfBooksToSkip = (currentPage - 1) * 40;
         const foundBooks = await Book.find().skip(stockOfBooksToSkip).limit(40);
@@ -64,7 +64,7 @@ router.post("/admin/addNewBook", async (req, res) => {
             req.body?.stock ||
             req.body?.categories ||
             req.body?.collections;
-        if (!hasAllFields) throw new Error("Enter all fields");
+        if (!hasAllFields) throw new Error("Введите все поля");
 
         async function addOrUpdateCategory(categoryNames) {
             const allCategories = await Category.find();
@@ -189,7 +189,7 @@ router.post("/admin/updateBook", async (req, res) => {
         verifyJWT(req, hasToBeAuthorized);
 
         const hasBookId = req.body?.bookId;
-        if (!hasBookId) throw new Error("Please enter bookId");
+        if (!hasBookId) throw new Error("Пожалуйста, введите ID книги");
 
         await redisClient.del("book:" + req.body.bookId.toString());
 
@@ -272,7 +272,7 @@ router.post("/admin/deleteBook", async (req, res) => {
         verifyJWT(req, hasToBeAuthorized);
 
         const hasBookId = req.body?.bookId;
-        if (!hasBookId) throw new Error("Please, enter book id");
+        if (!hasBookId) throw new Error("Пожалуйста, введите ID книги");
 
         const book = await Book.findById(req.body.bookId);
 
@@ -353,7 +353,7 @@ router.get("/user/searchBook", async (req, res) => {
             .sort(sort);
 
         const totalPages = Math.ceil(foundBooks.length / 40);
-        if (currentPage > totalPages) throw new Error("Undefined page");
+        if (currentPage > totalPages) throw new Error("Такой страницы не существует");
 
         res.status(200).send({ books: foundBooks, totalPages });
     } catch (error) {
@@ -375,15 +375,15 @@ router.get("/user/getBooksByCategory", async (req, res) => {
         if (sortType === "byNew") {
             if (sortOrder === 1) sort = { year: 1 };
             else if (sortOrder === -1) sort = { year: -1 };
-            else throw new Error("Invalid sort order");
+            else throw new Error("Неправильный порядок сортировки");
         } else if (sortType === "byPrice") {
             if (sortOrder === 1) sort = { price: 1 };
             else if (sortOrder === -1) sort = { price: -1 };
-            else throw new Error("Invalid sort order");
+            else throw new Error("Неправильный порядок сортировки");
         } else if (sortType === "byRating") {
             if (sortOrder === 1) sort = { rating: 1 };
             else if (sortOrder === -1) sort = { rating: -1 };
-            else throw new Error("Invalid sort order");
+            else throw new Error("Неправильный порядок сортировки");
         }
 
         const currentPage = parseInt(req.query.page) ?? 1;
@@ -392,7 +392,7 @@ router.get("/user/getBooksByCategory", async (req, res) => {
         await redisClient.get("booksIn:" + categoryPath, async (err, reply) => {
             if (reply) {
                 const totalPages = Math.ceil(JSON.parse(reply).length / 40);
-                if (currentPage > totalPages) throw new Error("Undefined page");
+                if (currentPage > totalPages) throw new Error("Такой страницы не существует");
 
                 res.status(200).send({ books: JSON.parse(reply), totalPages });
             } else {
@@ -401,14 +401,14 @@ router.get("/user/getBooksByCategory", async (req, res) => {
                 await redisClient.set("booksIn:" + categoryPath, JSON.stringify(foundBooks), "EX", 60 * 60);
 
                 const totalPages = Math.ceil(foundBooks.length / 40);
-                if (currentPage > totalPages) throw new Error("Undefined page");
+                if (currentPage > totalPages) throw new Error("Такой страницы не существует");
 
                 res.status(200).send({ books: foundBooks, totalPages });
             }
         });
 
         const totalPages = Math.ceil(foundBooks.length / 40);
-        if (currentPage > totalPages) throw new Error("Undefined page");
+        if (currentPage > totalPages) throw new Error("Такой страницы не существует");
 
         res.status(200).send({ books: foundBooks, totalPages });
     } catch (error) {
@@ -469,17 +469,17 @@ router.get("/user/getBooksByCollection", async (req, res) => {
         if (sortType === "byNew") {
             if (sortOrder === 1) sort = { year: 1 };
             else if (sortOrder === -1) sort = { year: -1 };
-            else throw new Error("Invalid sort order");
+            else throw new Error("Неправильный порядок сортировки");
         }
         if (sortType === "byPrice") {
             if (sortOrder === 1) sort = { price: 1 };
             else if (sortOrder === -1) sort = { price: -1 };
-            else throw new Error("Invalid sort order");
+            else throw new Error("Неправильный порядок сортировки");
         }
         if (sortType === "byRating") {
             if (sortOrder === 1) sort = { rating: 1 };
             else if (sortOrder === -1) sort = { rating: -1 };
-            else throw new Error("Invalid sort order");
+            else throw new Error("Неправильный порядок сортировки");
         }
 
         const currentPage = parseInt(req.query.page) ?? 1;
@@ -488,7 +488,7 @@ router.get("/user/getBooksByCollection", async (req, res) => {
         const foundBooks = await Book.find({ collections: collectionName }).skip(stockOfBooksToSkip).limit(46).sort(sort);
 
         const totalPages = Math.ceil(foundBooks.length / 46);
-        if (currentPage > totalPages) throw new Error("Undefined page");
+        if (currentPage > totalPages) throw new Error("Такой страницы не существует");
 
         res.status(200).send({ books: foundBooks, totalPages });
     } catch (error) {
@@ -523,7 +523,7 @@ router.get("/user/getBookData", async (req, res) => {
             res.status(200).send(JSON.parse(cachedBook));
         } else {
             const bookId = req.query?.bookId;
-            if (!bookId) throw new Error("Please, enter book id");
+            if (!bookId) throw new Error("Пожалуйста, введите ID книги");
 
             const book = await Book.findById(bookId);
 

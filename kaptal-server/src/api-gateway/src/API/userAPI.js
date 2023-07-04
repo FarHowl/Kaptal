@@ -27,6 +27,29 @@ router.post("/users-service/user/signIn", async (req, res) => {
     }
 });
 
+// router.post("/users-service/user/signInWithGoogle", async (req, res) => {});
+
+// router.post("/users-service/user/signInWithVK", async (req, res) => {});
+
+router.post("/users-service/user/sendEmailCode", async (req, res) => {
+    try {
+        const token = jwt.sign({}, process.env.GATEWAY_USERS_KEY, { expiresIn: "1h" });
+
+        const response = await axios.post(
+            "http://users-service:3000" + "/api/user/sendEmailCode",
+            {
+                ...req.body,
+            },
+            { headers: { Authorization: "Bearer " + token } }
+        );
+
+        res.status(200).send(response.data);
+    } catch (error) {
+        if (error?.response) res.status(500).send({ error: error.response.data.error });
+        else res.status(500).send({ error: error.message });
+    }
+});
+
 router.get("/users-service/user/refreshToken", async (req, res) => {
     try {
         const frontendToken = verifyJWT(req, ["admin", "user", "moderator"]);
@@ -380,7 +403,7 @@ router.post("/books-service/user/getShoppingCartBooks", async (req, res) => {
 router.post("/books-service/user/getWishlistBooks", async (req, res) => {
     try {
         const frontendToken = verifyJWT(req, ["admin", "user", "moderator"]);
-        
+
         const newToken = jwt.sign({ frontendToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "1h" });
 
         const response = await axios.post("http://books-service:3000" + "/api/user/getWishlistBooks", { ...req.body }, { headers: { Authorization: "Bearer " + newToken } });
@@ -391,7 +414,7 @@ router.post("/books-service/user/getWishlistBooks", async (req, res) => {
         if (error?.response) res.status(500).send({ error: error.response.error });
         else res.status(500).send({ error: error.message });
     }
-})
+});
 
 router.post("/orders-service/user/makeOrder", async (req, res) => {
     try {
