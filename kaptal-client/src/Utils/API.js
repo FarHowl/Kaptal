@@ -102,4 +102,8 @@ export const getWishlistBooks_EP = apiAddress + "/api/books-service/user/getWish
 
 export const sendEmailCode_EP = apiAddress + "/api/users-service/user/sendEmailCode";
 
+export const checkEmailCode_EP = apiAddress + "/api/users-service/user/checkEmailCode";
+
+export const makeOrder_EP = apiAddress + "/api/orders-service/user/makeOrder";
+
 //

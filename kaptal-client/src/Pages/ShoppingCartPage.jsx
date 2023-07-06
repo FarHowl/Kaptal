@@ -2,7 +2,7 @@ import { React, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { authToken_header, getUserData } from "../Utils/LocalStorageUtils";
-import { getBookImage_EP, getShoppingCartBooks_EP } from "../Utils/API";
+import { getBookImage_EP, getShoppingCartBooks_EP, makeOrder_EP } from "../Utils/API";
 import { useStoreState } from "pullstate";
 import LoadingComponent from "../Components/UI/LoadingComponent";
 import IconComponent from "../Components/Icons/IconComponent";
@@ -11,13 +11,17 @@ import WishesIcon from "../Components/Icons/WishesIcon";
 import CrossIcon from "../Components/Icons/CrossIcon";
 import { ShoppingCartStore, addToCartAction, removeFromCartAction, rmSameBooksFromCartAction } from "../StoreState/ShoppingCartStore";
 import { WishlistStore, addToWishlistAction, removeFromWishlistAction } from "../StoreState/WishlistStore";
+import InputTile from "../Components/UI/InputTile";
+import { showErrorNotification } from "../StoreState/NotificationStore";
 
 export default function ShoppingCartPage() {
     const shoppingCart = useStoreState(ShoppingCartStore).shoppingCart;
     const wishlist = useStoreState(WishlistStore).wishlist;
+
     const [shoppingCartBooks, setShoppingCartBooks] = useState([]);
     const [isImgLoaded, setIsImgLoaded] = useState(false);
     const [totalPrice, setTotalPrice] = useState(0);
+    const [orderInfo, setOrderInfo] = useState({ firstName: getUserData()?.firstName ?? "", lastName: getUserData()?.lastName ?? "", paymentMethod: "", deliveryMethod: "", deliveryAddress: "" });
 
     const navigate = useNavigate();
 
@@ -45,6 +49,14 @@ export default function ShoppingCartPage() {
         }
     };
 
+    async function makeOrder() {
+        try {
+            const response = await axios.post(makeOrder_EP, { ...orderInfo });
+        } catch (error) {
+            showErrorNotification(error);
+        }
+    }
+
     useEffect(() => {
         console.log(renderCounter.current);
         if (renderCounter.current === 0) {
@@ -59,14 +71,14 @@ export default function ShoppingCartPage() {
 
     return (
         <div className="w-full flex flex-col justify-center items-center px-6">
-            <div className="max-w-[1400px] w-full flex flex-col justify-center items-center mt-8 flex-wrap gap-y-6">
+            <div className="max-w-[1240px] w-full flex flex-col justify-center items-center mt-8 flex-wrap gap-y-6 mb-16">
                 <div className="w-full justify-start">
                     <span className="text-3xl font-bold">Корзина</span>
                 </div>
-                <div className="flex gap-10 w-full justify-between">
-                    <div className="flex flex-col items-start w-[1000px]">
+                <div className="flex gap-10 w-full justify-start mb-20">
+                    <div className="flex flex-col items-start w-full max-h-[600px] overflow-y-auto pr-4">
                         {shoppingCartBooks.map((book) => (
-                            <div key={book._id} className="max-w-[1000px] w-full flex py-4 border-b-2 border-gray-100 justify-between">
+                            <div key={book._id} className="w-full flex py-4 border-b-2 border-gray-100 justify-between">
                                 <div className="flex">
                                     <div
                                         onClick={() => {
@@ -170,21 +182,141 @@ export default function ShoppingCartPage() {
                             </div>
                         ))}
                     </div>
-                    <div className="w-[300px] flex flex-col gap-y-4">
-                        <div className="rounded-md border-2 border-gray-100 flex flex-col px-6 py-4">
-                            <div className="flex justify-between">
-                                <span className="text-lg font-semibold">Итого</span>
-                                <span className="text-lg font-semibold">{totalPrice}</span>
+                </div>
+                <div className="flex flex-col w-full gap-y-12">
+                    <div className="w-full justify-start">
+                        <span className="text-3xl font-bold">Оформление заказа</span>
+                    </div>
+                    <div className="w-full justify-between flex">
+                        <div className="w-full flex flex-col items-start px-4 gap-y-4">
+                            <div className="relative">
+                                <div className="absolute -left-3 border-r-[3px] h-full border-sky-500"></div>
+                                <span className="text-xl font-medium">Способ получения</span>
+                            </div>
+                            <div className="flex gap-x-3">
+                                <button
+                                    onClick={() => {
+                                        setOrderInfo({ ...orderInfo, deliveryMethod: "self" });
+                                    }}
+                                    className={
+                                        "w-[200px] rounded-md animated-100 py-[6px] " +
+                                        (orderInfo.deliveryMethod === "self" ? "bg-sky-400 text-white" : "bg-sky-300/40 hover:bg-sky-400 hover:text-white")
+                                    }
+                                >
+                                    Самовывоз
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setOrderInfo({ ...orderInfo, deliveryMethod: "courier" });
+                                    }}
+                                    className={
+                                        "w-[200px] rounded-md animated-100 py-[6px] " +
+                                        (orderInfo.deliveryMethod === "courier" ? "bg-sky-400 text-white" : "bg-sky-300/40 hover:bg-sky-400 hover:text-white")
+                                    }
+                                >
+                                    Курьером
+                                </button>
                             </div>
                         </div>
-                        <button
-                            onClick={() => {
-                                navigate("/orderConfirmation");
-                            }}
-                            className="py-2 w-full rounded-md text-white animated-100 font-semibold bg-sky-400 hover:bg-sky-500 px-4"
-                        >
-                            Оформить заказ
-                        </button>
+                        <div className="w-[350px] flex flex-col gap-y-4">
+                            <div className="rounded-md border-2 border-gray-100 flex flex-col px-6 py-4">
+                                <div className="flex justify-between">
+                                    <span className="text-lg font-semibold">Итого</span>
+                                    <span className="text-lg font-semibold">{totalPrice + "₽"}</span>
+                                </div>
+                            </div>
+                            <button onClick={() => {}} className="py-2 w-full rounded-md text-white animated-100 font-semibold bg-sky-400 hover:bg-sky-500 px-4">
+                                Оформить заказ
+                            </button>
+                        </div>
+                    </div>
+                    <div className="w-full flex flex-col items-start px-4 gap-y-4">
+                        <div className="relative">
+                            <div className="absolute -left-3 border-r-[3px] h-full border-sky-500"></div>
+                            <span className="text-xl font-medium">Способ оплаты</span>
+                        </div>
+                        <div className="flex gap-x-4">
+                            <div
+                                onClick={() => {
+                                    setOrderInfo({ ...orderInfo, paymentMethod: "card" });
+                                }}
+                                className={
+                                    "flex flex-col items-center gap-y-1 justify-center w-[240px] border-2 py-4 rounded-md cursor-pointer animated-100 px-5 " +
+                                    (orderInfo.paymentMethod === "card" ? "border-sky-500" : "border-gray-200 hover:border-sky-300")
+                                }
+                            >
+                                <span className="font-medium">Картой онлайн</span>
+                                <span className="text-sm text-gray-500 text-center">Оплатить картой сейчас</span>
+                            </div>
+                            <div
+                                onClick={() => {
+                                    setOrderInfo({ ...orderInfo, paymentMethod: "cash" });
+                                }}
+                                className={
+                                    "flex flex-col items-center gap-y-1 justify-center w-[240px] border-2 py-4 rounded-md cursor-pointer animated-100 px-5 " +
+                                    (orderInfo.paymentMethod === "cash" ? "border-sky-500" : "border-gray-200 hover:border-sky-300")
+                                }
+                            >
+                                <span className="font-medium">При получении</span>
+                                <span className="text-sm text-gray-500 text-center">Оплатить картой или наличными при получении</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="w-full flex flex-col items-start px-4 gap-y-4">
+                        <div className="relative">
+                            <div className="absolute -left-3 border-r-[3px] h-full border-sky-500"></div>
+                            <span className="text-xl font-medium">Получатель</span>
+                        </div>
+                        <div className="flex flex-col w-[300px] gap-y-4">
+                            <InputTile
+                                defaultValue={orderInfo.lastName}
+                                title={"Фамилия"}
+                                onChange={(e) => {
+                                    setOrderInfo({ ...orderInfo, customer: { fullName: e.target.value } });
+                                }}
+                            />
+                            <InputTile
+                                defaultValue={orderInfo.firstName}
+                                title={"Имя"}
+                                onChange={(e) => {
+                                    setOrderInfo({ ...orderInfo, customer: { fullName: e.target.value } });
+                                }}
+                            />
+                            <InputTile
+                                title={"Электронная почта"}
+                                onChange={(e) => {
+                                    a;
+                                    setOrderInfo({ ...orderInfo, customer: { email: e.target.value } });
+                                }}
+                                type={"email"}
+                            />
+                            <InputTile
+                                title={"Телефон"}
+                                onChange={(e) => {
+                                    setOrderInfo({ ...orderInfo, customer: { phoneNumber: e.target.value } });
+                                }}
+                                type={"tel"}
+                                effectProp={(value, setValue) => {
+                                    const formattedValue = value.replace(/[^\d+]/g, ""); // Удаляем все символы, кроме цифр и "+"
+                                    if (formattedValue.length > 2 && formattedValue.length <= 15) {
+                                        const countryCode = "+7";
+                                        let formattedNumber = formattedValue.slice(2); // Удаляем первые два символа
+                                        // Добавляем пробелы и дефисы в нужные позиции
+                                        formattedNumber = formattedNumber.replace(/^(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/, (_, group1, group2, group3, group4) => {
+                                            let result = "";
+                                            if (group1) result += `${group1} `;
+                                            if (group2) result += `${group2} `;
+                                            if (group3) result += `${group3}-`;
+                                            if (group4) result += `${group4}-`;
+                                            return result;
+                                        });
+                                        // Удаляем лишние пробелы, дефисы и добавляем "+7"
+                                        formattedNumber = formattedNumber.replace(/[\s-]+$/, "");
+                                        setValue(`${countryCode} ${formattedNumber}`);
+                                    }
+                                }}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>

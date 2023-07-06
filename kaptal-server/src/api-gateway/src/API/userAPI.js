@@ -50,6 +50,25 @@ router.post("/users-service/user/sendEmailCode", async (req, res) => {
     }
 });
 
+router.post("/users-service/user/checkEmailCode", async (req, res) => {
+    try {
+        const token = jwt.sign({}, process.env.GATEWAY_USERS_KEY, { expiresIn: "1h" });
+
+        const response = await axios.post(
+            "http://users-service:3000" + "/api/user/checkEmailCode",
+            {
+                ...req.body,
+            },
+            { headers: { Authorization: "Bearer " + token } }
+        );
+
+        res.status(200).send(response.data);
+    } catch (error) {
+        if (error?.response) res.status(500).send({ error: error.response.data.error });
+        else res.status(500).send({ error: error.message });
+    }
+});
+
 router.get("/users-service/user/refreshToken", async (req, res) => {
     try {
         const frontendToken = verifyJWT(req, ["admin", "user", "moderator"]);

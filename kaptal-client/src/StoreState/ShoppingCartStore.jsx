@@ -41,7 +41,7 @@ export const addToCartAction = async (item) => {
 };
 
 export const removeFromCartAction = async (item) => {
-    await axios.post(removeBookFromShoppingCart_EP, { bookId: item._id }, authToken_header());
+    await axios.post(removeBookFromShoppingCart_EP, { bookId: item._id, amount: 1 }, authToken_header());
 
     ShoppingCartStore.update((s) => {
         s.shoppingCart = s.shoppingCart.map((i) => {
@@ -54,8 +54,10 @@ export const removeFromCartAction = async (item) => {
     });
 };
 
-export const rmSameBooksFromCartAction = (item) => {
+export const rmSameBooksFromCartAction = async (item) => {
+    await axios.post(removeBookFromShoppingCart_EP, { bookId: item._id, amount: "all" }, authToken_header());
+
     ShoppingCartStore.update((s) => {
-        s.shoppingCart = s.shoppingCart.filter((i) => i.bookId !== item.bookId);
-    });
+        s.shoppingCart = s.shoppingCart.filter((i) => i.bookId !== item._id);
+    }); 
 };

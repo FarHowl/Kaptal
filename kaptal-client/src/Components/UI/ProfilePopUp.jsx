@@ -9,7 +9,7 @@ export default function ProfilePopUp({ profilePopUpRef }) {
         return (
             <div ref={profilePopUpRef} className="absolute scale-0 z-10 top-0 right-0 origin-top-right opacity-0 pointer-events-none bg-white shadow-xl rounded-lg animated-300">
                 <div className="h-[68px] text-lg flex-shrink-0 w-[150px] pl-3 flex flex-col justify-center">
-                    <span className="font-bold">{getUserData().username}</span>
+                    <span className="font-bold">{getUserData().firstName}</span>
                     <span className={getUserData().role !== "user" ? "text-red-500" : "text-green-500"}>
                         {getUserData().role === "admin" ? "Администратор" : getUserData().role === "moderator" ? "Модератор" : "Пользователь"}
                     </span>

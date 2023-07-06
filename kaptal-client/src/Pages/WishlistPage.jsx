@@ -36,7 +36,7 @@ export default function WishlistPage() {
 
     return (
         <div className="w-full flex flex-col justify-center items-center px-6">
-            <div className="max-w-[1400px] w-full flex flex-col justify-center items-center mt-8 flex-wrap gap-y-16">
+            <div className="max-w-[1240px] w-full flex flex-col justify-center items-center mt-8 flex-wrap gap-y-16">
                 <div className="flex flex-col gap-y-3 w-full">
                     <span className="text-3xl font-bold">Желаемое</span>
                     <div className="flex w-full items-center gap-3">{wishlistBooks}</div>

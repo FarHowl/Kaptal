@@ -18,38 +18,8 @@ const { User } = require("./models");
 
 const verifyJWT = require("./utils/verifyJWT");
 
-router.post("/user/signIn", async (req, res) => {
-    try {
-        const hasToBeAuthorized = false;
-        verifyJWT(req, hasToBeAuthorized);
-
-        const currentUser = await User.findOne({ email: req.body.email });
-        if (!currentUser) throw new Error("User does not exist or email is invalid");
-
-        const hash = new SHA3(512);
-        const passwordHash = hash.update(req.body.password).digest("hex");
-        const isPasswordValid = currentUser.password !== passwordHash;
-        if (isPasswordValid) throw new Error("Password is invalid");
-
-        const frontendToken = jwt.sign({ userId: currentUser._id.toString(), role: currentUser.role }, process.env.FRONTEND_GATEWAY_KEY, { expiresIn: "1d" });
-
-        res.status(200).send({
-            username: currentUser.username,
-            role: currentUser.role,
-            orders: currentUser.orders,
-            shoppingCart: currentUser.shoppingCart,
-            authToken: frontendToken,
-            userId: currentUser._id,
-        });
-    } catch (error) {
-        res.status(400).send({ error: error.message });
-        console.log(error);
-    }
-});
-
 router.get("/user/refreshToken", async (req, res) => {
     try {
-        console.log("first");
         const hasToBeAuthorized = true;
         const frontendToken = verifyJWT(req, hasToBeAuthorized);
 
@@ -69,28 +39,94 @@ router.post("/user/signUp", async (req, res) => {
         const hasToBeAuthorized = false;
         verifyJWT(req, hasToBeAuthorized);
 
-        const hasAllFields = req.body?.username || req.body?.email || req.body?.password;
+        const { firstName, phoneNumber, email, lastName, code } = req.body;
+        const hasAllFields = firstName && phoneNumber && email && lastName && code;
         if (!hasAllFields) throw new Error("Please, enter all fields");
 
-        const hash = new SHA3(512);
-        const passwordHash = hash.update(req.body.password).digest("hex");
+        const originalCode = await redisClient.get(email);
 
-        const userData = new User({
-            username: req.body.username,
-            email: req.body.email,
-            password: passwordHash,
-            shoppingCart: [],
-        });
+        if (code === originalCode) {
+            const userData = new User({
+                email,
+                firstName,
+                lastName,
+                phoneNumber,
+            });
 
-        await userData.save();
-        res.sendStatus(201);
+            await userData.save();
+
+            const frontendToken = jwt.sign({ userId: userData._id.toString(), role: userData.role }, process.env.FRONTEND_GATEWAY_KEY, { expiresIn: "1d" });
+
+            res.status(200).send({
+                firstName,
+                role: userData.role,
+                authToken: frontendToken,
+                userId: userData._id,
+            });
+        } else throw new Error("Code is invalid");
     } catch (error) {
-        console.log(error);
         res.status(400).send({ error: error.message });
     }
 });
 
-// router.post("/user/signIn", async (req, res) => {});
+router.post("/user/signIn", async (req, res) => {
+    try {
+        const hasToBeAuthorized = false;
+        verifyJWT(req, hasToBeAuthorized);
+
+        const hasAllFields = req.body?.email && req.body?.code;
+        if (!hasAllFields) throw new Error("Please, enter all Fields");
+
+        const originalCode = await redisClient.get(req.body.email);
+
+        if (req.body.code === originalCode) {
+            const currentUser = await User.findOne({ email: req.body.email });
+
+            const frontendToken = jwt.sign({ userId: currentUser._id.toString(), role: currentUser.role }, process.env.FRONTEND_GATEWAY_KEY, { expiresIn: "1d" });
+
+            res.status(200).send({
+                firstName: currentUser.firstName,
+                lastName: currentUser.lastName,
+                role: currentUser.role,
+                orders: currentUser.orders,
+                shoppingCart: currentUser.shoppingCart,
+                authToken: frontendToken,
+                userId: currentUser._id,
+            });
+
+            redisClient.del(req.body.email);
+        } else {
+            throw new Error("Code is invalid");
+        }
+    } catch (error) {
+        res.status(400).send({ error: error.message });
+    }
+});
+
+router.post("/user/checkEmailCode", async (req, res) => {
+    try {
+        const hasToBeAuthorized = false;
+        verifyJWT(req, hasToBeAuthorized);
+
+        const code = req.body?.code;
+        const email = req.body?.email;
+
+        const hasAllFields = code && email;
+        if (!hasAllFields) throw new Error("Enter all fields");
+
+        const originalCode = await redisClient.get(email);
+
+        if (code !== originalCode) {
+            throw new Error("Code invalid");
+        } else {
+            const currentUser = await User.findOne({ email: req.body.email });
+            res.status(200).send(currentUser ? { doesUserExist: true } : { doesUserExist: false });
+        }
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+        console.log(error);
+    }
+});
 
 router.post("/user/sendEmailCode", async (req, res) => {
     try {
@@ -102,7 +138,7 @@ router.post("/user/sendEmailCode", async (req, res) => {
 
         const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-        redisClient.set(email, code, "EX", 60);
+        await redisClient.set(email, code, "EX", 60 * 5);
 
         const transporter = nodemailer.createTransport({
             service: "gmail",
@@ -163,7 +199,7 @@ router.post("/user/removeBookFromShoppingCart", async (req, res) => {
         const hasToBeAuthorized = true;
         const frontendToken = verifyJWT(req, hasToBeAuthorized);
 
-        const hasAllFields = req.body?.bookId;
+        const hasAllFields = req.body?.bookId && req.body?.amount;
         if (!hasAllFields) throw new Error("Please, enter all fields");
 
         const currentUser = await User.findById(frontendToken.userId);
@@ -171,12 +207,15 @@ router.post("/user/removeBookFromShoppingCart", async (req, res) => {
 
         if (bookIndex === -1) throw new Error("Book not found in the shopping cart");
 
-        if (currentUser.shoppingCart[bookIndex].amount === 1) {
+        if (req.body.amount === 1) {
+            if (currentUser.shoppingCart[bookIndex].amount === 1) {
+                currentUser.shoppingCart.splice(bookIndex, 1);
+            } else {
+                currentUser.shoppingCart[bookIndex].amount -= 1;
+            }
+        } else if (req.body.amount === "all") {
             currentUser.shoppingCart.splice(bookIndex, 1);
-        } else {
-            currentUser.shoppingCart[bookIndex].amount -= 1;
         }
-
         currentUser.markModified("shoppingCart");
         await currentUser.save();
 

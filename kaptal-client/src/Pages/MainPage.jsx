@@ -1,15 +1,13 @@
-import React, { useEffect, useState, useLayoutEffect } from "react";
-import { authToken_header, getUserData } from "../Utils/LocalStorageUtils";
-import { getAllBooks_EP, getBooksBarByCollection_EP } from "../Utils/API";
+import React, { useEffect, useState } from "react";
+import { authToken_header } from "../Utils/LocalStorageUtils";
+import { getBooksBarByCollection_EP } from "../Utils/API";
 import BookTile from "../Components/Book/BookTile";
 import axios from "axios";
-import { socket } from "../Utils/socketIO";
-import { useSessionState } from "../Utils/CustomHooks";
 
 export default function MainPage() {
     return (
         <div className="w-full flex flex-col justify-center items-center px-6">
-            <div className="max-w-[1400px] w-full flex flex-col justify-center items-center mt-8 flex-wrap gap-y-16">
+            <div className="max-w-[1240px] w-full flex flex-col justify-center items-center mt-8 flex-wrap gap-y-16">
                 <div className="flex flex-col gap-y-3 w-full">
                     <span className="text-3xl font-bold">Новинки</span>
                     <BooksBar collection={"Новинки"} />
@@ -47,7 +45,7 @@ function BooksBar({ collection }) {
     }, []);
 
     return (
-        <div className="w-full flex flex-col justify-center items-center">
+        <div className="w-full flex flex-col justify-center items-center px-6">
             <div className="max-w-[1400px] w-full flex justify-start items-center flex-wrap gap-4">{booksList}</div>
         </div>
     );

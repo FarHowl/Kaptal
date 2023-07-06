@@ -10,6 +10,7 @@ import InputTile from "../Components/UI/InputTile";
 import CrossIcon from "../Components/Icons/CrossIcon";
 import RatingStarIcon from "../Components/Icons/RatingStarIcon";
 import { showErrorNotification } from "../StoreState/NotificationStore";
+import { addToCartAction } from "../StoreState/ShoppingCartStore";
 
 export default function BookPage() {
     const params = useParams();
@@ -60,8 +61,8 @@ export default function BookPage() {
     }, []);
 
     return (
-        <div className="flex flex-col items-center w-full gap-y-10 pt-10 py-10 max-w-[1200px]">
-            <div className="flex justify-between w-full gap-20">
+        <div className="w-full flex flex-col justify-center items-center px-6">
+            <div className="max-w-[1240px] w-full flex justify-between mt-8 flex-wrap gap-y-16">
                 <div className="flex flex-col w-[800px]">
                     <div className="flex justify-center gap-14">
                         <div className="w-[300px] h-[450px] relative">
@@ -216,7 +217,12 @@ export default function BookPage() {
                         )}
                         <div className="mt-2">
                             <div className="w-full flex justify-between px-4">
-                                <button className={"py-2 px-10  rounded-md text-white animated-100 font-semibold " + (true ? "bg-sky-400 hover:bg-sky-500" : "bg-slate-400 pointer-events-none")}>
+                                <button
+                                    onClick={() => {
+                                        addToCartAction(bookData);
+                                    }}
+                                    className={"py-2 px-10  rounded-md text-white animated-100 font-semibold " + (true ? "bg-sky-400 hover:bg-sky-500" : "bg-slate-400 pointer-events-none")}
+                                >
                                     Купить
                                 </button>
                                 <IconComponent
@@ -232,7 +238,7 @@ export default function BookPage() {
                     </div>
                 </div>
             </div>
-            <div className="flex w-full justify-start">
+            <div className="flex w-full justify-start gap-x-16 max-w-[1240px] mt-4">
                 <div className="flex flex-col gap-2">
                     <span className="text-3xl font-bold">Отзывы</span>
                     <button
@@ -244,10 +250,7 @@ export default function BookPage() {
                         Написать отзыв
                     </button>
                 </div>
-            </div>
-            <div className="flex w-full justify-start">
-                <div className="flex justify-center gap-6">
-                    <div className="flex flex-col items-start gap-y-10">{reviewsView}</div>
+                {reviewsView.length === 0 ? (
                     <div className="w-[100px] flex flex-col">
                         <div className="flex justify-start items-center gap-x-3 sticky top-[90px]">
                             <div className="border-l-2 border-sky-500 h-full"></div>
@@ -257,6 +260,26 @@ export default function BookPage() {
                             </div>
                         </div>
                     </div>
+                ) : (
+                    <></>
+                )}
+            </div>
+            <div className="flex w-full justify-start max-w-[1240px] mt-8">
+                <div className="flex justify-center gap-6">
+                    <div className="flex flex-col items-start gap-y-10">{reviewsView}</div>
+                    {reviewsView.length !== 0 ? (
+                        <div className="w-[100px] flex flex-col">
+                            <div className="flex justify-start items-center gap-x-3 sticky top-[90px]">
+                                <div className="border-l-2 border-sky-500 h-full"></div>
+                                <div className="flex flex-col">
+                                    <span className="text-neutral-500">Всего</span>
+                                    <span className="text-3xl">{reviewsView.length}</span>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <></>
+                    )}
                 </div>
             </div>
             {isAddReviewOpened ? <AddFeedbackPopUp setIsAddReviewOpened={setIsAddReviewOpened} /> : isAddRatingOpened ? <AddFeedbackPopUp setIsAddRatingOpened={setIsAddRatingOpened} /> : <></>}

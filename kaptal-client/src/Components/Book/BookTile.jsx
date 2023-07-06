@@ -26,62 +26,6 @@ export default function BookTile({ book }) {
         return Math.round(summary);
     };
 
-    const addBookToShoppingCart = async () => {
-        try {
-            if (getUserData()) {
-                await axios.post(
-                    addBookToShoppingCart_EP,
-                    {
-                        bookId: book._id,
-                    },
-                    authToken_header()
-                );
-
-                const newBook = { bookId: book._id };
-                addToCartAction(newBook);
-            }
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
-    const addBookToWishlist = async () => {
-        try {
-            await axios.post(
-                addBookToWishlist_EP,
-                {
-                    bookId: book._id,
-                },
-                authToken_header()
-            );
-
-            const newBook = { bookId: book._id };
-            addToWishlistAction(newBook);
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
-    const removeBookFromWishlist = async () => {
-        try {
-            await axios.post(removeBookFromWishlist_EP, { bookId: book._id }, authToken_header());
-
-            removeFromWishlistAction(book);
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
-    const removeBookFromShoppingCart = async () => {
-        try {
-            await axios.post(removeBookFromShoppingCart_EP, { bookId: book._id }, authToken_header());
-
-            removeFromCartAction(book);
-        } catch (error) {
-            console.log(error);
-        }
-    };
-    
     return (
         <div className="flex relative flex-col justify-center w-[250px] p-3 pt-[30px] pb-4 gap-[12px] rounded-md hover:shadow-lg animated-100">
             <div className="absolute top-[6px] text-base flex w-[224px] items-center">
