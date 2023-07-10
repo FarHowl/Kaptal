@@ -400,7 +400,7 @@ router.get("/admin/getAllUsers", async (req, res) => {
 });
 
 router.post("/service/clearShoppingCart", async (req, res) => {
-    let dataWasChanged = false;
+    let dbRequestWasDone = false;
 
     try {
         const currentToken = req.headers.authorization.split(" ")[1];
@@ -430,7 +430,7 @@ router.post("/service/clearShoppingCart", async (req, res) => {
                 user.shoppingCart = [];
 
                 await user.save();
-                dataWasChanged = true;
+                dbRequestWasDone = true;
 
                 await redisClient.set(userId + "-user-shoppingCart", JSON.stringify(userShoppingCart), "EX", 30);
             }
@@ -438,9 +438,9 @@ router.post("/service/clearShoppingCart", async (req, res) => {
             throw new Error("Access denied");
         }
 
-        res.status(200).send({ dataWasChanged });
+        res.status(200).send({ dbRequestWasDone });
     } catch (error) {
-        res.status(200).send({ error: error.message, dataWasChanged });
+        res.status(200).send({ error: error.message, dbRequestWasDone });
         console.log(error);
     }
 });

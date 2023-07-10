@@ -28,7 +28,7 @@ export const signUp_EP = apiAddress + "/api/users-service/user/signUp";
  */
 export const getBookData_EP = apiAddress + "/api/books-service/user/getBookData";
 
-export const getSeveralBooksData_EP = apiAddress + "/api/books-service/user/getSeveralBooksData";
+export const getOrderBooksData_EP = apiAddress + "/api/books-service/user/getOrderBooksData";
 
 /**
  * @param {string} bookId
@@ -110,5 +110,9 @@ export const makeOrder_EP = apiAddress + "/api/orders-service/user/makeOrder";
 export const getOrders_EP = apiAddress + "/api/orders-service/user/getOrders";
 
 export const getUserData_EP = apiAddress + "/api/users-service/user/getUserData";
+
+export const getParticularBookData_EP = apiAddress + "/api/books-service/user/getParticularBookData";
+
+export const getSeveralParticularBooksData_EP = apiAddress + "/api/books-service/user/getSeveralParticularBooksData";
 
 //

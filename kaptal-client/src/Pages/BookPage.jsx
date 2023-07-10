@@ -2,7 +2,7 @@ import { useEffect, React, useState, useLayoutEffect } from "react";
 import IconComponent from "../Components/Icons/IconComponent";
 import WishesIcon from "../Components/Icons/WishesIcon";
 import LoadingComponent from "../Components/UI/LoadingComponent";
-import { addRating_EP, addReview_EP, getBookData_EP, getBookImage_EP, getBookRating_EP, getBookReviews_EP, rateReview_EP } from "../Utils/API";
+import { addRating_EP, addReview_EP, getBookData_EP, getBookImage_EP, getBookRating_EP, getBookReviews_EP, getParticularBookData_EP, rateReview_EP } from "../Utils/API";
 import { authToken_header } from "../Utils/LocalStorageUtils";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -27,7 +27,27 @@ export default function BookPage() {
         try {
             const query = `?bookId=${params.bookId}`;
 
-            const res1 = axios.get(getBookData_EP + query);
+            const res1 = axios.post(getParticularBookData_EP, {
+                bookId: params.bookId,
+                requiredFields: {
+                    name: 1,
+                    author: 1,
+                    image: 1,
+                    price: 1,
+                    discount: 1,
+                    stock: 1,
+                    ISBN: 1,
+                    publisher: 1,
+                    series: 1,
+                    year: 1,
+                    pagesCount: 1,
+                    size: 1,
+                    coverType: 1,
+                    weight: 1,
+                    ageLimit: 1,
+                    annotation: 1,
+                },
+            });
             const res2 = axios.get(getBookReviews_EP + query);
             const res3 = axios.get(getBookRating_EP + query);
             const res = await axios.all([res1, res2, res3]);

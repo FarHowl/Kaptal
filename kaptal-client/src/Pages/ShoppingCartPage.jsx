@@ -2,7 +2,7 @@ import { React, useEffect, useState, useRef, useLayoutEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { authToken_header, getUserData } from "../Utils/LocalStorageUtils";
-import { getBookImage_EP, getShoppingCartBooks_EP, getUserData_EP, makeOrder_EP } from "../Utils/API";
+import { getBookImage_EP, getSeveralParticularBooksData_EP, getShoppingCartBooks_EP, getUserData_EP, makeOrder_EP } from "../Utils/API";
 import { useStoreState } from "pullstate";
 import LoadingComponent from "../Components/UI/LoadingComponent";
 import IconComponent from "../Components/Icons/IconComponent";
@@ -20,7 +20,6 @@ export default function ShoppingCartPage() {
 
     const [shoppingCartBooks, setShoppingCartBooks] = useState([]);
     const [isImgLoaded, setIsImgLoaded] = useState(false);
-    const [totalPrice, setTotalPrice] = useState(0);
     const [orderInfo, setOrderInfo] = useState({
         firstName: "",
         lastName: "",
@@ -29,6 +28,7 @@ export default function ShoppingCartPage() {
         paymentMethod: "",
         deliveryMethod: "",
         deliveryAddress: "",
+        totalPrice: 0,
         books: shoppingCart,
     });
 
@@ -44,11 +44,11 @@ export default function ShoppingCartPage() {
     async function getShoppingCartBooks() {
         try {
             const bookIds = shoppingCart.map((item) => item.bookId);
-            const response = await axios.post(getShoppingCartBooks_EP, { bookIds }, authToken_header());
+            const response = await axios.post(getSeveralParticularBooksData_EP, { bookIds, requiredFields: { _id: 1, name: 1, image: 1, author: 1, price: 1, discount: 1, stock: 1 } });
             const shoppingCartBooks = response.data.map((book) => {
                 const { _id } = book;
                 const { amount } = shoppingCart.find((item) => item.bookId === _id);
-                setTotalPrice((prev) => prev + book.price * amount);
+                setOrderInfo((prev) => ({ ...prev, totalPrice: prev.totalPrice + book.price * amount }));
                 return { ...book, amount };
             });
 
@@ -109,110 +109,115 @@ export default function ShoppingCartPage() {
                     <div className="flex flex-col w-full gap-y-6">
                         <div className="flex gap-10 w-full justify-start mb-20">
                             <div className="flex flex-col items-start w-full max-h-[600px] overflow-y-auto pr-4">
-                                {shoppingCartBooks.map((book) => (
-                                    <div key={book._id} className="w-full flex py-4 border-b-2 border-gray-100 justify-between">
-                                        <div className="flex">
-                                            <div
-                                                onClick={() => {
-                                                    navigate(`/book/${book._id}`);
-                                                }}
-                                                className="w-[100px] h-[150px] cursor-pointer"
-                                            >
-                                                {isImgLoaded ? null : <LoadingComponent customStyle={"absolute inset-0 flex justify-center items-center bg-white z-5"} />}
-                                                <img
-                                                    onLoad={() => {
-                                                        setIsImgLoaded(true);
-                                                    }}
-                                                    className="object-cover w-full h-full"
-                                                    src={`${getBookImage_EP}?imgName=${book.image}`}
-                                                    alt=""
-                                                />
-                                            </div>
-                                            <div className="flex flex-col items-start ml-6">
-                                                <span
+                                {shoppingCartBooks
+                                    .sort((bookA, bookB) => bookB.stock - bookA.stock)
+                                    .map((book) => (
+                                        <div key={book._id} className="w-full flex py-4 border-b-2 border-gray-100 justify-between">
+                                            <div className="flex">
+                                                <div
                                                     onClick={() => {
                                                         navigate(`/book/${book._id}`);
                                                     }}
-                                                    className="font-semibold text-lg cursor-pointer animated-100 hover:text-sky-500"
+                                                    className="w-[100px] h-[150px] cursor-pointer"
                                                 >
-                                                    {book.name}
-                                                </span>
-                                                <span className="text-gray-500">{book.author}</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col justify-between">
-                                            <div className="flex gap-x-3">
-                                                <div className="flex border-gray-100 border-2">
-                                                    <button
-                                                        onClick={() => {
-                                                            if (book.amount > 1) {
-                                                                removeFromCartAction(book);
-                                                                book.amount--;
-                                                                setTotalPrice((prev) => prev - book.price);
-                                                            }
+                                                    {isImgLoaded ? null : <LoadingComponent customStyle={"absolute inset-0 flex justify-center items-center bg-white z-5"} />}
+                                                    <img
+                                                        onLoad={() => {
+                                                            setIsImgLoaded(true);
                                                         }}
-                                                        className={"px-2 py-[2px] " + (book.amount === 1 ? "opacity-50" : "")}
-                                                    >
-                                                        -
-                                                    </button>
-                                                    <span className="min-w-[30px] text-center pt-[2px]">{book.amount}</span>
-                                                    <button
-                                                        onClick={() => {
-                                                            addToCartAction(book);
-                                                            book.amount++;
-                                                            setTotalPrice((prev) => prev + book.price);
-                                                        }}
-                                                        className="px-2 py-[2px]"
-                                                    >
-                                                        +
-                                                    </button>
+                                                        className="object-cover w-full h-full"
+                                                        src={`${getBookImage_EP}?imgName=${book.image}`}
+                                                        alt=""
+                                                    />
                                                 </div>
-                                                {book.discount === 0 ? (
-                                                    <div className="flex w-full gap-10 items-center justify-end">
-                                                        <span className="font-bold text-xl">{book.price * book.amount + "₽"}</span>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex flex-col w-full gap-10 items-center justify-end">
-                                                        <span className="font-bold text-red-500 text-xl">{calculateDiscount(book.price, book.discount) + "₽"}</span>
-                                                        <span className="font-extralight line-through text-slate-600">{book.price + "₽"}</span>
-                                                    </div>
-                                                )}
+                                                <div className="flex flex-col items-start ml-6">
+                                                    <span
+                                                        onClick={() => {
+                                                            navigate(`/book/${book._id}`);
+                                                        }}
+                                                        className="font-semibold text-lg cursor-pointer animated-100 hover:text-sky-500"
+                                                    >
+                                                        {book.name}
+                                                    </span>
+                                                    <span className="text-gray-500">{book.author}</span>
+                                                </div>
                                             </div>
-                                            <div className="flex gap-x-3 w-full justify-end">
-                                                <IconComponent
-                                                    onClick={() => {
-                                                        if (getUserData()) {
-                                                            if (wishlist.some((item) => item.bookId === book._id)) {
-                                                                removeFromWishlistAction(book);
-                                                            } else {
-                                                                addToWishlistAction(book);
+                                            <div className="flex flex-col justify-between">
+                                                <div className="flex gap-x-3">
+                                                    <div className="flex border-gray-100 border-2">
+                                                        <button
+                                                            onClick={() => {
+                                                                if (book.amount > 1) {
+                                                                    removeFromCartAction(book);
+                                                                    book.amount--;
+                                                                    setOrderInfo({ ...orderInfo, totalPrice: orderInfo.totalPrice - book.price });
+                                                                }
+                                                            }}
+                                                            className={"px-2 py-[2px] " + (book.amount === 1 ? "opacity-50" : "")}
+                                                        >
+                                                            -
+                                                        </button>
+                                                        <span className="min-w-[30px] text-center pt-[2px]">{book.amount}</span>
+                                                        <button
+                                                            onClick={() => {
+                                                                addToCartAction(book);
+                                                                book.amount++;
+                                                                setOrderInfo({ ...orderInfo, totalPrice: orderInfo.totalPrice + book.price });
+                                                            }}
+                                                            className="px-2 py-[2px]"
+                                                        >
+                                                            +
+                                                        </button>
+                                                    </div>
+                                                    {book.discount === 0 ? (
+                                                        <div className="flex w-full gap-10 items-center justify-end">
+                                                            <span className="font-bold text-xl">{book.price * book.amount + "₽"}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex flex-col w-full gap-10 items-center justify-end">
+                                                            <span className="font-bold text-red-500 text-xl">{calculateDiscount(book.price, book.discount) + "₽"}</span>
+                                                            <span className="font-extralight line-through text-slate-600">{book.price + "₽"}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex justify-end">
+                                                    <span className={"font-medium " + (book.stock > 0 ? "text-emerald-500" : "text-gray-500")}>{book.stock > 0 ? "В наличии" : "Нет в наличии"}</span>
+                                                </div>
+                                                <div className="flex gap-x-3 w-full justify-end">
+                                                    <IconComponent
+                                                        onClick={() => {
+                                                            if (getUserData()) {
+                                                                if (wishlist.some((item) => item.bookId === book._id)) {
+                                                                    removeFromWishlistAction(book);
+                                                                } else {
+                                                                    addToWishlistAction(book);
+                                                                }
                                                             }
-                                                        }
-                                                    }}
-                                                    Icon={wishlist.some((item) => item.bookId === book._id) ? WishesFilledIcon : WishesIcon}
-                                                    size={20}
-                                                    color={"#3BA5ED"}
-                                                    hoveredColor={"#1b90e0"}
-                                                    animation={"animated-100"}
-                                                    buttonStyle={"w-[40px] h-[40px] flex justify-center items-center bg-slate-200 animated-100 rounded-md hover:bg-slate-300"}
-                                                />
-                                                <IconComponent
-                                                    onClick={() => {
-                                                        rmSameBooksFromCartAction(book);
-                                                        setTotalPrice((prev) => prev - book.price * book.amount);
-                                                        shoppingCartBooks.splice(shoppingCartBooks.indexOf(book), 1);
-                                                    }}
-                                                    Icon={CrossIcon}
-                                                    size={20}
-                                                    color={"#3BA5ED"}
-                                                    hoveredColor={"#1b90e0"}
-                                                    animation={"animated-100"}
-                                                    buttonStyle={"w-[40px] h-[40px] flex justify-center items-center bg-slate-200 animated-100 rounded-md hover:bg-slate-300"}
-                                                />
+                                                        }}
+                                                        Icon={wishlist.some((item) => item.bookId === book._id) ? WishesFilledIcon : WishesIcon}
+                                                        size={20}
+                                                        color={"#3BA5ED"}
+                                                        hoveredColor={"#1b90e0"}
+                                                        animation={"animated-100"}
+                                                        buttonStyle={"w-[40px] h-[40px] flex justify-center items-center bg-slate-200 animated-100 rounded-md hover:bg-slate-300"}
+                                                    />
+                                                    <IconComponent
+                                                        onClick={() => {
+                                                            rmSameBooksFromCartAction(book);
+                                                            setOrderInfo({ ...orderInfo, totalPrice: orderInfo.totalPrice - book.price * book.amount });
+                                                            shoppingCartBooks.splice(shoppingCartBooks.indexOf(book), 1);
+                                                        }}
+                                                        Icon={CrossIcon}
+                                                        size={20}
+                                                        color={"#3BA5ED"}
+                                                        hoveredColor={"#1b90e0"}
+                                                        animation={"animated-100"}
+                                                        buttonStyle={"w-[40px] h-[40px] flex justify-center items-center bg-slate-200 animated-100 rounded-md hover:bg-slate-300"}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
                             </div>
                         </div>
                         <div className="flex flex-col w-full gap-y-12">
@@ -262,7 +267,7 @@ export default function ShoppingCartPage() {
                                     <div className="rounded-md border-2 border-gray-100 flex flex-col px-6 py-4">
                                         <div className="flex justify-between">
                                             <span className="text-lg font-semibold">Итого</span>
-                                            <span className="text-lg font-semibold">{totalPrice + "₽"}</span>
+                                            <span className="text-lg font-semibold">{orderInfo.totalPrice + "₽"}</span>
                                         </div>
                                     </div>
                                     <button
@@ -283,11 +288,11 @@ export default function ShoppingCartPage() {
                                 <div className="flex gap-x-4">
                                     <div
                                         onClick={() => {
-                                            setOrderInfo({ ...orderInfo, paymentMethod: "card" });
+                                            setOrderInfo({ ...orderInfo, paymentMethod: "online" });
                                         }}
                                         className={
                                             "flex flex-col items-center gap-y-1 justify-center w-[240px] border-2 py-4 rounded-md cursor-pointer animated-100 px-5 " +
-                                            (orderInfo.paymentMethod === "card" ? "border-sky-500" : "border-gray-200 hover:border-sky-300")
+                                            (orderInfo.paymentMethod === "online" ? "border-sky-500" : "border-gray-200 hover:border-sky-300")
                                         }
                                     >
                                         <span className="font-medium">Картой онлайн</span>
@@ -295,11 +300,11 @@ export default function ShoppingCartPage() {
                                     </div>
                                     <div
                                         onClick={() => {
-                                            setOrderInfo({ ...orderInfo, paymentMethod: "cash" });
+                                            setOrderInfo({ ...orderInfo, paymentMethod: "offline" });
                                         }}
                                         className={
                                             "flex flex-col items-center gap-y-1 justify-center w-[240px] border-2 py-4 rounded-md cursor-pointer animated-100 px-5 " +
-                                            (orderInfo.paymentMethod === "cash" ? "border-sky-500" : "border-gray-200 hover:border-sky-300")
+                                            (orderInfo.paymentMethod === "offline" ? "border-sky-500" : "border-gray-200 hover:border-sky-300")
                                         }
                                     >
                                         <span className="font-medium">При получении</span>

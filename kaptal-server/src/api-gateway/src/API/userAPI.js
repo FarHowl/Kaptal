@@ -177,7 +177,7 @@ router.get("/users-service/user/getUserData", async (req, res) => {
         let newToken = jwt.sign({ frontendToken }, process.env.GATEWAY_USERS_KEY, { expiresIn: "1h" });
 
         const response = await axios.get("http://users-service:3000" + "/api/user/getUserData", { headers: { Authorization: "Bearer " + newToken } });
-    
+
         res.status(200).send(response.data);
     } catch (error) {
         if (error?.response) res.status(500).send({ error: error.response.data.error });
@@ -220,21 +220,21 @@ router.get("/users-service/user/getWishlist", async (req, res) => {
     }
 });
 
-router.get("/books-service/user/getBookData", async (req, res) => {
-    try {
-        console.log("first");
-        const token = jwt.sign({}, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "1h" });
+// router.get("/books-service/user/getBookData", async (req, res) => {
+//     try {
+//         console.log("first");
+//         const token = jwt.sign({}, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "1h" });
 
-        const query = "?" + req.originalUrl.split("?")[1];
+//         const query = "?" + req.originalUrl.split("?")[1];
 
-        const response = await axios.get("http://books-service:3000" + "/api/user/getBookData" + query, { headers: { Authorization: "Bearer " + token } });
+//         const response = await axios.get("http://books-service:3000" + "/api/user/getBookData" + query, { headers: { Authorization: "Bearer " + token } });
 
-        res.status(200).send(response.data);
-    } catch (error) {
-        if (error?.response) res.status(500).send({ error: error.response.data.error });
-        else res.status(500).send({ error: error.message });
-    }
-});
+//         res.status(200).send(response.data);
+//     } catch (error) {
+//         if (error?.response) res.status(500).send({ error: error.response.data.error });
+//         else res.status(500).send({ error: error.message });
+//     }
+// });
 
 router.get("/books-service/user/searchBook", async (req, res) => {
     try {
@@ -400,36 +400,36 @@ router.get("/books-service/user/getBookImage", async (req, res) => {
     }
 });
 
-router.post("/books-service/user/getShoppingCartBooks", async (req, res) => {
-    try {
-        const frontendToken = verifyJWT(req, ["admin", "user", "moderator"]);
+// router.post("/books-service/user/getShoppingCartBooks", async (req, res) => {
+//     try {
+//         const frontendToken = verifyJWT(req, ["admin", "user", "moderator"]);
 
-        const newToken = jwt.sign({ frontendToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "1h" });
+//         const newToken = jwt.sign({ frontendToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "1h" });
 
-        const response = await axios.post("http://books-service:3000" + "/api/user/getShoppingCartBooks", { ...req.body }, { headers: { Authorization: "Bearer " + newToken } });
+//         const response = await axios.post("http://books-service:3000" + "/api/user/getShoppingCartBooks", { ...req.body }, { headers: { Authorization: "Bearer " + newToken } });
 
-        res.status(200).send(response.data);
-    } catch (error) {
-        if (error?.response) res.status(500).send({ error: error.response.data.error });
-        else res.status(500).send({ error: error.message });
-    }
-});
+//         res.status(200).send(response.data);
+//     } catch (error) {
+//         if (error?.response) res.status(500).send({ error: error.response.data.error });
+//         else res.status(500).send({ error: error.message });
+//     }
+// });
 
-router.post("/books-service/user/getWishlistBooks", async (req, res) => {
-    try {
-        const frontendToken = verifyJWT(req, ["admin", "user", "moderator"]);
+// router.post("/books-service/user/getWishlistBooks", async (req, res) => {
+//     try {
+//         const frontendToken = verifyJWT(req, ["admin", "user", "moderator"]);
 
-        const newToken = jwt.sign({ frontendToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "1h" });
+//         const newToken = jwt.sign({ frontendToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "1h" });
 
-        const response = await axios.post("http://books-service:3000" + "/api/user/getWishlistBooks", { ...req.body }, { headers: { Authorization: "Bearer " + newToken } });
+//         const response = await axios.post("http://books-service:3000" + "/api/user/getWishlistBooks", { ...req.body }, { headers: { Authorization: "Bearer " + newToken } });
 
-        res.status(200).send(response.data);
-    } catch (error) {
-        console.log(error);
-        if (error?.response) res.status(500).send({ error: error.response.data.error });
-        else res.status(500).send({ error: error.message });
-    }
-});
+//         res.status(200).send(response.data);
+//     } catch (error) {
+//         console.log(error);
+//         if (error?.response) res.status(500).send({ error: error.response.data.error });
+//         else res.status(500).send({ error: error.message });
+//     }
+// });
 
 router.post("/orders-service/user/makeOrder", async (req, res) => {
     try {
@@ -443,7 +443,6 @@ router.post("/orders-service/user/makeOrder", async (req, res) => {
     } catch (error) {
         if (error?.response) res.status(500).send({ error: error.response.data.error });
         else res.status(500).send({ error: error.message });
-        console.log(error.response.error);
     }
 });
 
@@ -462,18 +461,44 @@ router.get("/orders-service/user/getOrders", async (req, res) => {
     }
 });
 
-router.post("/books-service/user/getSeveralBooksData", async (req, res) => {
+// router.post("/books-service/user/getOrderBooksData", async (req, res) => {
+//     try {
+//         const frontendToken = verifyJWT(req, ["admin", "user", "moderator"]);
+
+//         const newToken = jwt.sign({ frontendToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "1h" });
+
+//         const response = await axios.post("http://books-service:3000" + "/api/user/getOrderBooksData", { ...req.body }, { headers: { Authorization: "Bearer " + newToken } });
+
+//         res.status(200).send(response.data);
+//     } catch (error) {
+//         if (error?.response) res.status(500).send({ error: error.response.data.error });
+//         else res.status(500).send({ error: error.message });
+//     }
+// });
+
+router.post("/books-service/user/getSeveralParticularBooksData", async (req, res) => {
     try {
-        const frontendToken = verifyJWT(req, ["admin", "user", "moderator"]);
+        const token = jwt.sign({}, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "1h" });
 
-        const newToken = jwt.sign({ frontendToken }, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "1h" });
-
-        const response = await axios.post("http://books-service:3000" + "/api/user/getSeveralBooksData", { ...req.body }, { headers: { Authorization: "Bearer " + newToken } });
+        const response = await axios.post("http://books-service:3000" + "/api/user/getSeveralParticularBooksData", { ...req.body }, { headers: { Authorization: "Bearer " + token } });
 
         res.status(200).send(response.data);
     } catch (error) {
         if (error?.response) res.status(500).send({ error: error.response.data.error });
-        else res.status(500).send({ error: error.message });
+        else res.status(500).send({ error });
+    }
+});
+
+router.post("/books-service/user/getParticularBookData", async (req, res) => {
+    try {
+        const token = jwt.sign({}, process.env.GATEWAY_BOOKS_KEY, { expiresIn: "1h" });
+
+        const response = await axios.post("http://books-service:3000" + "/api/user/getParticularBookData", { ...req.body }, { headers: { Authorization: "Bearer " + token } });
+
+        res.status(200).send(response.data);
+    } catch (error) {
+        if (error?.response) res.status(500).send({ error: error.response.data.error });
+        else res.status(500).send({ error: "Ошибка при получении данных о книге" });
     }
 });
 

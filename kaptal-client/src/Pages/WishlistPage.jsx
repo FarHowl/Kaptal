@@ -1,5 +1,5 @@
 import { React, useEffect, useState } from "react";
-import { getWishlistBooks_EP } from "../Utils/API";
+import { getSeveralParticularBooksData_EP, getWishlistBooks_EP } from "../Utils/API";
 import { authToken_header, getUserData } from "../Utils/LocalStorageUtils";
 import { useStoreState } from "pullstate";
 import axios from "axios";
@@ -17,7 +17,7 @@ export default function WishlistPage() {
         try {
             const bookIds = wishlist.map((item) => item.bookId);
 
-            const response = await axios.post(getWishlistBooks_EP, { bookIds }, authToken_header());
+            const response = await axios.post(getSeveralParticularBooksData_EP, { bookIds, requiredFields: {_id: 1, name: 1, author: 1, price: 1, discount: 1, stock: 1, image: 1 } });
 
             let a = [];
             for (const i of response.data) {

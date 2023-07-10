@@ -5,7 +5,6 @@ const jwt = require("jsonwebtoken");
 const { SHA3 } = require("sha3");
 const axios = require("axios");
 
-
 const { Order } = require("./models");
 
 const verifyJWT = require("./utils/verifyJWT");
@@ -31,16 +30,29 @@ router.post("/user/makeOrder", async (req, res) => {
             req.body?.paymentMethod &&
             req.body?.deliveryMethod &&
             req.body?.phoneNumber &&
+            req.body?.totalPrice &&
             req.body?.email &&
             req.body?.firstName &&
             req.body?.lastName;
         if (!hasAllFields) throw new Error("Пожалуйста, введите все поля");
 
+        const hasCorrectTypes =
+            typeof req.body?.books === "object" &&
+            typeof req.body?.deliveryAddress === "string" &&
+            typeof req.body?.paymentMethod === "string" &&
+            typeof req.body?.deliveryMethod === "string" &&
+            typeof req.body?.phoneNumber === "string" &&
+            typeof req.body?.totalPrice === "number" &&
+            typeof req.body?.email === "string" &&
+            typeof req.body?.firstName === "string" &&
+            typeof req.body?.lastName === "string";
+        if (!hasCorrectTypes) throw new Error("Пожалуйста, введите корректные данные");
+
         let orderDate = new Date();
         const day = orderDate.getDate();
         const month = orderDate.getMonth() + 1;
         const year = orderDate.getFullYear();
-        const time = orderDate.getHours() + ":" + orderDate.getMinutes();
+        const time = parseInt(orderDate.getHours() + 3) + ":" + (orderDate.getMinutes() < 10 ? "0" + orderDate.getMinutes() : orderDate.getMinutes());
         orderDate = day + "." + month + "." + year + " " + time;
 
         const order = new Order({
@@ -48,6 +60,7 @@ router.post("/user/makeOrder", async (req, res) => {
             deliveryAddress: req.body?.deliveryAddress,
             deliveryMethod: req.body?.deliveryMethod,
             paymentMethod: req.body?.paymentMethod,
+            totalPrice: req.body?.totalPrice,
             userId: frontendToken.userId,
             date: orderDate,
             status: "created",
@@ -61,14 +74,14 @@ router.post("/user/makeOrder", async (req, res) => {
 
         response = await axios.all([response1, response2]);
 
-        if (!response[0].data?.dataWasChanged && !response[1].data?.dataWasChanged) {
-            throw new Error("Ошибка при создании заказа");
-        } else if (response[0].data?.dataWasChanged && !response[1].data?.dataWasChanged) {
+        if (!response[0].data?.dbRequestWasDone && !response[1].data?.dbRequestWasDone) {
+            throw new Error(response[0].data?.error + " " + response[1].data?.error);
+        } else if (response[0].data?.dbRequestWasDone && !response[1].data?.dbRequestWasDone) {
             await axios.post("http://users-service:3000/api/service/clearShoppingCart", { userId: frontendToken.userId, rollback: true }, { headers: { Authorization: "Bearer " + newTokenForUsers } });
-            throw new Error("Ошибка при создании заказа");
-        } else if (response[1].data?.dataWasChanged && !response[0].data?.dataWasChanged) {
+            throw new Error(response[1].data?.error);
+        } else if (response[1].data?.dbRequestWasDone && !response[0].data?.dbRequestWasDone) {
             await axios.post("http://books-service:3000/api/service/makeOrder", { ...req.body, rollback: true }, { headers: { Authorization: "Bearer " + newTokenForBooks } });
-            throw new Error("Ошибка при создании заказа");
+            throw new Error(response[0].data?.error);
         } else await order.save();
 
         res.status(200).send({ message: "Заказ создан" });

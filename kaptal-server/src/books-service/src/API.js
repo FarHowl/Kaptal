@@ -4,7 +4,6 @@ const jwt = require("jsonwebtoken");
 const url = require("url");
 const router = express.Router();
 
-
 const Minio = require("minio");
 
 const verifyJWT = require("./utils/verifyJWT");
@@ -514,29 +513,29 @@ router.get("/user/getBooksBarByCollection", async (req, res) => {
     }
 });
 
-router.get("/user/getBookData", async (req, res) => {
-    try {
-        const hasToBeAuthorized = false;
-        verifyJWT(req, hasToBeAuthorized);
+// router.get("/user/getBookData", async (req, res) => {
+//     try {
+//         const hasToBeAuthorized = false;
+//         verifyJWT(req, hasToBeAuthorized);
 
-        const cachedBook = await redisClient.get("book:" + req.query?.bookId.toString());
-        if (cachedBook) {
-            res.status(200).send(JSON.parse(cachedBook));
-        } else {
-            const bookId = req.query?.bookId;
-            if (!bookId) throw new Error("Пожалуйста, введите ID книги");
+//         const cachedBook = await redisClient.get("book:" + req.query?.bookId.toString());
+//         if (cachedBook) {
+//             res.status(200).send(JSON.parse(cachedBook));
+//         } else {
+//             const bookId = req.query?.bookId;
+//             if (!bookId) throw new Error("Пожалуйста, введите ID книги");
 
-            const book = await Book.findById(bookId);
+//             const book = await Book.findById(bookId);
 
-            await redisClient.set("book:" + bookId.toString(), JSON.stringify(book), "EX", 60 * 60 * 24);
+//             await redisClient.set("book:" + bookId.toString(), JSON.stringify(book), "EX", 60 * 60 * 24);
 
-            res.status(200).send(book);
-        }
-    } catch (error) {
-        res.status(500).send({ error: error.message });
-        console.log(error);
-    }
-});
+//             res.status(200).send(book);
+//         }
+//     } catch (error) {
+//         res.status(500).send({ error: error.message });
+//         console.log(error);
+//     }
+// });
 
 router.get("/user/getBookImage", async (req, res) => {
     try {
@@ -565,14 +564,66 @@ router.get("/user/getBookImage", async (req, res) => {
     }
 });
 
-router.post("/user/getShoppingCartBooks", async (req, res) => {
+// router.post("/user/getShoppingCartBooks", async (req, res) => {
+//     try {
+//         const hasToBeAuthorized = true;
+//         verifyJWT(req, hasToBeAuthorized);
+
+//         const bookIds = req.body?.bookIds;
+
+//         const foundBooks = await Book.find({ _id: { $in: bookIds } });
+
+//         res.status(200).send(foundBooks);
+//     } catch (error) {
+//         res.status(500).send({ error: error.message });
+//         console.log(error);
+//     }
+// });
+
+// router.post("/user/getWishlistBooks", async (req, res) => {
+//     try {
+//         const hasToBeAuthorized = true;
+//         verifyJWT(req, hasToBeAuthorized);
+
+//         const bookIds = req.body?.bookIds;
+
+//         const foundBooks = await Book.find({ _id: { $in: bookIds } });
+
+//         res.status(200).send(foundBooks);
+//     } catch (error) {
+//         res.status(500).send({ error: error.message });
+//         console.log(error);
+//     }
+// });
+
+// router.post("/user/getOrderBooksData", async (req, res) => {
+//     try {
+//         const hasToBeAuthorized = true;
+//         verifyJWT(req, hasToBeAuthorized);
+
+//         const bookIds = req.body?.bookIds;
+
+//         const foundBooks = await Book.find({ _id: { $in: bookIds } });
+
+//         res.status(200).send(foundBooks);
+//     } catch (error) {
+//         res.status(500).send({ error: error.message });
+//         console.log(error);
+//     }
+// });
+
+router.post("/user/getSeveralParticularBooksData", async (req, res) => {
     try {
-        const hasToBeAuthorized = true;
+        const hasToBeAuthorized = false;
         verifyJWT(req, hasToBeAuthorized);
 
         const bookIds = req.body?.bookIds;
+        const requiredFields = req.body?.requiredFields;
 
-        const foundBooks = await Book.find({ _id: { $in: bookIds } });
+        if (!requiredFields) throw new Error("Пожалуйста, введите все поля");
+        if (!bookIds) throw new Error("Пожалуйста, введите все поля");
+
+        const foundBooks = await Book.find({ _id: { $in: bookIds } }, { ...requiredFields });
 
         res.status(200).send(foundBooks);
     } catch (error) {
@@ -581,33 +632,20 @@ router.post("/user/getShoppingCartBooks", async (req, res) => {
     }
 });
 
-router.post("/user/getWishlistBooks", async (req, res) => {
+router.post("/user/getParticularBookData", async (req, res) => {
     try {
-        const hasToBeAuthorized = true;
+        const hasToBeAuthorized = false;
         verifyJWT(req, hasToBeAuthorized);
 
-        const bookIds = req.body?.bookIds;
+        const bookId = req.body?.bookId;
+        const requiredFields = req.body?.requiredFields;
 
-        const foundBooks = await Book.find({ _id: { $in: bookIds } });
+        if (!requiredFields) throw new Error("Пожалуйста, введите все поля");
+        if (!bookId) throw new Error("Пожалуйста, введите все поля");
 
-        res.status(200).send(foundBooks);
-    } catch (error) {
-        res.status(500).send({ error: error.message });
-        console.log(error);
-    }
-});
+        const book = await Book.findById(bookId, { ...requiredFields });
 
-router.post("/user/getSeveralBooksData", async (req, res) => {
-    try {
-        const hasToBeAuthorized = true;
-        verifyJWT(req, hasToBeAuthorized);
-
-        const bookIds = req.body?.bookIds;
-        console.log(req.body);
-
-        const foundBooks = await Book.find({ _id: { $in: bookIds } });
-
-        res.status(200).send(foundBooks);
+        res.status(200).send(book);
     } catch (error) {
         res.status(500).send({ error: error.message });
         console.log(error);
@@ -615,7 +653,7 @@ router.post("/user/getSeveralBooksData", async (req, res) => {
 });
 
 router.post("/service/makeOrder", async (req, res) => {
-    let dataWasChanged = false;
+    let dbRequestWasDone = false;
 
     try {
         const currentToken = req.headers.authorization.split(" ")[1];
@@ -648,8 +686,17 @@ router.post("/service/makeOrder", async (req, res) => {
 
                 await Book.bulkWrite(updateOperations);
             } else {
-                const updateOperations = books.map((book) => {
+                const updatePromises = books.map(async (book) => {
                     const { bookId, amount } = book;
+
+                    const existingBook = await Book.findById(bookId);
+                    if (!existingBook) {
+                        throw new Error(`Книга с идентификатором ${bookId} не найдена`);
+                    }
+
+                    if (existingBook.stock < amount) {
+                        throw new Error("Некоторых книг в вашем заказе нет в наличии. Пожалуйста, измените свой заказ :(");
+                    }
 
                     return {
                         updateOne: {
@@ -659,17 +706,20 @@ router.post("/service/makeOrder", async (req, res) => {
                     };
                 });
 
+                const updateOperations = await Promise.all(updatePromises);
+
                 await Book.bulkWrite(updateOperations);
-                dataWasChanged = true;
+
+                dbRequestWasDone = true;
                 await redisClient.set(userId + "-ordered-books", JSON.stringify(books), "EX", 30);
             }
         } else if (parentToken?.frontendToken) {
-            throw new Error("Access denied");
+            throw new Error("Доступ запрещен");
         }
 
-        res.status(200).send({ dataWasChanged });
+        res.status(200).send({ dbRequestWasDone });
     } catch (error) {
-        res.status(200).send({ error: error.message, dataWasChanged });
+        res.status(200).send({ error: error.message, dbRequestWasDone });
         console.log(error);
     }
 });

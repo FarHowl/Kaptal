@@ -23,6 +23,11 @@ const orderSchema = new mongoose.Schema({
         type: String,
         trim: true,
     },
+    totalPrice: {
+        required: true,
+        type: Number,
+        trim: true,
+    },
     userId: {
         required: true,
         type: String,
