@@ -10,7 +10,7 @@ type: container
 name: admin-panel
 description: The admin-panel deployment
 build: admin-panel
-dependencies: [deploy.api-gateway]
+dependencies: [deploy.api-gateway, deploy.frontend]
 spec:
   args: [npm, run, start]
   ports:

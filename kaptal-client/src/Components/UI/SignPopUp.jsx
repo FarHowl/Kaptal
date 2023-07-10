@@ -19,13 +19,20 @@ export default function SignPopUp({ setIsSignOpened }) {
         try {
             const response = await axios.post(checkEmailCode_EP, { email: userInfo.email, code: userInfo.code });
 
-            if (response.data.doesUserExist) {
-                signIn();
-            } else {
+            if (response.data.message === "User does not exist") {
                 setSignTab("SignUp");
+            } else {
+                setIsSignOpened(false);
+                localStorage.setItem("userData", JSON.stringify(response.data));
+                window.location.reload();
             }
         } catch (error) {
-            showErrorNotification(error);
+            if (error?.response) showErrorNotification(error.response.data.error);
+            else showErrorNotification(error);
+
+            if (error?.response?.data?.error === "Вы превысили допустимое количество попыток") {
+                setIsSignOpened(false);
+            }
         }
     }
 
@@ -36,19 +43,8 @@ export default function SignPopUp({ setIsSignOpened }) {
             setIsPending(false);
             setSignTab("Code");
         } catch (error) {
-            showErrorNotification(error);
-        }
-    }
-
-    async function signIn() {
-        try {
-            const response = await axios.post(signIn_EP, { email: userInfo.email, code: userInfo.code });
-
-            setIsSignOpened(false);
-            localStorage.setItem("userData", JSON.stringify(response.data));
-            window.location.reload();
-        } catch (error) {
-            showErrorNotification(error);
+            if (error?.response) showErrorNotification(error.response.data.error);
+            else showErrorNotification(error);
         }
     }
 
@@ -61,12 +57,13 @@ export default function SignPopUp({ setIsSignOpened }) {
             localStorage.setItem("userData", JSON.stringify(response.data));
             navigate("/");
         } catch (error) {
-            showErrorNotification(error);
+            if (error?.response) showErrorNotification(error.response.data.error);
+            else showErrorNotification(error);
         }
     }
 
     return (
-        <div className="absolute inset-0 bg-black/40 flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
             {signTab === "SignIn" ? (
                 <div className="bg-white flex flex-col rounded-md relative px-6 pt-6 pb-8 gap-y-5 w-[350px]">
                     {isPending ? <LoadingComponent customStyle={"absolute inset-0 flex justify-center items-center bg-white rounded-md z-10"} /> : <></>}
@@ -89,6 +86,7 @@ export default function SignPopUp({ setIsSignOpened }) {
                     </div>
                     <InputTile
                         title={"Почта"}
+                        defaultValue={""}
                         onChange={(e) => {
                             setUserInfo({ ...userInfo, email: e.target.value });
                         }}
@@ -135,8 +133,10 @@ export default function SignPopUp({ setIsSignOpened }) {
                             На почту <span className="text-black font-semibold">{userInfo.email}</span> было отправлено письмо с кодом для входа
                         </span>
                     </div>
+                    {console.log("")}
                     <InputTile
                         title={"Код"}
+                        defaultValue={""}
                         onChange={(e) => {
                             setUserInfo({ ...userInfo, code: e.target.value });
                         }}
@@ -175,22 +175,26 @@ export default function SignPopUp({ setIsSignOpened }) {
                             }}
                             className="text-gray-500"
                         >
-                            <span className="font-semibold text-lg">{"<"}</span>Указать другой email
+                            <span className="font-semibold text-lg">{"< "}</span>Указать другой email
                         </button>
                     </div>
+                    {console.log("")}
                     <InputTile
+                        defaultValue={""}
                         title={"Имя"}
                         onChange={(e) => {
                             setUserInfo({ ...userInfo, firstName: e.target.value });
                         }}
                     />
                     <InputTile
+                        defaultValue={""}
                         title={"Фамилия"}
                         onChange={(e) => {
                             setUserInfo({ ...userInfo, lastName: e.target.value });
                         }}
                     />
                     <InputTile
+                        defaultValue={""}
                         title={"Телефон"}
                         onChange={(e) => {
                             setUserInfo({ ...userInfo, phoneNumber: e.target.value });

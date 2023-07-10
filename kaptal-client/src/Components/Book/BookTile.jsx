@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import WishesFilledIcon from "../Icons/WishesFilledIcon";
 import { WishlistStore, addToWishlistAction, removeFromWishlistAction } from "../../StoreState/WishlistStore";
 import { ShoppingCartStore, addToCartAction, removeFromCartAction } from "../../StoreState/ShoppingCartStore";
+import { showErrorNotification } from "../../StoreState/NotificationStore";
 
 export default function BookTile({ book }) {
     const [isImgLoaded, setIsImgLoaded] = useState(false);
@@ -89,7 +90,7 @@ export default function BookTile({ book }) {
                             } else {
                                 addToWishlistAction(book);
                             }
-                        }
+                        } else showErrorNotification("Для добавления в список желаемого нужно войти на сайт :(");
                     }}
                     Icon={wishlist?.some((item) => item.bookId === book._id) ? WishesFilledIcon : WishesIcon}
                     size={20}

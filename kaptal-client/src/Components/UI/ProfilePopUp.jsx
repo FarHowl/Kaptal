@@ -15,7 +15,14 @@ export default function ProfilePopUp({ profilePopUpRef }) {
                     </span>
                 </div>
                 <div className="w-[280px] text-base flex flex-shrink-0 flex-col gap-2 justify-center px-3 pb-2 pt-4 items-start">
-                    <button className="hover:text-sky-500">Заказы</button>
+                    <button
+                        onClick={() => {
+                            navigate("/orders");
+                        }}
+                        className="hover:text-sky-500"
+                    >
+                        Заказы
+                    </button>
                     <button className="hover:text-sky-500">Настройки профиля</button>
                     <button
                         onClick={() => {

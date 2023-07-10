@@ -10,7 +10,8 @@ import InputTile from "../Components/UI/InputTile";
 import CrossIcon from "../Components/Icons/CrossIcon";
 import RatingStarIcon from "../Components/Icons/RatingStarIcon";
 import { showErrorNotification } from "../StoreState/NotificationStore";
-import { addToCartAction } from "../StoreState/ShoppingCartStore";
+import { ShoppingCartStore, addToCartAction } from "../StoreState/ShoppingCartStore";
+import { useStoreState } from "pullstate";
 
 export default function BookPage() {
     const params = useParams();
@@ -19,6 +20,8 @@ export default function BookPage() {
     const [reviewsView, setReviewsView] = useState([]);
     const [isAddReviewOpened, setIsAddReviewOpened] = useState(false);
     const [isAddRatingOpened, setIsAddRatingOpened] = useState(false);
+
+    const shoppingCart = useStoreState(ShoppingCartStore).shoppingCart;
 
     async function getBookData() {
         try {
@@ -200,7 +203,7 @@ export default function BookPage() {
                     </div>
                     <div className="mt-14 leading-7 mb-6">{bookData.annotation}</div>
                 </div>
-                <div className="w-[270px] flex flex-col">
+                <div className="w-[280px] flex flex-col">
                     <div className="flex flex-col shadow-lg w-full px-4 py-4 gap-1">
                         <div className="w-full mb-1">
                             <span className={"font-light " + (bookData.stock ? "text-teal-500" : "text-neutral-500")}>{bookData.stock ? "В наличии" : "Нет в наличии"}</span>
@@ -216,14 +219,14 @@ export default function BookPage() {
                             </div>
                         )}
                         <div className="mt-2">
-                            <div className="w-full flex justify-between px-4">
+                            <div className="w-full flex justify-between px-4 gap-x-4">
                                 <button
                                     onClick={() => {
                                         addToCartAction(bookData);
                                     }}
                                     className={"py-2 px-10  rounded-md text-white animated-100 font-semibold " + (true ? "bg-sky-400 hover:bg-sky-500" : "bg-slate-400 pointer-events-none")}
                                 >
-                                    Купить
+                                    {shoppingCart.some((item) => item.bookId === bookData._id) ? "Оформить" : "Купить"}
                                 </button>
                                 <IconComponent
                                     Icon={WishesIcon}
@@ -465,11 +468,12 @@ function AddFeedbackPopUp({ setIsAddReviewOpened, setIsAddRatingOpened }) {
 
 function ReviewTile({ review }) {
     const [reviewRating, setReviewRating] = useState({ likes: 0, dislikes: 0 });
+    const navigate = useNavigate();
 
     async function rateReview(isReviewUseful) {
         try {
             const res = await axios.post(rateReview_EP, { reviewId: review._id, isReviewUseful }, authToken_header());
-            console.log(res);
+            navigate(0);
         } catch (error) {
             if (error?.response) showErrorNotification(error.response.data.error);
             else showErrorNotification(error);
@@ -497,9 +501,10 @@ function ReviewTile({ review }) {
     return (
         <div
             className={
-                "w-[700px] rounded-lg flex flex-col items-center px-6 py-6 gap-4 " + (review.bookRating >= 4 ? "bg-green-100/70" : review.bookRating === 3 ? "bg-neutral-100/70" : "bg-red-100/70")
+                "w-[700px] rounded-lg flex flex-col items-center px-6 py-6 gap-4 " + (review.bookRating >= 4 ? "bg-green-100/50" : review.bookRating === 3 ? "bg-neutral-100/50" : "bg-red-100/50")
             }
         >
+            <div></div>
             <div className="flex w-full justify-between">
                 <span className="text-lg text-gray-600">{review.author}</span>
                 <div className="flex gap-2 items-center">
@@ -519,6 +524,24 @@ function ReviewTile({ review }) {
             <div className="w-full">
                 <span className="font-light tracking-wide">{review.text}</span>
             </div>
+            {review.pros && review.cons ? (
+                <div className="w-full flex flex-col gap-4">
+                    <div className="w-full flex justify-start">
+                        <span className="font-semibold text-lg">Плюсы</span>
+                    </div>
+                    <div className="w-full flex justify-start -mt-3">
+                        <span className="font-light tracking-wide">{review.pros}</span>
+                    </div>
+                    <div className="w-full flex justify-start">
+                        <span className="font-semibold text-lg">Минусы</span>
+                    </div>
+                    <div className="w-full flex justify-start -mt-3">
+                        <span className="font-light tracking-wide">{review.pros}</span>
+                    </div>
+                </div>
+            ) : (
+                <></>
+            )}
             <div className="w-full flex justify-end">
                 <div className="flex justify-center gap-x-2">
                     <button

@@ -1,6 +1,11 @@
 const express = require("express");
 const router = express.Router();
 
+
+const verifyJWT = require("./utils/verifyJWT");
+
+const { Review } = require("./models");
+
 const redis = require("redis");
 const redisClient = redis.createClient({ url: "redis://reviews-redis:6379" });
 
@@ -9,10 +14,6 @@ redisClient.on("error", (error) => {
 });
 
 redisClient.connect();
-
-const verifyJWT = require("./utils/verifyJWT");
-
-const { Review } = require("./models");
 
 router.get("/user/getBookReviews", async (req, res) => {
     try {
@@ -51,7 +52,6 @@ router.post("/user/addReview", async (req, res) => {
         const hasToBeAuthorized = true;
         const frontendToken = verifyJWT(req, hasToBeAuthorized);
 
-        console.log(req.body);
         const hasAllFields = req.body?.text && req.body?.title && req.body?.bookRating && req.body?.author && req.body?.bookId;
         if (!hasAllFields) throw new Error("Please enter all fields");
 
@@ -110,13 +110,21 @@ router.post("/user/rateReview", async (req, res) => {
         const review = await Review.findById(req.body?.reviewId);
         if (!review) throw new Error("Review not found");
 
-        const userAlreadyRated = review?.reviewRating?.find((i) => i.userId.toString() === frontendToken.userId);
-        if (userAlreadyRated) throw new Error("You already rated this review");
-
         const isSelfRate = review.userId.toString() === frontendToken.userId;
-        if (isSelfRate) throw new Error("You can't rate your own review");
+        if (isSelfRate) {
+            throw new Error("You can't rate your own review");
+        }
 
-        await Review.updateOne({ _id: req.body?.reviewId }, { $push: { reviewRating: { userId: frontendToken.userId, isReviewUseful: req.body?.isReviewUseful } } });
+        const userRating = review.reviewRating?.find((i) => i.userId.toString() === frontendToken.userId);
+        if (userRating) {
+            if (userRating.isReviewUseful === req.body?.isReviewUseful) {
+                throw new Error("You already rated this review");
+            } else {
+                await Review.updateOne({ _id: req.body?.reviewId, "reviewRating.userId": frontendToken.userId }, { $set: { "reviewRating.$.isReviewUseful": req.body?.isReviewUseful } });
+            }
+        } else {
+            await Review.updateOne({ _id: req.body?.reviewId }, { $push: { reviewRating: { userId: frontendToken.userId, isReviewUseful: req.body?.isReviewUseful } } });
+        }
 
         res.sendStatus(200);
     } catch (error) {

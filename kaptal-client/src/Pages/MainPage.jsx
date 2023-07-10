@@ -3,6 +3,7 @@ import { authToken_header } from "../Utils/LocalStorageUtils";
 import { getBooksBarByCollection_EP } from "../Utils/API";
 import BookTile from "../Components/Book/BookTile";
 import axios from "axios";
+import { showErrorNotification } from "../StoreState/NotificationStore";
 
 export default function MainPage() {
     return (
@@ -36,7 +37,8 @@ function BooksBar({ collection }) {
             }
             setBooksList(a);
         } catch (error) {
-            console.log(error);
+            if (error?.response) showErrorNotification(error.response.data.error);
+            else showErrorNotification(error);
         }
     }
 

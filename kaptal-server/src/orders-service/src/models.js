@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const orderSchema = new mongoose.Schema({
     books: [
         {
-            type: String,
+            type: Object,
             required: true,
             trim: true,
         },

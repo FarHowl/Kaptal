@@ -4,6 +4,13 @@ const jwt = require("jsonwebtoken");
 const url = require("url");
 const router = express.Router();
 
+
+const Minio = require("minio");
+
+const verifyJWT = require("./utils/verifyJWT");
+
+const { Book, Category, Collection } = require("./models");
+
 const redis = require("redis");
 const redisClient = redis.createClient({ url: "redis://books-redis:6379" });
 
@@ -12,12 +19,6 @@ redisClient.on("error", (error) => {
 });
 
 redisClient.connect();
-
-const Minio = require("minio");
-
-const verifyJWT = require("./utils/verifyJWT");
-
-const { Book, Category, Collection } = require("./models");
 
 router.get("/admin/getAllBooks", async (req, res) => {
     try {
@@ -594,6 +595,83 @@ router.post("/user/getWishlistBooks", async (req, res) => {
         res.status(500).send({ error: error.message });
         console.log(error);
     }
-})
+});
+
+router.post("/user/getSeveralBooksData", async (req, res) => {
+    try {
+        const hasToBeAuthorized = true;
+        verifyJWT(req, hasToBeAuthorized);
+
+        const bookIds = req.body?.bookIds;
+        console.log(req.body);
+
+        const foundBooks = await Book.find({ _id: { $in: bookIds } });
+
+        res.status(200).send(foundBooks);
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+        console.log(error);
+    }
+});
+
+router.post("/service/makeOrder", async (req, res) => {
+    let dataWasChanged = false;
+
+    try {
+        const currentToken = req.headers.authorization.split(" ")[1];
+        const parentToken = jwt.decode(currentToken);
+
+        if (parentToken?.gatewayToken) {
+            jwt.verify(currentToken, process.env.ORDERS_BOOKS_KEY);
+
+            jwt.verify(parentToken?.gatewayToken, process.env.GATEWAY_ORDERS_KEY);
+
+            const { frontendToken } = jwt.decode(parentToken?.gatewayToken);
+            jwt.verify(frontendToken, process.env.FRONTEND_GATEWAY_KEY);
+
+            const { userId } = jwt.decode(frontendToken);
+            const books = req.body?.books;
+
+            if (req.body?.rollback) {
+                const orderedBooks = JSON.parse(await redisClient.get(userId + "-ordered-books"));
+
+                const updateOperations = orderedBooks.map((book) => {
+                    const { bookId, amount } = book;
+
+                    return {
+                        updateOne: {
+                            filter: { _id: bookId },
+                            update: { $inc: { stock: +amount } },
+                        },
+                    };
+                });
+
+                await Book.bulkWrite(updateOperations);
+            } else {
+                const updateOperations = books.map((book) => {
+                    const { bookId, amount } = book;
+
+                    return {
+                        updateOne: {
+                            filter: { _id: bookId },
+                            update: { $inc: { stock: -amount } },
+                        },
+                    };
+                });
+
+                await Book.bulkWrite(updateOperations);
+                dataWasChanged = true;
+                await redisClient.set(userId + "-ordered-books", JSON.stringify(books), "EX", 30);
+            }
+        } else if (parentToken?.frontendToken) {
+            throw new Error("Access denied");
+        }
+
+        res.status(200).send({ dataWasChanged });
+    } catch (error) {
+        res.status(200).send({ error: error.message, dataWasChanged });
+        console.log(error);
+    }
+});
 
 module.exports = router;

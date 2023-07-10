@@ -10,7 +10,7 @@ type: container
 name: api-gateway
 description: The api-gateway deployment
 build: api-gateway
-dependencies: [deploy.books-service, deploy.users-service]
+dependencies: [deploy.books-service, deploy.users-service, deploy.reviews-service, deploy.orders-service]
 spec:
   args: [npm, start]
   env:

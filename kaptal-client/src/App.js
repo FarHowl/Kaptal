@@ -26,6 +26,7 @@ const MainPage = React.lazy(() => import("./Pages/MainPage"));
 const BookPage = React.lazy(() => import("./Pages/BookPage"));
 const ShoppingCartPage = React.lazy(() => import("./Pages/ShoppingCartPage"));
 const WishlistPage = React.lazy(() => import("./Pages/WishlistPage"));
+const OrdersPage = React.lazy(() => import("./Pages/OrdersPage"));
 
 export default function App() {
     const [isRouteLoaded, setIsRouteLoaded] = useState(false);
@@ -108,14 +109,14 @@ export default function App() {
 
     return (
         <div className="flex flex-col w-full items-center">
-            <div className="fixed w-full flex justify-end pr-6 top-[90px] z-50">
-                <div className="flex flex-col gap-y-2">
+            <div className="fixed w-full flex justify-end pr-6 top-[90px] z-50 pointer-events-none">
+                <div className="flex flex-col gap-y-2 pointer-events-none">
                     {notifications.slice(0, 3).map((notification) => {
                         return (
                             <div
                                 key={notification.id}
                                 className={
-                                    "w-[300px] flex px-4 py-2 rounded-md border-2 animated-200 " +
+                                    "w-[300px] flex px-4 py-2 rounded-md border-2 animated-200 pointer-events-none " +
                                     (notification.type === "success"
                                         ? "bg-green-100 border-green-300"
                                         : notification.type === "warning"
@@ -214,6 +215,7 @@ export default function App() {
                         <Route path="/book/:bookId" element={<BookPage />} />
                         <Route path="/shoppingCart" element={<ShoppingCartPage />} />
                         <Route path="/wishlist" element={<WishlistPage />} />
+                        <Route path="/orders" element={<OrdersPage />} />
                     </Routes>
                 </Suspense>
                 <div className="w-full flex flex-col items-center py-10 bg-sky-100/80 gap-y-12 mt-16">

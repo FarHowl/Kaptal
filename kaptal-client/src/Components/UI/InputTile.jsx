@@ -1,4 +1,4 @@
-import { React, useState, useRef, useLayoutEffect } from "react";
+import { React, useState, useEffect, useLayoutEffect } from "react";
 
 export default function InputTile({ title, onChange, type, defaultValue, effectProp }) {
     const [isFocused, setIsFocused] = useState(false);
@@ -9,6 +9,12 @@ export default function InputTile({ title, onChange, type, defaultValue, effectP
             effectProp(value, setValue);
         }
     }, [value]);
+
+    useEffect(() => {
+        if (defaultValue !== undefined) {
+            setValue(defaultValue);
+        }
+    }, [defaultValue]);
 
     return (
         <div className="relative flex flex-col w-full items-center">

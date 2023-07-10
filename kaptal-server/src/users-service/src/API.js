@@ -5,6 +5,11 @@ const jwt = require("jsonwebtoken");
 const { SHA3 } = require("sha3");
 const nodemailer = require("nodemailer");
 
+
+const { User } = require("./models");
+
+const verifyJWT = require("./utils/verifyJWT");
+
 const redis = require("redis");
 const redisClient = redis.createClient({ url: "redis://users-redis:6379" });
 
@@ -13,10 +18,6 @@ redisClient.on("error", (error) => {
 });
 
 redisClient.connect();
-
-const { User } = require("./models");
-
-const verifyJWT = require("./utils/verifyJWT");
 
 router.get("/user/refreshToken", async (req, res) => {
     try {
@@ -43,9 +44,9 @@ router.post("/user/signUp", async (req, res) => {
         const hasAllFields = firstName && phoneNumber && email && lastName && code;
         if (!hasAllFields) throw new Error("Please, enter all fields");
 
-        const originalCode = await redisClient.get(email);
+        const originalCode = JSON.parse(await redisClient.get(email));
 
-        if (code === originalCode) {
+        if (code === originalCode.code) {
             const userData = new User({
                 email,
                 firstName,
@@ -58,10 +59,10 @@ router.post("/user/signUp", async (req, res) => {
             const frontendToken = jwt.sign({ userId: userData._id.toString(), role: userData.role }, process.env.FRONTEND_GATEWAY_KEY, { expiresIn: "1d" });
 
             res.status(200).send({
-                firstName,
-                role: userData.role,
+                firstName: currentUser.firstName,
+                role: currentUser.role,
                 authToken: frontendToken,
-                userId: userData._id,
+                userId: currentUser._id,
             });
         } else throw new Error("Code is invalid");
     } catch (error) {
@@ -69,58 +70,77 @@ router.post("/user/signUp", async (req, res) => {
     }
 });
 
-router.post("/user/signIn", async (req, res) => {
-    try {
-        const hasToBeAuthorized = false;
-        verifyJWT(req, hasToBeAuthorized);
+// router.post("/user/signIn", async (req, res) => {
+//     try {
+//         const hasToBeAuthorized = false;
+//         verifyJWT(req, hasToBeAuthorized);
 
-        const hasAllFields = req.body?.email && req.body?.code;
-        if (!hasAllFields) throw new Error("Please, enter all Fields");
+//         const hasAllFields = req.body?.email && req.body?.code;
+//         if (!hasAllFields) throw new Error("Please, enter all Fields");
 
-        const originalCode = await redisClient.get(req.body.email);
+//         const originalCode = await redisClient.get(req.body.email);
 
-        if (req.body.code === originalCode) {
-            const currentUser = await User.findOne({ email: req.body.email });
+//         if (req.body.code === originalCode.code) {
+//             const currentUser = await User.findOne({ email: req.body.email });
 
-            const frontendToken = jwt.sign({ userId: currentUser._id.toString(), role: currentUser.role }, process.env.FRONTEND_GATEWAY_KEY, { expiresIn: "1d" });
+//             const frontendToken = jwt.sign({ userId: currentUser._id.toString(), role: currentUser.role }, process.env.FRONTEND_GATEWAY_KEY, { expiresIn: "1d" });
 
-            res.status(200).send({
-                firstName: currentUser.firstName,
-                lastName: currentUser.lastName,
-                role: currentUser.role,
-                orders: currentUser.orders,
-                shoppingCart: currentUser.shoppingCart,
-                authToken: frontendToken,
-                userId: currentUser._id,
-            });
+//             res.status(200).send({
+//                 firstName: currentUser.firstName,
+//                 lastName: currentUser.lastName,
+//                 role: currentUser.role,
+//                 orders: currentUser.orders,
+//                 shoppingCart: currentUser.shoppingCart,
+//                 authToken: frontendToken,
+//                 userId: currentUser._id,
+//             });
 
-            redisClient.del(req.body.email);
-        } else {
-            throw new Error("Code is invalid");
-        }
-    } catch (error) {
-        res.status(400).send({ error: error.message });
-    }
-});
+//             redisClient.del(req.body.email);
+//         } else {
+//             throw new Error("Code is invalid");
+//         }
+//     } catch (error) {
+//         res.status(400).send({ error: error.message });
+//     }
+// });
 
 router.post("/user/checkEmailCode", async (req, res) => {
     try {
         const hasToBeAuthorized = false;
         verifyJWT(req, hasToBeAuthorized);
 
-        const code = req.body?.code;
+        const clientCode = req.body?.code;
         const email = req.body?.email;
 
-        const hasAllFields = code && email;
+        const hasAllFields = clientCode && email;
         if (!hasAllFields) throw new Error("Enter all fields");
 
-        const originalCode = await redisClient.get(email);
+        const originalCode = JSON.parse(await redisClient.get(email));
+        if (originalCode.availableAttempts === 0) {
+            redisClient.del(email);
+            throw new Error("You have exceeded the number of attempts");
+        }
 
-        if (code !== originalCode) {
+        if (clientCode !== originalCode.code) {
+            const stringToSave = JSON.stringify({ code: originalCode.code, availableAttempts: originalCode.availableAttempts - 1 });
+
+            await redisClient.set(email, stringToSave, "EX", 60 * 5);
             throw new Error("Code invalid");
         } else {
             const currentUser = await User.findOne({ email: req.body.email });
-            res.status(200).send(currentUser ? { doesUserExist: true } : { doesUserExist: false });
+
+            if (currentUser) {
+                const frontendToken = jwt.sign({ userId: currentUser._id.toString(), role: currentUser.role }, process.env.FRONTEND_GATEWAY_KEY, { expiresIn: "1d" });
+
+                res.status(200).send({
+                    firstName: currentUser.firstName,
+                    role: currentUser.role,
+                    authToken: frontendToken,
+                    userId: currentUser._id,
+                });
+            } else {
+                res.status(200).send({ message: "User does not exist" });
+            }
         }
     } catch (error) {
         res.status(500).send({ error: error.message });
@@ -136,9 +156,16 @@ router.post("/user/sendEmailCode", async (req, res) => {
         const email = req.body?.email;
         if (!email) throw new Error("Please, enter email");
 
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        let code = "";
 
-        await redisClient.set(email, code, "EX", 60 * 5);
+        for (let i = 0; i < 10; i++) {
+            const randomIndex = Math.floor(Math.random() * characters.length);
+            code += characters.charAt(randomIndex);
+        }
+
+        const stringToSave = JSON.stringify({ code, availableAttempts: 5 });
+        await redisClient.set(email, stringToSave, "EX", 60 * 5);
 
         const transporter = nodemailer.createTransport({
             service: "gmail",
@@ -158,6 +185,7 @@ router.post("/user/sendEmailCode", async (req, res) => {
         res.sendStatus(200);
     } catch (error) {
         res.status(400).send({ error: error.message });
+        console.log(error);
     }
 });
 
@@ -236,13 +264,15 @@ router.post("/user/addBookToWishlist", async (req, res) => {
         const currentUser = await User.findById(frontendToken.userId);
         const isBookAlreadyInWishlist = currentUser.wishlist.includes(req.body.bookId);
         if (!isBookAlreadyInWishlist) {
-            await User.findByIdAndUpdate(currentUser._id.toString(), {
+            const user = await User.findByIdAndUpdate(currentUser._id.toString(), {
                 $push: {
                     wishlist: {
                         bookId: req.body.bookId,
                     },
                 },
             });
+
+            if (!user) throw new Error("User does not exist");
         } else throw new Error("Book is already in wishlist");
 
         res.sendStatus(200);
@@ -263,11 +293,13 @@ router.post("/user/removeBookFromWishlist", async (req, res) => {
         const currentUser = await User.findById(frontendToken.userId);
         const isBookAlreadyInWishlist = currentUser.wishlist.some((book) => book.bookId === req.body.bookId);
         if (isBookAlreadyInWishlist) {
-            await User.findByIdAndUpdate(currentUser._id.toString(), {
+            const user = await User.findByIdAndUpdate(currentUser._id.toString(), {
                 $pull: {
                     wishlist: { bookId: req.body.bookId },
                 },
             });
+
+            if (!user) throw new Error("User does not exist");
         }
 
         res.sendStatus(200);
@@ -275,6 +307,15 @@ router.post("/user/removeBookFromWishlist", async (req, res) => {
         res.status(400).send({ error: error.message });
         console.log(error);
     }
+});
+
+router.get("/user/getUserData", async (req, res) => {
+    const hasToBeAuthorized = true;
+    const frontendToken = verifyJWT(req, hasToBeAuthorized);
+
+    const currentUser = await User.findById(frontendToken.userId, { role: 0, shoppingCart: 0, wishlist: 0, isStaffAvailableForChat: 0, webSocketId: 0 });
+
+    res.status(200).send(currentUser);
 });
 
 router.get("/user/getWishlist", async (req, res) => {
@@ -331,7 +372,8 @@ router.post("/admin/updateUser", async (req, res) => {
             update.$unset = { isStaffAvailableForChat: "" };
         }
 
-        await User.findByIdAndUpdate(currentUser._id.toString(), update);
+        const user = await User.findByIdAndUpdate(currentUser._id.toString(), update);
+        if (!user) throw new Error("User does not exist");
         res.sendStatus(200);
     } catch (error) {
         res.status(400).send({ error: error.message });
@@ -354,6 +396,52 @@ router.get("/admin/getAllUsers", async (req, res) => {
         res.status(200).send(users);
     } catch (error) {
         res.status(500).send({ error: error.message });
+    }
+});
+
+router.post("/service/clearShoppingCart", async (req, res) => {
+    let dataWasChanged = false;
+
+    try {
+        const currentToken = req.headers.authorization.split(" ")[1];
+        const parentToken = jwt.decode(currentToken);
+
+        if (parentToken?.gatewayToken) {
+            jwt.verify(currentToken, process.env.ORDERS_USERS_KEY);
+
+            jwt.verify(parentToken?.gatewayToken, process.env.GATEWAY_ORDERS_KEY);
+
+            const { frontendToken } = jwt.decode(parentToken?.gatewayToken);
+            jwt.verify(frontendToken, process.env.FRONTEND_GATEWAY_KEY);
+
+            const { userId } = jwt.decode(frontendToken);
+
+            if (req.body?.rollback) {
+                const userShoppingCart = JSON.parse(await redisClient.get(userId + "-user-shoppingCart"));
+                if (!userShoppingCart) throw new Error();
+
+                const user = await User.findByIdAndUpdate(userId, { shoppingCart: userShoppingCart });
+                if (!user) throw new Error("User does not exist");
+            } else {
+                const user = await User.findById(userId);
+                if (!user) throw new Error("User does not exist");
+
+                let userShoppingCart = user.shoppingCart.slice();
+                user.shoppingCart = [];
+
+                await user.save();
+                dataWasChanged = true;
+
+                await redisClient.set(userId + "-user-shoppingCart", JSON.stringify(userShoppingCart), "EX", 30);
+            }
+        } else if (parentToken?.frontendToken) {
+            throw new Error("Access denied");
+        }
+
+        res.status(200).send({ dataWasChanged });
+    } catch (error) {
+        res.status(200).send({ error: error.message, dataWasChanged });
+        console.log(error);
     }
 });
 

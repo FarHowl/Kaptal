@@ -12,4 +12,5 @@ export function getUserData() {
 
 export function logOut() {
     localStorage.setItem("userData", null);
+    window.location.reload();
 }
