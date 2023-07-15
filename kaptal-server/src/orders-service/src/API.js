@@ -48,24 +48,6 @@ router.post("/user/makeOrder", async (req, res) => {
             typeof req.body?.lastName === "string";
         if (!hasCorrectTypes) throw new Error("Пожалуйста, введите корректные данные");
 
-        let orderDate = new Date();
-        const day = orderDate.getDate();
-        const month = orderDate.getMonth() + 1;
-        const year = orderDate.getFullYear();
-        const time = parseInt(orderDate.getHours() + 3) + ":" + (orderDate.getMinutes() < 10 ? "0" + orderDate.getMinutes() : orderDate.getMinutes());
-        orderDate = day + "." + month + "." + year + " " + time;
-
-        const order = new Order({
-            books: req.body?.books,
-            deliveryAddress: req.body?.deliveryAddress,
-            deliveryMethod: req.body?.deliveryMethod,
-            paymentMethod: req.body?.paymentMethod,
-            totalPrice: req.body?.totalPrice,
-            userId: frontendToken.userId,
-            date: orderDate,
-            status: "created",
-        });
-
         let response;
         const newTokenForBooks = jwt.sign({ gatewayToken: currentToken }, process.env.ORDERS_BOOKS_KEY, { expiresIn: "1h" });
         const newTokenForUsers = jwt.sign({ gatewayToken: currentToken }, process.env.ORDERS_USERS_KEY, { expiresIn: "1h" });
@@ -73,16 +55,43 @@ router.post("/user/makeOrder", async (req, res) => {
         const response2 = axios.post("http://books-service:3000/api/service/makeOrder", { ...req.body }, { headers: { Authorization: "Bearer " + newTokenForBooks } });
 
         response = await axios.all([response1, response2]);
+        console.log(response[0].data, response[1].data)
 
-        if (!response[0].data?.dbRequestWasDone && !response[1].data?.dbRequestWasDone) {
-            throw new Error(response[0].data?.error + " " + response[1].data?.error);
-        } else if (response[0].data?.dbRequestWasDone && !response[1].data?.dbRequestWasDone) {
-            await axios.post("http://users-service:3000/api/service/clearShoppingCart", { userId: frontendToken.userId, rollback: true }, { headers: { Authorization: "Bearer " + newTokenForUsers } });
-            throw new Error(response[1].data?.error);
-        } else if (response[1].data?.dbRequestWasDone && !response[0].data?.dbRequestWasDone) {
-            await axios.post("http://books-service:3000/api/service/makeOrder", { ...req.body, rollback: true }, { headers: { Authorization: "Bearer " + newTokenForBooks } });
-            throw new Error(response[0].data?.error);
-        } else await order.save();
+        if (response[0].data.error || response[1].data.error) {
+            if (!response[0].data?.dbRequestWasDone && !response[1].data?.dbRequestWasDone) {
+                throw new Error(response[0].data?.error + " " + response[1].data?.error);
+            } else if (response[0].data?.dbRequestWasDone && !response[1].data?.dbRequestWasDone) {
+                await axios.post(
+                    "http://users-service:3000/api/service/clearShoppingCart",
+                    { userId: frontendToken.userId, rollback: true },
+                    { headers: { Authorization: "Bearer " + newTokenForUsers } }
+                );
+                throw new Error(response[1].data?.error);
+            } else if (response[1].data?.dbRequestWasDone && !response[0].data?.dbRequestWasDone) {
+                await axios.post("http://books-service:3000/api/service/makeOrder", { ...req.body, rollback: true }, { headers: { Authorization: "Bearer " + newTokenForBooks } });
+                throw new Error(response[0].data?.error);
+            }
+        } else {
+            let orderDate = new Date();
+            const day = orderDate.getDate();
+            const month = orderDate.getMonth() + 1;
+            const year = orderDate.getFullYear();
+            const time = parseInt(orderDate.getHours() + 3) + ":" + (orderDate.getMinutes() < 10 ? "0" + orderDate.getMinutes() : orderDate.getMinutes());
+            orderDate = day + "." + month + "." + year + " " + time;
+
+            const order = new Order({
+                books: req.body?.books,
+                deliveryAddress: req.body?.deliveryAddress,
+                deliveryMethod: req.body?.deliveryMethod,
+                paymentMethod: req.body?.paymentMethod,
+                totalPrice: req.body?.totalPrice,
+                userId: frontendToken.userId,
+                date: orderDate,
+                status: "created",
+            });
+
+            await order.save();
+        }
 
         res.status(200).send({ message: "Заказ создан" });
     } catch (error) {

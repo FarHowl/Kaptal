@@ -18,7 +18,7 @@ export default function ShoppingCartPage() {
     const shoppingCart = useStoreState(ShoppingCartStore).shoppingCart;
     const wishlist = useStoreState(WishlistStore).wishlist;
 
-    const [shoppingCartBooks, setShoppingCartBooks] = useState([]);
+    const [bookCartView, setBookCartView] = useState([]);
     const [isImgLoaded, setIsImgLoaded] = useState(false);
     const [orderInfo, setOrderInfo] = useState({
         firstName: "",
@@ -29,7 +29,7 @@ export default function ShoppingCartPage() {
         deliveryMethod: "",
         deliveryAddress: "",
         totalPrice: 0,
-        books: shoppingCart,
+        books: [],
     });
 
     const navigate = useNavigate();
@@ -48,11 +48,13 @@ export default function ShoppingCartPage() {
             const shoppingCartBooks = response.data.map((book) => {
                 const { _id } = book;
                 const { amount } = shoppingCart.find((item) => item.bookId === _id);
-                setOrderInfo((prev) => ({ ...prev, totalPrice: prev.totalPrice + book.price * amount }));
+                if (book.stock > 0) {
+                    setOrderInfo((prev) => ({ ...prev, totalPrice: prev.totalPrice + book.price * amount, books: [...prev.books, { bookId: _id, amount }] }));
+                }
                 return { ...book, amount };
             });
 
-            setShoppingCartBooks(shoppingCartBooks);
+            setBookCartView(shoppingCartBooks);
         } catch (error) {
             if (error?.response) showErrorNotification(error.response.data.error);
             else showErrorNotification(error);
@@ -99,6 +101,10 @@ export default function ShoppingCartPage() {
             }
     }, [shoppingCart]);
 
+    useEffect(() => {
+        console.log(orderInfo);
+    }, [orderInfo]);
+
     return (
         <div className="w-full flex flex-col justify-center items-center px-6">
             <div className="max-w-[1240px] w-full flex flex-col justify-center items-center mt-8 flex-wrap gap-y-8 mb-16">
@@ -109,7 +115,7 @@ export default function ShoppingCartPage() {
                     <div className="flex flex-col w-full gap-y-6">
                         <div className="flex gap-10 w-full justify-start mb-20">
                             <div className="flex flex-col items-start w-full max-h-[600px] overflow-y-auto pr-4">
-                                {shoppingCartBooks
+                                {bookCartView
                                     .sort((bookA, bookB) => bookB.stock - bookA.stock)
                                     .map((book) => (
                                         <div key={book._id} className="w-full flex py-4 border-b-2 border-gray-100 justify-between">
@@ -150,7 +156,7 @@ export default function ShoppingCartPage() {
                                                                 if (book.amount > 1) {
                                                                     removeFromCartAction(book);
                                                                     book.amount--;
-                                                                    setOrderInfo({ ...orderInfo, totalPrice: orderInfo.totalPrice - book.price });
+                                                                    if (book.stock > 0) setOrderInfo({ ...orderInfo, totalPrice: orderInfo.totalPrice - book.price });
                                                                 }
                                                             }}
                                                             className={"px-2 py-[2px] " + (book.amount === 1 ? "opacity-50" : "")}
@@ -162,7 +168,7 @@ export default function ShoppingCartPage() {
                                                             onClick={() => {
                                                                 addToCartAction(book);
                                                                 book.amount++;
-                                                                setOrderInfo({ ...orderInfo, totalPrice: orderInfo.totalPrice + book.price });
+                                                                if (book.stock > 0) setOrderInfo({ ...orderInfo, totalPrice: orderInfo.totalPrice + book.price });
                                                             }}
                                                             className="px-2 py-[2px]"
                                                         >
@@ -205,7 +211,7 @@ export default function ShoppingCartPage() {
                                                         onClick={() => {
                                                             rmSameBooksFromCartAction(book);
                                                             setOrderInfo({ ...orderInfo, totalPrice: orderInfo.totalPrice - book.price * book.amount });
-                                                            shoppingCartBooks.splice(shoppingCartBooks.indexOf(book), 1);
+                                                            bookCartView.splice(bookCartView.indexOf(book), 1);
                                                         }}
                                                         Icon={CrossIcon}
                                                         size={20}

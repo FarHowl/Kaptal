@@ -5,7 +5,6 @@ const jwt = require("jsonwebtoken");
 const { SHA3 } = require("sha3");
 const nodemailer = require("nodemailer");
 
-
 const { User } = require("./models");
 
 const verifyJWT = require("./utils/verifyJWT");
@@ -66,7 +65,7 @@ router.post("/user/signUp", async (req, res) => {
             });
         } else throw new Error("Code is invalid");
     } catch (error) {
-        console.log(error)
+        console.log(error);
         res.status(400).send({ error: error.message });
     }
 });
@@ -430,10 +429,10 @@ router.post("/service/clearShoppingCart", async (req, res) => {
                 let userShoppingCart = user.shoppingCart.slice();
                 user.shoppingCart = [];
 
+                await redisClient.set(userId + "-user-shoppingCart", JSON.stringify(userShoppingCart), "EX", 30);
+                
                 await user.save();
                 dbRequestWasDone = true;
-
-                await redisClient.set(userId + "-user-shoppingCart", JSON.stringify(userShoppingCart), "EX", 30);
             }
         } else if (parentToken?.frontendToken) {
             throw new Error("Access denied");

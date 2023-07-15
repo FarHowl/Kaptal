@@ -670,8 +670,13 @@ router.post("/service/makeOrder", async (req, res) => {
             const { userId } = jwt.decode(frontendToken);
             const books = req.body?.books;
 
+            if (books.length === 0) {
+                throw new Error("В заказе должна быть хотя бы одна книга");
+            }
+
             if (req.body?.rollback) {
                 const orderedBooks = JSON.parse(await redisClient.get(userId + "-ordered-books"));
+                console.log("first")
 
                 const updateOperations = orderedBooks.map((book) => {
                     const { bookId, amount } = book;
@@ -686,7 +691,9 @@ router.post("/service/makeOrder", async (req, res) => {
 
                 await Book.bulkWrite(updateOperations);
             } else {
-                const updatePromises = books.map(async (book) => {
+                let updateOperations = [];
+
+                for (const book of books) {
                     const { bookId, amount } = book;
 
                     const existingBook = await Book.findById(bookId);
@@ -698,20 +705,18 @@ router.post("/service/makeOrder", async (req, res) => {
                         throw new Error("Некоторых книг в вашем заказе нет в наличии. Пожалуйста, измените свой заказ :(");
                     }
 
-                    return {
+                    updateOperations.push({
                         updateOne: {
                             filter: { _id: bookId },
                             update: { $inc: { stock: -amount } },
                         },
-                    };
-                });
+                    });
+                }
 
-                const updateOperations = await Promise.all(updatePromises);
+                await redisClient.set(userId + "-ordered-books", JSON.stringify(books), "EX", 30);
 
                 await Book.bulkWrite(updateOperations);
-
                 dbRequestWasDone = true;
-                await redisClient.set(userId + "-ordered-books", JSON.stringify(books), "EX", 30);
             }
         } else if (parentToken?.frontendToken) {
             throw new Error("Доступ запрещен");
