@@ -20,7 +20,7 @@ spec:
     - path: /
       port: http
       hostname: frontend.${var.base-hostname}
-  command: [npm, run, start] # Overrides the container's default when the service is deployed in dev mode
+  command: [npm, run, start]
   sync:
     paths:
     - target: /app/src
