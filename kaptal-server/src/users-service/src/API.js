@@ -59,13 +59,14 @@ router.post("/user/signUp", async (req, res) => {
             const frontendToken = jwt.sign({ userId: userData._id.toString(), role: userData.role }, process.env.FRONTEND_GATEWAY_KEY, { expiresIn: "1d" });
 
             res.status(200).send({
-                firstName: currentUser.firstName,
-                role: currentUser.role,
+                firstName: userData.firstName,
+                role: userData.role,
                 authToken: frontendToken,
-                userId: currentUser._id,
+                userId: userData._id,
             });
         } else throw new Error("Code is invalid");
     } catch (error) {
+        console.log(error)
         res.status(400).send({ error: error.message });
     }
 });
