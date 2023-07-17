@@ -55,7 +55,6 @@ router.post("/user/makeOrder", async (req, res) => {
         const response2 = axios.post("http://books-service:3000/api/service/makeOrder", { ...req.body }, { headers: { Authorization: "Bearer " + newTokenForBooks } });
 
         response = await axios.all([response1, response2]);
-        console.log(response[0].data, response[1].data)
 
         if (response[0].data.error || response[1].data.error) {
             if (!response[0].data?.dbRequestWasDone && !response[1].data?.dbRequestWasDone) {
