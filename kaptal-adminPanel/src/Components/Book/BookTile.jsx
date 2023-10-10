@@ -6,10 +6,12 @@ import { deleteBook_EP, getBookImage_EP } from "../../Utils/API";
 import { authToken_header } from "../../Utils/LocalStorageUtils";
 import axios from "axios";
 import CrossIcon from "../Icons/CrossIcon";
+import { useNavigate } from "react-router-dom"
 
 export default function BookTile({ book, isBookInAdminMenu, setAdminMenuTab }) {
     const [isImgLoaded, setIsImgLoaded] = useState(false);
     const [isTileHovered, setIsTileHovered] = useState(false);
+    const navigate = useNavigate();
 
     function calculateDiscount(price, discount) {
         let summary = price - price * (discount / 100);

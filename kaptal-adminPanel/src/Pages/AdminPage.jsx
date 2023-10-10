@@ -35,7 +35,7 @@ export default function AdminPage() {
 
     return (
         <div className="flex w-full">
-            <div className="flex flex-col w-[254px] top-[80px] bg-[#fafafa] bottom-0 absolute border-r-2">
+            <div className="flex flex-col w-[254px] top-[80px] bottom-[276px] bg-[#fafafa] absolute border-r-2">
                 <div className="flex flex-col w-full items-left mt-6 pl-6">
                     <span className="font-semibold">Книги</span>
                 </div>
@@ -119,7 +119,7 @@ export default function AdminPage() {
                     </button>
                 </div>
             </div>
-            {isTabLoading ? <LoadingComponent customStyle={"absolute right-0 left-[254px] bottom-0 top-[80px] bg-white z-10 flex justify-center items-center"} /> : <></>}
+            {isTabLoading ? <LoadingComponent customStyle={"absolute right-0 left-[254px] bottom-[276px] top-[80px] bg-white z-10 flex justify-center items-center"} /> : <></>}
             {tabOption === "AllBooks" ? (
                 <AllBooksTab setTabOption={setTabOption} />
             ) : tabOption === "AddBook" ? (

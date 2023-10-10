@@ -7,6 +7,8 @@ export const apiAddress = "http://api.local.app.garden";
  */
 export const signIn_EP = apiAddress + "/api/users-service/user/signIn";
 
+export const refreshToken_EP = apiAddress + "/api/users-service/user/refreshToken";
+
 /**
  * @param {string} bookId
  */
@@ -134,4 +136,8 @@ export const checkReview_EP = apiAddress + "/api/reviews-service/moderator/check
  */
 export const updateUserInformation_EP = apiAddress + "/api/users-service/admin/updateUser";
 
+
+export const sendEmailCode_EP = apiAddress + "/api/users-service/user/sendEmailCode";
+
+export const checkEmailCode_EP = apiAddress + "/api/users-service/user/checkEmailCode";
 //
