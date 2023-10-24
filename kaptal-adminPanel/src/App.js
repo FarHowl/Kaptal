@@ -111,7 +111,7 @@ export default function App() {
                     })}
                 </div>
             </div>
-            {isSignOpened ? <SignPopUp setIsSignOpened={setIsSignOpened} /> : <></>}
+            {isSignOpened ? <SignPopUp setIsSignOpened={setIsSignOpened} isSignOpened={isSignOpened} /> : <></>}
             <div className="w-full max-w-[1400px] flex gap-6 justify-between items-center h-[80px] px-6 border-b-2 fixed bg-white z-20">
                 <Link to={"/"} className="title-font text-5xl text-center w-[204px] flex flex-shrink-0 justify-center">
                     Каптал
@@ -172,49 +172,14 @@ export default function App() {
                 </div>
             </div>
             <div className="w-full h-[80px]"></div>
-            <div className="w-full flex flex-col justify-between z-10" style={{ height: `calc(100vh - 80px)` }}>
+            <div className="w-full flex flex-col justify-between z-10">
                 <Suspense>
                     <Routes>
                         <Route path="/" element={<AdminPage />} />
                     </Routes>
                 </Suspense>
-                <div className="w-full flex flex-col items-center py-10 bg-sky-100/80 gap-y-12 mt-16">
-                    <div className="w-full flex flex-wrap justify-between px-16">
-                        <div className="flex flex-col gap-y-[8px] max-w-[400px]">
-                            <span className="text-xl text-gray-700 font-bold">О Каптале</span>
-                            <span className="tracking-wide text-gray-600">Пет-проект, который делался с искренней любовью. Дух Каптала всегда останется в сердце его разработчика ❤</span>
-                        </div>
-                        <div className="flex flex-col gap-y-[8px]">
-                            <span className="text-xl text-gray-700 font-bold">Контакты</span>
-                            <div className="flex gap-x-2">
-                                <span className="text-red-600 font-medium">E:</span>
-                                <span className="font-bold tracking-wide text-gray-700">kartashov104@gmail.com</span>
-                            </div>
-                        </div>
-                        <div className="flex flex-col gap-y-[8px] items-center">
-                            <span className="text-xl text-gray-700 font-bold">Следите за нами в соц. сетях</span>
-                            <IconComponent
-                                Icon={TelegramIcon}
-                                size={36}
-                                color={"#FFF"}
-                                hoveredColor={"#FFF"}
-                                buttonStyle={"px-2 py-2 w-[50px]"}
-                                onClick={() => {
-                                    window.open("https://t.me/FarHowl");
-                                }}
-                            />
-                        </div>
-                    </div>
-                    <div className="flex gap-x-3 items-center">
-                        <div className="flex gap-x-1">
-                            <span className="text-2xl pt-[7px] title-font">©</span>
-                            <span className="flex title-font text-4xl font-semibold">Каптал</span>
-                        </div>
-                        <span className="font-semibold title-font text-3xl pt-[4px]">2023</span>
-                    </div>
-                </div>
+                {isRouteLoaded ? <></> : <LoadingComponent customStyle={"absolute inset-0 top-[80px] bg-white z-10 flex justify-center items-center"} />}
             </div>
-            {isRouteLoaded ? <></> : <LoadingComponent customStyle={"absolute inset-0 top-[80px] bg-white z-10 flex justify-center items-center"} />}
         </div>
     );
 }

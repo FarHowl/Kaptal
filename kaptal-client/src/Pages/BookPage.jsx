@@ -85,7 +85,7 @@ export default function BookPage() {
 
     return (
         <div className="w-full flex flex-col justify-center items-center px-6">
-            <div className="max-w-[1240px] w-full flex justify-between mt-8 flex-wrap gap-y-16">
+            <div className="max-w-[1240px] w-full flex justify-between mt-8 flex-wrap gap-y-4">
                 <div className="flex flex-col w-[800px]">
                     <div className="flex justify-center gap-14">
                         <div className="w-[300px] h-[450px] relative">
@@ -261,7 +261,7 @@ export default function BookPage() {
                     </div>
                 </div>
             </div>
-            <div className="flex w-full justify-start gap-x-16 max-w-[1240px] mt-4">
+            <div className="flex w-full justify-start gap-x-16 max-w-[1240px] mt-10">
                 <div className="flex flex-col gap-2">
                     <span className="text-3xl font-bold">Отзывы</span>
                     <button

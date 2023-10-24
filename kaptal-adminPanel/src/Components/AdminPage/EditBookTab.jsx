@@ -3,6 +3,7 @@ import { useLayoutEffect, useState, useRef, useEffect } from "react";
 import { getAllCategories_EP, getAllCollections_EP, getBookImage_EP, updateBook_EP } from "../../Utils/API";
 import { authToken_header, getUserData } from "../../Utils/LocalStorageUtils";
 import InputTile from "../UI/InputTile";
+import { showSuccessNotification } from "../../StoreState/NotificationStore";
 
 export default function EditBookTab({ book, setTabOption }) {
     const [bookInfo, setBookInfo] = useState(book);
@@ -55,9 +56,9 @@ export default function EditBookTab({ book, setTabOption }) {
                 },
                 { headers: { "Content-Type": "multipart/form-data", Authorization: "Bearer " + getUserData().authToken } }
             );
-            
+
             setTabOption("AllBooks");
-            console.log("Книга успешно обновлена");
+            showSuccessNotification("Книга успешно обновлена");
         } catch (error) {
             if (error?.response) console.log(error.response.data.error);
             else console.log(error);

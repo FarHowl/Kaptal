@@ -3,6 +3,7 @@ import { useEffect, useState, useRef, Children, useLayoutEffect } from "react";
 import { addNewBook_EP, getAllCategories_EP, getAllcollections_EP, getAllCollections_EP } from "../../Utils/API";
 import { authToken_header, getUserData } from "../../Utils/LocalStorageUtils";
 import InputTile from "../UI/InputTile";
+import { showSuccessNotification } from "../../StoreState/NotificationStore";
 
 export default function AddBookTab({ setIsTabLoading }) {
     const [bookInfo, setBookInfo] = useState({});
@@ -40,7 +41,8 @@ export default function AddBookTab({ setIsTabLoading }) {
                 },
                 { headers: { "Content-Type": "multipart/form-data", Authorization: "Bearer " + getUserData().authToken } }
             );
-            console.log("Книга успешно добавлена!");
+            
+            showSuccessNotification("Книга успешно добавлена!")
         } catch (error) {
             if (error?.response) {
                 console.log(error.response.data.error);

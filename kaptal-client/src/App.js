@@ -131,7 +131,7 @@ export default function App() {
                     })}
                 </div>
             </div>
-            {isSignOpened ? <SignPopUp setIsSignOpened={setIsSignOpened} /> : <></>}
+            {isSignOpened ? <SignPopUp setIsSignOpened={setIsSignOpened} isSignOpened={isSignOpened} /> : <></>}
             <div className="w-full max-w-[1400px] flex gap-6 justify-between items-center h-[80px] px-6 border-b-2 fixed bg-white z-20">
                 <Link to={"/"} className="title-font text-5xl text-center w-[204px] flex flex-shrink-0 justify-center">
                     Каптал

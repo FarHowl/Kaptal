@@ -1,4 +1,4 @@
-import { React, useState } from "react";
+import { React, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import IconComponent from "../Icons/IconComponent";
 import InputTile from "./InputTile";
@@ -8,10 +8,12 @@ import { showErrorNotification } from "../../StoreState/NotificationStore";
 import CrossIcon from "../Icons/CrossIcon";
 import LoadingComponent from "./LoadingComponent";
 
-export default function SignPopUp({ setIsSignOpened }) {
+export default function SignPopUp({ setIsSignOpened, isSignOpened }) {
     const [userInfo, setUserInfo] = useState({ email: "", firstName: "", code: "", lastName: "", phoneNumber: "" });
     const [isPending, setIsPending] = useState(false);
     const [signTab, setSignTab] = useState("SignIn");
+    const [timer, setTimer] = useState(300);
+    const [availableAttempts, setAvailableAttempts] = useState(5);
 
     const navigate = useNavigate();
 
@@ -30,8 +32,9 @@ export default function SignPopUp({ setIsSignOpened }) {
             if (error?.response) showErrorNotification(error.response.data.error);
             else showErrorNotification(error);
 
-            if (error?.response?.data?.error === "Вы превысили допустимое количество попыток") {
-                setIsSignOpened(false);
+            if (error?.response?.data?.error === "Code invalid") {
+                console.log("first");
+                setAvailableAttempts((prev) => prev - 1);
             }
         }
     }
@@ -45,6 +48,8 @@ export default function SignPopUp({ setIsSignOpened }) {
         } catch (error) {
             if (error?.response) showErrorNotification(error.response.data.error);
             else showErrorNotification(error);
+
+            setIsPending(false);
         }
     }
 
@@ -62,8 +67,28 @@ export default function SignPopUp({ setIsSignOpened }) {
         }
     }
 
+    useEffect(() => {
+        if (signTab === "Code") {
+            let seconds = 300;
+
+            const timer = setInterval(() => {
+                seconds--;
+                setTimer(seconds);
+
+                if (seconds === 0 || !isSignOpened || signTab !== "Code") clearInterval(timer);
+            }, 1000);
+        }
+    }, [signTab]);
+
+    useEffect(() => {
+        if (availableAttempts === 0) {
+            setIsSignOpened(false);
+            showErrorNotification("You have exceeded the number of attempts");
+        }
+    }, [availableAttempts]);
+
     return (
-        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-40">
             {signTab === "SignIn" ? (
                 <div className="bg-white flex flex-col rounded-md relative px-6 pt-6 pb-8 gap-y-5 w-[350px]">
                     {isPending ? <LoadingComponent customStyle={"absolute inset-0 flex justify-center items-center bg-white rounded-md z-10"} /> : <></>}
@@ -71,7 +96,7 @@ export default function SignPopUp({ setIsSignOpened }) {
                         <span className="text-xl font-semibold">Вход и регистрация</span>
                         <IconComponent
                             onClick={() => {
-                                setIsSignOpened ? setIsSignOpened(false) : setIsSignOpened(false);
+                                setIsSignOpened(false);
                             }}
                             Icon={CrossIcon}
                             size={20}
@@ -103,7 +128,7 @@ export default function SignPopUp({ setIsSignOpened }) {
                     </div>
                 </div>
             ) : signTab === "Code" ? (
-                <div className="bg-white flex flex-col rounded-md relative px-6 pt-6 pb-8 gap-y-5 w-[350px]">
+                <div className="bg-white flex flex-col rounded-md relative px-6 pt-6 pb-6 gap-y-5 w-[350px]">
                     <div className=" w-full flex justify-between items-center">
                         <span className="text-xl font-semibold">Вход и регистрация</span>
                         <IconComponent
@@ -141,15 +166,25 @@ export default function SignPopUp({ setIsSignOpened }) {
                             setUserInfo({ ...userInfo, code: e.target.value });
                         }}
                     />
-                    <div className="w-full flex">
-                        <button
-                            onClick={() => {
-                                checkEmailCode();
-                            }}
-                            className="py-2 w-full rounded-md text-white animated-100 font-semibold bg-sky-400 hover:bg-sky-500"
-                        >
-                            Продолжить
-                        </button>
+                    <div className="w-full flex justify-center -mb-2 -mt-2">
+                        <span className="font-semibold text-lg text-red-500">
+                            {timer >= 60 ? Math.floor(timer / 60) + ":" + (timer % 60 >= 10 ? timer % 60 : "0" + (timer % 60)) : "0:" + (timer >= 10 ? timer : "0" + timer)}
+                        </span>
+                    </div>
+                    <div className="flex flex-col items-center gap-y-3">
+                        <div className="w-full flex">
+                            <button
+                                onClick={() => {
+                                    checkEmailCode();
+                                }}
+                                className="py-2 w-full rounded-md text-white animated-100 font-semibold bg-sky-400 hover:bg-sky-500"
+                            >
+                                Продолжить
+                            </button>
+                        </div>
+                        <div className="w-full flex justify-center">
+                            <span className="font-light text-md text-gray-600">Осталось {availableAttempts} попыток</span>
+                        </div>
                     </div>
                 </div>
             ) : (
@@ -186,6 +221,7 @@ export default function SignPopUp({ setIsSignOpened }) {
                             setUserInfo({ ...userInfo, firstName: e.target.value });
                         }}
                     />
+                    {console.log("")}
                     <InputTile
                         defaultValue={""}
                         title={"Фамилия"}

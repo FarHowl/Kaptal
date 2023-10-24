@@ -70,40 +70,6 @@ router.post("/user/signUp", async (req, res) => {
     }
 });
 
-// router.post("/user/signIn", async (req, res) => {
-//     try {
-//         const hasToBeAuthorized = false;
-//         verifyJWT(req, hasToBeAuthorized);
-
-//         const hasAllFields = req.body?.email && req.body?.code;
-//         if (!hasAllFields) throw new Error("Please, enter all Fields");
-
-//         const originalCode = await redisClient.get(req.body.email);
-
-//         if (req.body.code === originalCode.code) {
-//             const currentUser = await User.findOne({ email: req.body.email });
-
-//             const frontendToken = jwt.sign({ userId: currentUser._id.toString(), role: currentUser.role }, process.env.FRONTEND_GATEWAY_KEY, { expiresIn: "1d" });
-
-//             res.status(200).send({
-//                 firstName: currentUser.firstName,
-//                 lastName: currentUser.lastName,
-//                 role: currentUser.role,
-//                 orders: currentUser.orders,
-//                 shoppingCart: currentUser.shoppingCart,
-//                 authToken: frontendToken,
-//                 userId: currentUser._id,
-//             });
-
-//             redisClient.del(req.body.email);
-//         } else {
-//             throw new Error("Code is invalid");
-//         }
-//     } catch (error) {
-//         res.status(400).send({ error: error.message });
-//     }
-// });
-
 router.post("/user/checkEmailCode", async (req, res) => {
     try {
         const hasToBeAuthorized = false;
@@ -116,12 +82,12 @@ router.post("/user/checkEmailCode", async (req, res) => {
         if (!hasAllFields) throw new Error("Enter all fields");
 
         const originalCode = JSON.parse(await redisClient.get(email));
-        if (originalCode.availableAttempts === 0) {
+        if (originalCode?.availableAttempts === 0) {
             redisClient.del(email);
             throw new Error("You have exceeded the number of attempts");
         }
 
-        if (clientCode !== originalCode.code) {
+        if (clientCode !== originalCode?.code) {
             const stringToSave = JSON.stringify({ code: originalCode.code, availableAttempts: originalCode.availableAttempts - 1 });
 
             await redisClient.set(email, stringToSave, "EX", 60 * 5);

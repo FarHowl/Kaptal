@@ -7,6 +7,7 @@ import { authToken_header } from "../../Utils/LocalStorageUtils";
 import axios from "axios";
 import CrossIcon from "../Icons/CrossIcon";
 import { useNavigate } from "react-router-dom"
+import { showSuccessNotification } from "../../StoreState/NotificationStore";
 
 export default function BookTile({ book, isBookInAdminMenu, setAdminMenuTab }) {
     const [isImgLoaded, setIsImgLoaded] = useState(false);
@@ -27,7 +28,8 @@ export default function BookTile({ book, isBookInAdminMenu, setAdminMenuTab }) {
                 },
                 authToken_header()
             );
-            console.log(res);
+            
+            showSuccessNotification("Книга была удалена")
         } catch (error) {
             console.log(error);
         }
