@@ -185,7 +185,7 @@ function ReviewTile({ review }) {
                 },
                 authToken_header()
             );
-            console.log("All good!")
+            console.log("All good!");
         } catch (error) {
             if (error?.response) console.log(error.response.data.error);
             else console.log(error);
@@ -193,7 +193,11 @@ function ReviewTile({ review }) {
     }
 
     return (
-        <div className={"w-[700px] rounded-lg flex flex-col items-center px-6 py-6 gap-4 " + (review.bookRating >= 4 ? "bg-green-100/70" : review.bookRating === 3 ? "bg-neutral-100/70" : "bg-red-100/70")}>
+        <div
+            className={
+                "w-[700px] rounded-lg flex flex-col items-center px-6 py-6 gap-4 " + (review.bookRating >= 4 ? "bg-green-100/70" : review.bookRating === 3 ? "bg-neutral-100/70" : "bg-red-100/70")
+            }
+        >
             <div className="flex w-full justify-between">
                 <span className="text-lg text-gray-600">{review.author}</span>
                 <div className="flex gap-2 items-center">
@@ -276,13 +280,11 @@ function AllUsersTab({ setTabOption }) {
         try {
             const query = "?page=1";
 
-            console.log(getAllUsers_EP + query);
-
             const res = await axios.get(getAllUsers_EP + query, authToken_header());
 
             let b = [];
             for (const i of res.data) {
-                if (getUserData().userId !== i._id) b.push(<UserTile user={i} key={i._id} setTabOption={setTabOption} />);
+                b.push(<UserTile user={i} key={i._id} setTabOption={setTabOption} />);
             }
             setAllUsersView(b);
         } catch (error) {

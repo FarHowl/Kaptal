@@ -396,7 +396,7 @@ router.post("/service/clearShoppingCart", async (req, res) => {
                 user.shoppingCart = [];
 
                 await redisClient.set(userId + "-user-shoppingCart", JSON.stringify(userShoppingCart), "EX", 30);
-                
+
                 await user.save();
                 dbRequestWasDone = true;
             }

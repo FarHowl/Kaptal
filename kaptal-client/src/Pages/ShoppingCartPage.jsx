@@ -80,7 +80,7 @@ export default function ShoppingCartPage() {
         try {
             const response = await axios.get(getUserData_EP, authToken_header());
 
-            setOrderInfo({ ...orderInfo, firstName: response.data.firstName, lastName: response.data.lastName, email: response.data.email, phoneNumber: response.data.phoneNumber });
+            setOrderInfo(prev => ({ ...prev, firstName: response.data.firstName, lastName: response.data.lastName, email: response.data.email, phoneNumber: response.data.phoneNumber }));
         } catch (error) {
             if (error?.response) showErrorNotification(error.response.data.error);
             else showErrorNotification(error);
@@ -100,10 +100,6 @@ export default function ShoppingCartPage() {
                 renderCounter.current = 1;
             }
     }, [shoppingCart]);
-
-    useEffect(() => {
-        console.log(orderInfo);
-    }, [orderInfo]);
 
     return (
         <div className="w-full flex flex-col justify-center items-center px-6">
