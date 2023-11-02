@@ -2,6 +2,7 @@ import { Store } from "pullstate";
 import axios from "axios";
 import { addBookToShoppingCart_EP, getShoppingCart_EP, removeBookFromShoppingCart_EP } from "../Utils/API";
 import { authToken_header, getUserData } from "../Utils/LocalStorageUtils";
+import { showErrorNotification } from "./NotificationStore";
 
 //
 // ShoppingCartStore
@@ -12,7 +13,8 @@ async function getShoppingCart() {
 
         return res.data;
     } catch (error) {
-        console.log(error);
+        if (error?.response) showErrorNotification(error.response.data.error);
+        else showErrorNotification(error);
     }
 }
 

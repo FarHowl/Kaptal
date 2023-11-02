@@ -21,6 +21,8 @@ export default function BookPage() {
     const [isAddReviewOpened, setIsAddReviewOpened] = useState(false);
     const [isAddRatingOpened, setIsAddRatingOpened] = useState(false);
 
+    const navigate = useNavigate();
+
     const shoppingCart = useStoreState(ShoppingCartStore).shoppingCart;
 
     async function getBookData() {
@@ -242,11 +244,11 @@ export default function BookPage() {
                             <div className="w-full flex justify-between px-4 gap-x-4">
                                 <button
                                     onClick={() => {
-                                        addToCartAction(bookData);
+                                        shoppingCart.some((item) => item?.bookId === bookData?._id) ? navigate("/shoppingCart") : addToCartAction();
                                     }}
                                     className={"py-2 px-10  rounded-md text-white animated-100 font-semibold " + (true ? "bg-sky-400 hover:bg-sky-500" : "bg-slate-400 pointer-events-none")}
                                 >
-                                    {shoppingCart.some((item) => item.bookId === bookData._id) ? "Оформить" : "Купить"}
+                                    {shoppingCart.some((item) => item?.bookId === bookData?._id) ? "Оформить" : "Купить"}
                                 </button>
                                 <IconComponent
                                     Icon={WishesIcon}

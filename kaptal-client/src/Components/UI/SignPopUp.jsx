@@ -90,7 +90,12 @@ export default function SignPopUp({ setIsSignOpened, isSignOpened }) {
     return (
         <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-40">
             {signTab === "SignIn" ? (
-                <div className="bg-white flex flex-col rounded-md relative px-6 pt-6 pb-8 gap-y-5 w-[350px]">
+                <div
+                    onKeyDown={(e) => {
+                        if (e.key == "Enter") sendEmailCode();
+                    }}
+                    className="bg-white flex flex-col rounded-md relative px-6 pt-6 pb-8 gap-y-5 w-[350px]"
+                >
                     {isPending ? <LoadingComponent customStyle={"absolute inset-0 flex justify-center items-center bg-white rounded-md z-10"} /> : <></>}
                     <div className=" w-full flex justify-between items-center">
                         <span className="text-xl font-semibold">Вход и регистрация</span>
@@ -128,7 +133,12 @@ export default function SignPopUp({ setIsSignOpened, isSignOpened }) {
                     </div>
                 </div>
             ) : signTab === "Code" ? (
-                <div className="bg-white flex flex-col rounded-md relative px-6 pt-6 pb-6 gap-y-5 w-[350px]">
+                <div
+                    onKeyDown={(e) => {
+                        if (e.key == "Enter") checkEmailCode();
+                    }}
+                    className="bg-white flex flex-col rounded-md relative px-6 pt-6 pb-6 gap-y-5 w-[350px]"
+                >
                     <div className=" w-full flex justify-between items-center">
                         <span className="text-xl font-semibold">Вход и регистрация</span>
                         <IconComponent
@@ -188,7 +198,12 @@ export default function SignPopUp({ setIsSignOpened, isSignOpened }) {
                     </div>
                 </div>
             ) : (
-                <div className="bg-white flex flex-col rounded-md relative px-6 pt-6 pb-8 gap-y-5 w-[350px]">
+                <div
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") signUp();
+                    }}
+                    className="bg-white flex flex-col rounded-md relative px-6 pt-6 pb-8 gap-y-5 w-[350px]"
+                >
                     <div className=" w-full flex justify-between items-center">
                         <span className="text-xl font-semibold">Регистрация</span>
                         <IconComponent

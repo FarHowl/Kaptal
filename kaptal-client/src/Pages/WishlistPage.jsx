@@ -17,7 +17,7 @@ export default function WishlistPage() {
         try {
             const bookIds = wishlist.map((item) => item.bookId);
 
-            const response = await axios.post(getSeveralParticularBooksData_EP, { bookIds, requiredFields: {_id: 1, name: 1, author: 1, price: 1, discount: 1, stock: 1, image: 1 } });
+            const response = await axios.post(getSeveralParticularBooksData_EP, { bookIds, requiredFields: { _id: 1, name: 1, author: 1, price: 1, discount: 1, stock: 1, image: 1 } });
 
             let a = [];
             for (const i of response.data) {
@@ -35,6 +35,8 @@ export default function WishlistPage() {
         if (getUserData()) {
             getWishlistBooks();
         }
+
+        console.log(wishlist?.length === 0);
     }, [wishlist]);
 
     return (
@@ -42,11 +44,17 @@ export default function WishlistPage() {
             <div className="max-w-[1240px] w-full flex flex-col justify-center items-center mt-8 flex-wrap gap-y-8">
                 <div className="flex flex-col gap-y-3 w-full">
                     <span className="text-3xl font-bold">Желаемое</span>
-                    <div className="flex w-full items-center gap-3">{wishlistBooks}</div>
+                    {wishlist?.length != 0 ? (
+                        <div className="flex w-full items-center gap-3">{wishlistBooks}</div>
+                    ) : (
+                        <div className="w-full flex justify-center">
+                            <span className="text-2xl font-medium">Ваш список желаемого пока пуст :(</span>
+                        </div>
+                    )}
                 </div>
                 {!getUserData() ? (
                     <div className="w-full flex justify-center">
-                        <span className="text-2xl font-medium">Для просморта списка желаемого нужно войти на сайт :(</span>
+                        <span className="text-2xl font-medium">Для просмотра списка желаемого нужно войти на сайт :(</span>
                     </div>
                 ) : (
                     <></>

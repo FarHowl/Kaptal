@@ -112,24 +112,10 @@ export default function App() {
                 </div>
             </div>
             {isSignOpened ? <SignPopUp setIsSignOpened={setIsSignOpened} isSignOpened={isSignOpened} /> : <></>}
-            <div className="w-full max-w-[1400px] flex gap-6 justify-between items-center h-[80px] px-6 border-b-2 fixed bg-white z-20">
+            <div className="w-full flex gap-6 justify-between items-center h-[80px] px-6 border-b-2 fixed bg-white z-20">
                 <Link to={"/"} className="title-font text-5xl text-center w-[204px] flex flex-shrink-0 justify-center">
                     Каптал
                 </Link>
-                <button className="px-4 py-3 rounded-xl text-white text-xl font-semibold bg-indigo-600 bg-opacity-90 animated-100 hover:bg-indigo-700 hover:bg-opacity-95">Каталог</button>
-                <div className="relative w-full h-full flex items-center gap-4">
-                    <input
-                        className="max-w-[60%] w-full h-[50%] pl-10 pr-16 border-2 border-indigo-400 border-opacity-80 rounded-full focus:outline-none focus:ring-1 focus:border-indigo-500 focus:border-opacity-90 focus:ring-indigo-300"
-                        placeholder="Введите для поиска"
-                        type="text"
-                    />
-                    <div className="absolute left-[13px] flex items-center w-full h-full pointer-events-none">
-                        <SearchIcon size={20} color={"#a3a2a2"} />
-                    </div>
-                    <button className="py-2 px-3 bg-sky-500 rounded-lg animated-100 hover:bg-sky-600">
-                        <SearchIcon size={24} color={"#ffffff"} />
-                    </button>
-                </div>
                 <div className="flex gap-4">
                     {getUserData() ? (
                         <div

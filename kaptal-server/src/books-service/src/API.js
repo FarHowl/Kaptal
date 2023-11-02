@@ -513,30 +513,6 @@ router.get("/user/getBooksBarByCollection", async (req, res) => {
     }
 });
 
-// router.get("/user/getBookData", async (req, res) => {
-//     try {
-//         const hasToBeAuthorized = false;
-//         verifyJWT(req, hasToBeAuthorized);
-
-//         const cachedBook = await redisClient.get("book:" + req.query?.bookId.toString());
-//         if (cachedBook) {
-//             res.status(200).send(JSON.parse(cachedBook));
-//         } else {
-//             const bookId = req.query?.bookId;
-//             if (!bookId) throw new Error("Пожалуйста, введите ID книги");
-
-//             const book = await Book.findById(bookId);
-
-//             await redisClient.set("book:" + bookId.toString(), JSON.stringify(book), "EX", 60 * 60 * 24);
-
-//             res.status(200).send(book);
-//         }
-//     } catch (error) {
-//         res.status(500).send({ error: error.message });
-//         console.log(error);
-//     }
-// });
-
 router.get("/user/getBookImage", async (req, res) => {
     try {
         const hasToBeAuthorized = false;
@@ -563,54 +539,6 @@ router.get("/user/getBookImage", async (req, res) => {
         console.log(error);
     }
 });
-
-// router.post("/user/getShoppingCartBooks", async (req, res) => {
-//     try {
-//         const hasToBeAuthorized = true;
-//         verifyJWT(req, hasToBeAuthorized);
-
-//         const bookIds = req.body?.bookIds;
-
-//         const foundBooks = await Book.find({ _id: { $in: bookIds } });
-
-//         res.status(200).send(foundBooks);
-//     } catch (error) {
-//         res.status(500).send({ error: error.message });
-//         console.log(error);
-//     }
-// });
-
-// router.post("/user/getWishlistBooks", async (req, res) => {
-//     try {
-//         const hasToBeAuthorized = true;
-//         verifyJWT(req, hasToBeAuthorized);
-
-//         const bookIds = req.body?.bookIds;
-
-//         const foundBooks = await Book.find({ _id: { $in: bookIds } });
-
-//         res.status(200).send(foundBooks);
-//     } catch (error) {
-//         res.status(500).send({ error: error.message });
-//         console.log(error);
-//     }
-// });
-
-// router.post("/user/getOrderBooksData", async (req, res) => {
-//     try {
-//         const hasToBeAuthorized = true;
-//         verifyJWT(req, hasToBeAuthorized);
-
-//         const bookIds = req.body?.bookIds;
-
-//         const foundBooks = await Book.find({ _id: { $in: bookIds } });
-
-//         res.status(200).send(foundBooks);
-//     } catch (error) {
-//         res.status(500).send({ error: error.message });
-//         console.log(error);
-//     }
-// });
 
 router.post("/user/getSeveralParticularBooksData", async (req, res) => {
     try {

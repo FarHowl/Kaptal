@@ -12,8 +12,6 @@ export const refreshToken_EP = apiAddress + "/api/users-service/user/refreshToke
  */
 export const getBookImage_EP = apiAddress + "/api/books-service/user/getBookImage";
 
-// export const getAvailableStaffForChat_EP = apiAddress + "/api/user/getAvailableStaff";
-
 /**
  * @param {string} username
  * @param {string} email
